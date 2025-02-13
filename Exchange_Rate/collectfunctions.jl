@@ -31,5 +31,6 @@
  include("interpol.jl")
 
 # ============Making moments ===============================
- include("momentgen.jl"); #wrapper
+include("kurtosis.jl"); #new moments
+include("momentgen.jl"); #wrapper
  include("makemoments.jl");

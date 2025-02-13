@@ -50,7 +50,8 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     var_a = var(vec(a))
     mu_c = mean(vec(c))
     var_c = var(vec(c))
-
+    avg_spell_length = mean(diff(findall(current_d .!= d_next)))
+    prob_change = mean(current_d .!= d_next)
 
     # Calculate the average spell length between changes of the durable good `d`
     spell_lengths = []
@@ -86,19 +87,50 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     outmoms[6] = var_c
     outmoms[7] = avg_spell_length  
     outmoms[8] = prob_change       
+    # Calculate kurtosis
+    kurt_i = kurtosis(vec(current_a))
+    kurt_a = kurtosis(vec(a))
+    kurt_c = kurtosis(vec(c))
+
+    # Calculate ratios
+    ratio_d_income = mean(vec(current_e .* current_d) ./ vec(w .+ current_e .* current_a .* (1 + rr)))
+    ratio_d_wealth = mean(vec(current_e .* current_d) ./ vec(current_e .* current_a .+ current_e .* current_d))
+    ratio_d_consumption = mean(vec(current_e .* current_d) ./ vec(c))
+
+    # Populate outmoms
+    outmoms[1] = mu_i
+    outmoms[2] = var_i
+    outmoms[3] = mu_a
+    outmoms[4] = var_a
+    outmoms[5] = mu_c
+    outmoms[6] = var_c
+    outmoms[7] = avg_spell_length  
+    outmoms[8] = prob_change
+    outmoms[9] = kurt_i
+    outmoms[10] = kurt_a
+    outmoms[11] = kurt_c
+    outmoms[12] = ratio_d_income
+    outmoms[13] = ratio_d_wealth
+    outmoms[14] = ratio_d_consumption
 
     # Optionally print statistics
     if settings.compstat
         println("----------------------------------------------------------")
         println("\nStatistics:\n")
-        println("Average rate of investment: $mu_i\n")
-        println("Variance of the rate of investment: $var_i\n")
+        println("Average rate of durable investment: $mu_i\n")
+        println("Variance of the rate of durable investment: $var_i\n")
         println("Average assets: $mu_a\n")
         println("Variance of assets: $var_a\n")
         println("Average nondurable consumption: $mu_c\n")
         println("Variance of nondurable consumption: $var_c\n")
         println("Average spell length between changes in durables: $avg_spell_length\n")
         println("Probability of change in durables: $prob_change\n")
+        println("Kurtosis of rate of investment: $kurt_i\n")
+        println("Kurtosis of assets: $kurt_a\n")
+        println("Kurtosis of nondurable consumption: $kurt_c\n")
+        println("Ratio of durable holdings to income: $ratio_d_income\n")
+        println("Ratio of durable holdings to wealth: $ratio_d_wealth\n")
+        println("Ratio of durable holdings to consumption: $ratio_d_consumption\n")
         println("----------------------------------------------------------")
     end 
 
