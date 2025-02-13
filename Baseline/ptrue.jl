@@ -8,6 +8,6 @@ function ptrue(enn::Int64)
     pea[6] = 2.00;                               # gamma    = Risk aversion parameter 
     pea[7] = 0.20;                               # adj cost
     pea[8] = 0.03;                               # asset return
-    pea[9] = 200;                                # wage
+    pea[9] = 100;                                # wage
     return pea::Vector{Float64};
 end
