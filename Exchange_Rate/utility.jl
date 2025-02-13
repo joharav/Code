@@ -26,7 +26,7 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
                         Threads.@threads for ie in 1:sz.ne
                             Threads.@threads for ip in 1:sz.np
                             # Calculate consumption and durable goods stock
-                            c = w + e[ie] * a[ia] * (1 + rr) + e[ie] * pd[ip] * (1 - f) * (1 - delta) * d[id] - ap[iia] - e[ie] * pd[ip] * dp[iid]
+                            c = w + e[ie] * a[ia] * (1 + rr) + e[ie] * pd[ip] * (1 - f) * (1 - delta) * d[id] -  e[ie] *  ap[iia] - e[ie] * pd[ip] * dp[iid]
 
                             # Check feasibility of consumption and durable goods stock
                             if c > 0 && dp[iid] > 0
