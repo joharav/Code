@@ -53,30 +53,30 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     avg_spell_length = mean(diff(findall(current_d .!= d_next)))
     prob_change = mean(current_d .!= d_next)
 
-    # Calculate the average spell length between changes of the durable good `d`
-    spell_lengths = []
-    change_count = 0
-    total_periods = 0
+    # # Calculate the average spell length between changes of the durable good `d`
+    # spell_lengths = []
+    # change_count = 0
+    # total_periods = 0
 
-    Threads.@threads for j in 1:sz.nFirms
-        last_value = d[1, j]
-        spell_length = 0
+    # Threads.@threads for j in 1:sz.nFirms
+    #     last_value = d[1, j]
+    #     spell_length = 0
     
-        Threads.@threads for i in max(1, sz.burnin-2):min(sz.nYears, size(d, 1))
-            total_periods += 1
-            if d[i, j] == last_value
-                spell_length += 1
-            else
-                push!(spell_lengths, spell_length)
-                change_count += 1
-                spell_length = 1
-                last_value = d[i, j]
-            end
-        end
-        push!(spell_lengths, spell_length)  # Final spell length
-    end
-    avg_spell_length = mean(spell_lengths)
-    prob_change = change_count / total_periods
+    #     Threads.@threads for i in max(1, sz.burnin-2):min(sz.nYears, size(d, 1))
+    #         total_periods += 1
+    #         if d[i, j] == last_value
+    #             spell_length += 1
+    #         else
+    #             push!(spell_lengths, spell_length)
+    #             change_count += 1
+    #             spell_length = 1
+    #             last_value = d[i, j]
+    #         end
+    #     end
+    #     push!(spell_lengths, spell_length)  # Final spell length
+    # end
+    # avg_spell_length = mean(spell_lengths)
+    # prob_change = change_count / total_periods
 
     # Populate outmoms
     outmoms[1] = mu_i
