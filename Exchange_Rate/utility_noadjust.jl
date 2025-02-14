@@ -11,6 +11,7 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
     nu = pea[7]       # Share parameter for nondurables
     gamma = pea[8]    # Risk aversion
     w = pea[10]       # Wage rate
+    chi = pea[11]     # Required maintenance 
 
     rr = (1 / beta) - 1 
 
@@ -24,8 +25,8 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
                     Threads.@threads for ie in 1:sz.ne
                         Threads.@threads for ip in 1:sz.np
                             # Calculate consumption and durable goods stock
-                            ddp = (1 - delta) * d[id]
-                            c = w + e[ie] * a[ia] * (1 + rr) + e[ie] * pd[ip] * (1 - delta) * d[id] - e[ie] * ap[iia]
+                            ddp = (1 - delta*(1-chi)) * d[id]
+                            c = w + e[ie] * a[ia] * (1 + rr) - e[ie] * pd[ip] * delta * chi * d[id] - e[ie] * ap[iia]
 
                             # Check feasibility of consumption and durable goods stock
                             if c > 0 && ddp > 0

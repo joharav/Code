@@ -27,13 +27,15 @@ module kst;
     const beta   = 0.95;       # Discount factor
     const delta  = 0.1;        # Depreciation rate for durable goods
     const rho    = 0.9;        # AR(1) persistence for durable price
-    const rho_e    = 0.7;      # AR(1) persistence for exchange rate
+    const rho_e  = 0.7;      # AR(1) persistence for exchange rate
     const sigma  = 0.2;        # Volatility of durable price shock
-    const sigma_e  = 0.3;      # Volatility of exchange rate shock
+    const sigma_e= 0.3;      # Volatility of exchange rate shock
     const nu     = 0.88;        # Share parameter for nondurable consumption
     const gamma  = 2;          # Risk aversion parameter
     const f      = 0.1;        # Adjustment fixed cost
     const w      = 100.0;        # Wage rate
+    const chi    = 0.80;     # Required maintenance 
+
 end;
 
 module dtp;
