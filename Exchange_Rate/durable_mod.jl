@@ -9,7 +9,7 @@ module sz;
     const nYears    = 10100;         #number of years to simulate
     const burnin    = 100;           #number of initial years to toss
     const nFirms    = 100;           #number of firms to simulate
-    const nmom      = 14;             #number of moments to calculate
+    const nmom      = 12;             #number of moments to calculate
     const maxiter   = 5000;          #maximum number of VFI iterations
     const maxditer  = 1000;          #maximum number of iterations for the stationary distribution
     const distol    = 0.00001;      #tolerance for the stationary distribution

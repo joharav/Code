@@ -15,8 +15,12 @@
  include("maxbellman.jl")
  include("howard.jl")
  include("makepol.jl")
+ include("maxbellman_noadjust.jl")
+ include("howard_noadjust.jl")
+ include("makepol_noadjust.jl")
  include("mew.jl")
  include("tinybellman.jl")
+ include("tinybellman_noadjust.jl")
  include("ptrue.jl")
 
 # ============ VFI =========================================
@@ -31,6 +35,11 @@
  include("interpol.jl")
 
 # ============Making moments ===============================
-include("kurtosis.jl"); #new moments
-include("momentgen.jl"); #wrapper
+ include("kurtosis.jl"); #new moments
+ include("momentgen.jl"); #wrapper
  include("makemoments.jl");
+ include("adjustment_gaps.jl")
+ include("transition_path.jl")
+ include("welfare.jl")
+
+

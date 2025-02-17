@@ -5,27 +5,31 @@ include("collectfunctions.jl");
 using Main.sz, Main.settings, Main.kst, Main.dtp; 
 
 
-momname = ["mu_i","v_i","mu_a","v_a","mu_c","v_c","avg_spell_length","prob_change"]; 
-pname = ["beta","delta","rho","sigma","nu", "gamma","f","rr","w"];  
+momname = ["mu_i", "v_i", "mu_a", "v_a", "mu_c", "v_c", "avg_spell_length", "prob_change",
+           "kurt_i", "kurt_a", "kurt_c", "ratio_d_income", "ratio_d_wealth", "ratio_d_consumption"]
+
+pname = ["beta", "delta", "rho", "rho_e", "sigma", "sigma_e", "nu", "gamma", "f", "w", "chi"]
 pea = ptrue(sz.nop);
 # ============ Run stuff ===================================
 nvary  = 5; # Number of variations per parameter
-nparam = 9; 
+nparam = 11; 
 
 # Define the subset of parameters you want to vary
-varying_params = [ 2, 3, 4, 5, 6, 7]  # Example: only vary params 2, 4, 6, and 8
+varying_params = [ 2, 3, 4, 5, ]  # Example: only vary params 2, 4, 6, and 8
 
-# Define parameter ranges (min, max) as before
+# Define parameter ranges (min, max)
 maxmin = [
-    0.95  0.95;  # Fixed beta  # Discount factor
-    0.10  0.20;  # Fixed delta  # Depreciation rate for durable goods 1,2
-    0.70  0.95;  # Fixed rho    # AR(1) persistence for durable price 1
-    0.3  0.40;  # Fixed sigma  # Volatility of durable price shock
-    0.40  0.80;  # Vary nu     # Share parameter for nondurable consumption
-    2.00  2.00;  # Fixed gamma # Risk aversion parameter
-    0.05  0.50;  # Vary f      # Adjustment fixed cost
-    0.03  0.03;  # Fixed rr    # Asset return
-    100   500;   # Fixed w      # Wage
+    0.95  0.95;  # beta (Discount factor)
+    0.10  0.20;  # delta (Depreciation rate)
+    0.70  0.95;  # rho (Persistence)
+    0.50  0.85;  # rho_e (Persistence of exchange rate shock)
+    0.2   0.40;  # sigma (Volatility of durable price shock)
+    0.2   0.50;  # sigma_e (Volatility of exchange rate shock)
+    0.40  0.80;  # nu (Share parameter for nondurable consumption)
+    2.00  2.50;  # gamma (Risk aversion)
+    0.05  0.50;  # f (Adjustment fixed cost)
+    100   500;   # w (Wage)
+    0.6   1.0;   # chi (Required maintenance)
 ]
 
 # Initialize storage (size based on the number of varying parameters)

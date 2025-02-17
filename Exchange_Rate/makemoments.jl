@@ -3,10 +3,11 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     outmoms = zeros(sz.nmom)
     
     # Constants from `pea`
-    beta = pea[1]
+    beta  = pea[1]
     delta = pea[2]
-    f = pea[7]
-    w = pea[10]
+    f     = pea[7]
+    w     = pea[10]
+    chi   = pea[11]
     rr = 1/beta -1
 
     # Extract variables from simulation data
@@ -32,10 +33,10 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
 
     # Compute consumption using a loop
     for i in 1:sz.nYears-sz.burnin-2, j in 1:sz.nFirms
-        if current_d[i, j] == d_next[i, j]
-            c[i, j] = w + current_e[i, j] * current_a[i, j] * (1 + rr) + current_e[i, j] * current_p[i, j] * (1 - f) * (1 - delta) * current_d[i, j] - a_next[i, j]
+        if d_next[i, j] == current_d[i, j] * (1 - delta * (1 - chi))  
+            c[i, j] = w + current_e[i, j] * current_a[i, j] * (1 + rr) - current_e[i, j] * current_p[i, j] * delta * chi * current_d[i, j] - current_e[i, j] * a_next[i, j]
         else
-            c[i, j] = w + current_e[i, j] * current_a[i, j] * (1 + rr) + current_e[i, j] * current_p[i, j] * (1 - delta) * current_d[i, j] - a_next[i, j] - current_p[i, j] * d_next[i, j]
+            c[i, j] = w + current_e[i, j] * current_a[i, j] * (1 + rr) + current_e[i, j] * current_p[i, j] * (1 - delta) * (1-f) * current_d[i, j] - current_e[i, j] * a_next[i, j] - current_e[i, j] * current_p[i, j] * d_next[i, j]
         end
     end
 
@@ -50,43 +51,7 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     var_a = var(vec(a))
     mu_c = mean(vec(c))
     var_c = var(vec(c))
-    avg_spell_length = mean(diff(findall(current_d .!= d_next)))
-    prob_change = mean(current_d .!= d_next)
-
-    # # Calculate the average spell length between changes of the durable good `d`
-    # spell_lengths = []
-    # change_count = 0
-    # total_periods = 0
-
-    # Threads.@threads for j in 1:sz.nFirms
-    #     last_value = d[1, j]
-    #     spell_length = 0
     
-    #     Threads.@threads for i in max(1, sz.burnin-2):min(sz.nYears, size(d, 1))
-    #         total_periods += 1
-    #         if d[i, j] == last_value
-    #             spell_length += 1
-    #         else
-    #             push!(spell_lengths, spell_length)
-    #             change_count += 1
-    #             spell_length = 1
-    #             last_value = d[i, j]
-    #         end
-    #     end
-    #     push!(spell_lengths, spell_length)  # Final spell length
-    # end
-    # avg_spell_length = mean(spell_lengths)
-    # prob_change = change_count / total_periods
-
-    # Populate outmoms
-    outmoms[1] = mu_i
-    outmoms[2] = var_i
-    outmoms[3] = mu_a
-    outmoms[4] = var_a
-    outmoms[5] = mu_c
-    outmoms[6] = var_c
-    outmoms[7] = avg_spell_length  
-    outmoms[8] = prob_change       
     # Calculate kurtosis
     kurt_i = kurtosis(vec(current_a))
     kurt_a = kurtosis(vec(a))
@@ -104,14 +69,12 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     outmoms[4] = var_a
     outmoms[5] = mu_c
     outmoms[6] = var_c
-    outmoms[7] = avg_spell_length  
-    outmoms[8] = prob_change
-    outmoms[9] = kurt_i
-    outmoms[10] = kurt_a
-    outmoms[11] = kurt_c
-    outmoms[12] = ratio_d_income
-    outmoms[13] = ratio_d_wealth
-    outmoms[14] = ratio_d_consumption
+    outmoms[7] = kurt_i
+    outmoms[8] = kurt_a
+    outmoms[9] = kurt_c
+    outmoms[10] = ratio_d_income
+    outmoms[11] = ratio_d_wealth
+    outmoms[12] = ratio_d_consumption
 
     # Optionally print statistics
     if settings.compstat
@@ -123,8 +86,6 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
         println("Variance of assets: $var_a\n")
         println("Average nondurable consumption: $mu_c\n")
         println("Variance of nondurable consumption: $var_c\n")
-        println("Average spell length between changes in durables: $avg_spell_length\n")
-        println("Probability of change in durables: $prob_change\n")
         println("Kurtosis of rate of investment: $kurt_i\n")
         println("Kurtosis of assets: $kurt_a\n")
         println("Kurtosis of nondurable consumption: $kurt_c\n")
