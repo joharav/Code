@@ -16,9 +16,8 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
     rr = (1 / beta) - 1 
 
     # Initialize utility array
-    util = zeros(sz.np, sz.ne, sz.na, sz.nd, sz.npa, sz.npd)
+    util = zeros(sz.np, sz.ne, sz.na, sz.nd, sz.npa)
     
-    Threads.@threads for iid in 1:sz.npd
         Threads.@threads for iia in 1:sz.npa
             Threads.@threads for id in 1:sz.nd
                 Threads.@threads for ia in 1:sz.na
@@ -31,16 +30,15 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
                             # Check feasibility of consumption and durable goods stock
                             if c > 0 && ddp > 0
                                 # Calculate utility
-                                util[ip, ie, ia, id, iia,iid] = (((c^nu) * (ddp^(1 - nu)))^(1 - gamma)) / (1 - gamma)
+                                util[ip, ie, ia, id, iia] = (((c^nu) * (ddp^(1 - nu)))^(1 - gamma)) / (1 - gamma)
                             else
-                                util[ip, ie, ia, id, iia,iid] = -1e10
+                                util[ip, ie, ia, id, iia] = -1e10
                             end
                         end
                     end
                 end
             end
         end
-    end
     
     return util
 end

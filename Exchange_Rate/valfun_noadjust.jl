@@ -56,14 +56,14 @@ function valfun_noadjust(pea::Vector{Float64})
         if iter <= sz.earlyiter || sum_in_a_row == 0
             # If you cannot do Howard 
             if sum_in_a_row > 0
-                vnew, gidx = maxbellman(queuelong, ut)
+                vnew, gidx = maxbellman_noadjust(queuelong, ut)
             # Otherwise do Howard
             else
-                vnew, gidx = howard(queuelong, ut, gidx)
+                vnew, gidx = howard_noadjust(queuelong, ut, gidx)
             end
         # If you are past earlyiter and the policy function has not yet converged.
         else
-            vnew, gidx = tinybellman(queuelong, ut, gidx)
+            vnew, gidx = tinybellman_noadjust(queuelong, ut, gidx)
         end
 
         # =====update -- McQueen-Porteus
@@ -89,16 +89,15 @@ function valfun_noadjust(pea::Vector{Float64})
 
         if gap < sz.toler || errcode > 0
             if errcode > 0
-                vnew .= 0.0
-                gidx.a .= 0
-                gidx.d .= 0
+                vnew = 0.0
+                gidx.a = 0
+                gidx.d = 0
                 pol.a .= 0.0
                 pol.d .= 0.0
                 break
             else
-                # Make the non-integer policy function
-                pol.a = makepol(gidx.a, grids.ap)
-                pol.d = makepol(gidx.d, grids.dp)
+                # Create the policy functions
+                pol = makepol_noadjust(gidx, grids)
                 break
             end
         end
