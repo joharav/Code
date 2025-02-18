@@ -47,21 +47,25 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     # Moments calculations
     mu_i = mean(vec(invest))
     var_i = var(vec(invest))
-    mu_a = mean(vec(a))
-    var_a = var(vec(a))
+    mu_a = mean(vec(current_a))
+    var_a = var(vec(current_a))
     mu_c = mean(vec(c))
     var_c = var(vec(c))
-    
-    # Calculate kurtosis
-    kurt_i = kurtosis(vec(current_a))
-    kurt_a = kurtosis(vec(a))
-    kurt_c = kurtosis(vec(c))
 
     # Calculate ratios
     ratio_d_income = mean(vec(current_e .* current_d) ./ vec(w .+ current_e .* current_a .* (1 + rr)))
-    ratio_d_wealth = mean(vec(current_e .* current_d) ./ vec(current_e .* current_a .+ current_e .* current_d))
-    ratio_d_consumption = mean(vec(current_e .* current_d) ./ vec(c))
+    ratio_d_wealth = mean(vec(current_e .* current_d) ./ vec(current_e .* current_a .* (1 + rr) .+ current_e .* current_d))
+   
+    # Ensure the vectors have the same length
+    min_length = min(length(vec(current_e .* current_d)), length(vec(c)))
 
+    # Truncate the vectors to the minimum length
+    truncated_numerator = vec(current_e .* current_d)[1:min_length]
+    truncated_denominator = vec(c)[1:min_length]
+
+    # Calculate the ratio
+    ratio_d_consumption = mean(truncated_numerator ./ truncated_denominator)
+   
     # Populate outmoms
     outmoms[1] = mu_i
     outmoms[2] = var_i
@@ -69,12 +73,9 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     outmoms[4] = var_a
     outmoms[5] = mu_c
     outmoms[6] = var_c
-    outmoms[7] = kurt_i
-    outmoms[8] = kurt_a
-    outmoms[9] = kurt_c
-    outmoms[10] = ratio_d_income
-    outmoms[11] = ratio_d_wealth
-    outmoms[12] = ratio_d_consumption
+    outmoms[7] = ratio_d_income
+    outmoms[8] = ratio_d_wealth
+    outmoms[9] = ratio_d_consumption
 
     # Optionally print statistics
     if settings.compstat
@@ -86,9 +87,6 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
         println("Variance of assets: $var_a\n")
         println("Average nondurable consumption: $mu_c\n")
         println("Variance of nondurable consumption: $var_c\n")
-        println("Kurtosis of rate of investment: $kurt_i\n")
-        println("Kurtosis of assets: $kurt_a\n")
-        println("Kurtosis of nondurable consumption: $kurt_c\n")
         println("Ratio of durable holdings to income: $ratio_d_income\n")
         println("Ratio of durable holdings to wealth: $ratio_d_wealth\n")
         println("Ratio of durable holdings to consumption: $ratio_d_consumption\n")

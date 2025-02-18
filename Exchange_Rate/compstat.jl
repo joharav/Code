@@ -4,9 +4,9 @@ include("durable_mod.jl");
 include("collectfunctions.jl");
 using Main.sz, Main.settings, Main.kst, Main.dtp; 
 
+commence = time();
 
-momname = ["mu_i", "v_i", "mu_a", "v_a", "mu_c", "v_c", "avg_spell_length", "prob_change",
-           "kurt_i", "kurt_a", "kurt_c", "ratio_d_income", "ratio_d_wealth", "ratio_d_consumption"]
+momname = ["mu_i", "v_i", "mu_a", "v_a", "mu_c", "v_c", "ratio_d_income", "ratio_d_wealth", "ratio_d_consumption"]
 
 pname = ["beta", "delta", "rho", "rho_e", "sigma", "sigma_e", "nu", "gamma", "f", "w", "chi"]
 pea = ptrue(sz.nop);
@@ -15,7 +15,7 @@ nvary  = 5; # Number of variations per parameter
 nparam = 11; 
 
 # Define the subset of parameters you want to vary
-varying_params = [ 2, 3, 4, 5, ]  # Example: only vary params 2, 4, 6, and 8
+varying_params = [ 2, 5, 6, 7, 8, 9, 10, 11]  # Example: only vary params 2, 4, 6, and 8
 
 # Define parameter ranges (min, max)
 maxmin = [
@@ -29,7 +29,7 @@ maxmin = [
     2.00  2.50;  # gamma (Risk aversion)
     0.05  0.50;  # f (Adjustment fixed cost)
     100   500;   # w (Wage)
-    0.6   1.0;   # chi (Required maintenance)
+    0.4   0.9;   # chi (Required maintenance)
 ]
 
 # Initialize storage (size based on the number of varying parameters)
@@ -78,3 +78,6 @@ for iparam in varying_params
         savefig(plot_comp, filename)
     end
 end
+include("heatmap.jl");
+arret = time();
+println("elapse of time in seconds = ",arret-commence)
