@@ -6,13 +6,13 @@ using Main.sz, Main.settings, Main.kst, Main.dtp;
 
 commence = time();
 
-momname = ["mu_i", "v_i", "mu_a", "v_a", "mu_c", "v_c", "ratio_d_income", "ratio_d_wealth", "ratio_d_consumption"]
+momname = ["mu_i", "v_i", "mu_a", "v_a", "mu_c", "v_c", "ratio_d_income", "ratio_d_wealth", "ratio_d_consumption", "mu_gap", "var_gap", "mu_hx", "var_hx", "I_d"]
 
 pname = ["beta", "delta", "rho", "rho_e", "sigma", "sigma_e", "nu", "gamma", "f", "w", "chi"]
 pea = ptrue(sz.nop);
 # ============ Run stuff ===================================
 nvary  = 5; # Number of variations per parameter
-nparam = 11; 
+nparam = sz.nparam; 
 
 # Define the subset of parameters you want to vary
 varying_params = [ 2, 5, 6, 7, 8, 9, 10, 11]  # Example: only vary params 2, 4, 6, and 8

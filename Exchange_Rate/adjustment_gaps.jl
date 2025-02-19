@@ -1,12 +1,7 @@
-function adjustment_gaps(pea::Vector{Float64})
-    # First, we are gonna recover all the durable policies, for the case where we adjust and when we do not
-
-    # Adjusted and non-adjusted value functions
-    adjust_result = valfun_adjust(pea)
-    noadjust_result = valfun_noadjust(pea)
+function adjustment_gaps(adjust_result::NamedTuple, noadjust_result::NamedTuple)
+    # Extract grids and durable goods grid
     grids = adjust_result.g  # Assuming grids are part of the result
     d_grid = grids.d         # Durable goods grid
-
 
     # Conditional assignments based on the indicator_matrix
     d_a = adjust_result.pol.d
@@ -37,12 +32,16 @@ function adjustment_gaps(pea::Vector{Float64})
     f_x = kde.density
     x_values = kde.x
 
-    # Compute the adjustment hazard h(x)
+    # Compute the adjustment hazard h(x) as a vector
     indicator_matrix = adjust_result.v .> noadjust_result.v
     adjustment_indicator = indicator_matrix
     adjustment_vec = vec(adjustment_indicator)
-    h_x = mean(adjustment_vec)
-    
+    h_x = zeros(length(x_values))
+
+    for i in 1:length(x_values)
+        h_x[i] = mean(adjustment_vec[gap_vec .== x_values[i]])
+    end
+
     # Compute the aggregate durable expenditures I_d using sum of products
     I_d = sum(x_values .* h_x .* f_x)
 

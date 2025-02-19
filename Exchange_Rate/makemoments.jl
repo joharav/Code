@@ -66,6 +66,16 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     # Calculate the ratio
     ratio_d_consumption = mean(truncated_numerator ./ truncated_denominator)
    
+    # Adjustment Gaps and distributions
+
+    gap, f_x, x_values, h_x, I_d = adjustment_gaps(answ.adjust_result,answ.noadjust_result)
+    mu_gap = mean(gap)
+    var_gap = var(gap)
+    mu_hx = mean(h_x)
+    var_hx = var(h_x)
+    I_d=I_d
+
+
     # Populate outmoms
     outmoms[1] = mu_i
     outmoms[2] = var_i
@@ -76,6 +86,12 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     outmoms[7] = ratio_d_income
     outmoms[8] = ratio_d_wealth
     outmoms[9] = ratio_d_consumption
+    outmoms[10] = mu_gap
+    outmoms[11] = var_gap
+    outmoms[12] = mu_hx
+    outmoms[13] = var_hx
+    outmoms[14] = I_d
+
 
     # Optionally print statistics
     if settings.compstat
@@ -90,7 +106,13 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
         println("Ratio of durable holdings to income: $ratio_d_income\n")
         println("Ratio of durable holdings to wealth: $ratio_d_wealth\n")
         println("Ratio of durable holdings to consumption: $ratio_d_consumption\n")
+        println("Average gap: $mu_gap\n")
+        println("Variance of gap: $var_gap\n")
+        println("Average adjustment hazard: $mu_hx\n")
+        println("Variance of adjustment hazard: $var_hx\n")
+        println("Aggregate durable expenditures: $I_d\n")
         println("----------------------------------------------------------")
+        plotgaps(f_x, x_values, h_x)
     end 
 
     return outmoms::Vector{Float64}
