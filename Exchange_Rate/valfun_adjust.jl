@@ -106,11 +106,11 @@ function valfun_adjust(pea::Vector{Float64})
 
     outtuple = (v=vnew::Array{Float64}, gidx=gidx, pol=pol, g=grids::NamedTuple, e=errcode::Int)
    
-    #if errcode == 0;
-    #    mew = makemew(outtuple); 
-    #end;
+#    if errcode == 0;
+#        mew = makemew(outtuple); 
+#    end;
 
-    #outtuple = (outtuple..., mew=mew::Array{Float64,3})
+#    outtuple = (outtuple..., mew=mew::Array{Float64,4})
 
     return outtuple;
 end
