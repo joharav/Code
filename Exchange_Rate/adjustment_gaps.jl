@@ -39,9 +39,6 @@ function adjustment_gaps(adjust_result::NamedTuple, noadjust_result::NamedTuple)
     adjustment_indicator = indicator_matrix
     adjustment_vec = vec(adjustment_indicator)
 
-    # Identify unique gap values for comparison
-    #unique_gaps = unique(gap_vec, dims=1)  # Note: May result in removal of floating-point precision concerns
-
     # Adjustment probabilities
     h_x = zeros(length(x_values))
 

@@ -69,6 +69,7 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::N
     # Adjustment Gaps and distributions
 
     gap, f_x, x_values, h_x, I_d = adjustment_gaps(adjust_result,noadjust_result)
+    gap_vec=vec(gap)
     mu_gap = mean(gap)
     var_gap = var(gap)
     mu_hx = mean(h_x)
@@ -112,7 +113,7 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::N
         println("Variance of adjustment hazard: $var_hx\n")
         println("Aggregate durable expenditures: $I_d\n")
         println("----------------------------------------------------------")
-        plotgaps(x_values, f_x, h_x)
+        plotgaps(x_values, f_x, h_x,gap_vec)
     end 
 
     return outmoms::Vector{Float64}
