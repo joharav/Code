@@ -1,4 +1,4 @@
-function makemoments(simdata::NamedTuple, pea::Vector{Float64})
+function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::NamedTuple, noadjust_result::NamedTuple)
     # Initialize the output moments vector
     outmoms = zeros(sz.nmom)
     
@@ -68,7 +68,7 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
    
     # Adjustment Gaps and distributions
 
-    gap, f_x, x_values, h_x, I_d = adjustment_gaps(answ.adjust_result,answ.noadjust_result)
+    gap, f_x, x_values, h_x, I_d = adjustment_gaps(adjust_result,noadjust_result)
     mu_gap = mean(gap)
     var_gap = var(gap)
     mu_hx = mean(h_x)
@@ -112,7 +112,7 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
         println("Variance of adjustment hazard: $var_hx\n")
         println("Aggregate durable expenditures: $I_d\n")
         println("----------------------------------------------------------")
-        plotgaps(f_x, x_values, h_x)
+        plotgaps(x_values, f_x, h_x)
     end 
 
     return outmoms::Vector{Float64}

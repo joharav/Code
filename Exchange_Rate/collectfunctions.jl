@@ -30,6 +30,7 @@
 
 # ============ Plotting and simulation =====================
  include("plotstuff.jl")
+ include("plotgaps.jl")
  include("printstuff.jl")
  include("simmodel.jl")
  include("interpol.jl")
