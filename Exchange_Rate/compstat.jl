@@ -2,6 +2,8 @@ using Random, Distributions, LinearAlgebra, Plots, Statistics, Printf, StatsBase
 
 include("durable_mod.jl");
 include("collectfunctions.jl");
+include("plotgaps_comp.jl");
+
 using Main.sz, Main.settings, Main.kst, Main.dtp; 
 
 commence = time();
@@ -62,6 +64,13 @@ for iparam in varying_params
         allmoms[ivary, iparam, :] = moms'; 
         allparams[ivary, iparam] = glop;
 
+        # Compute adjustment gaps for the current parameter
+        gap, f_x, x_values, h_x, I_d = adjustment_gaps(adjust_result, noadjust_result)
+        gap_vec = vec(gap)
+
+        # Call plotgaps inside the loop
+        plotgaps_comp(x_values, f_x, h_x, gap_vec, pname[iparam], glop)
+
         global counter += 1  
     end
 end
@@ -79,5 +88,6 @@ for iparam in varying_params
     end
 end
 include("heatmap.jl");
+
 arret = time();
 println("elapse of time in seconds = ",arret-commence)
