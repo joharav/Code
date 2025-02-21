@@ -14,7 +14,7 @@ pname = ["beta", "delta", "rho", "rho_e", "sigma", "sigma_e", "nu", "gamma", "f"
 pea = ptrue(sz.nop);
 # ============ Run stuff ===================================
 nvary  = 5; # Number of variations per parameter
-nparam = sz.nparam; 
+nparam = sz.nop; 
 
 # Define the subset of parameters you want to vary
 varying_params = [ 2, 5, 6, 7, 8, 9, 10, 11]  # Example: only vary params 2, 4, 6, and 8
@@ -43,32 +43,39 @@ used_params = zeros(nvary * num_varying, nparam)
 # Initialize counter globally
 counter = 1  
 
-# Loop only over the selected parameters
+# Loop over parameters and moments
 for iparam in varying_params
     for ivary in 1:nvary
         println("Varying parameter ", pname[iparam], " iteration ", ivary)
         
         # Set default parameters
-        global pea = ptrue(sz.nop);
-        ppp = pea;
+        global pea = ptrue(sz.nop)
+        ppp = pea
 
         # Compute the new parameter value
         glop = (maxmin[iparam,2] - maxmin[iparam,1]) * ivary / (nvary - 1.0) + maxmin[iparam,1]
-        ppp[iparam,1] = glop  
+        ppp[iparam] = glop  
 
         # Store the used parameter values
         used_params[counter, :] = ppp'
-        
-        # Compute the moments
-        global moms = momentgen(ppp);
-        allmoms[ivary, iparam, :] = moms'; 
-        allparams[ivary, iparam] = glop;
+
+        answ = valfun(ppp);
+        adjust_result=answ.adjust_result;
+        noadjust_result=answ.noadjust_result;
+
+        # Compute the moments using the updated parameters
+        simdata = simmodel(answ)
+        moments = makemoments(simdata, ppp, adjust_result, noadjust_result)
+
+        # Store the parameter values and moments
+        allparams[ivary, iparam] = glop
+        allmoms[ivary, iparam, :] = moments
 
         # Compute adjustment gaps for the current parameter
         gap, f_x, x_values, h_x, I_d = adjustment_gaps(adjust_result, noadjust_result)
         gap_vec = vec(gap)
 
-        # Call plotgaps inside the loop
+        # Call plotgaps_comp inside the loop
         plotgaps_comp(x_values, f_x, h_x, gap_vec, pname[iparam], glop)
 
         global counter += 1  

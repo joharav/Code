@@ -8,7 +8,7 @@ function avg_moments_for_param(allmoms, param_index, nmom)
 end
 
 # Assuming you have 4 parameters and 4 moments as per your description
-nparam = sz.nparam
+nparam = sz.nop
 nmom = sz.nmom
 
 # Initialize matrix to hold average moment values for the heatmap
