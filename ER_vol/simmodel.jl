@@ -8,7 +8,6 @@ function simmodel(answ::NamedTuple)
     # Initialize the outputs
     allv = zeros(sz.nYears, sz.nFirms)
     alla = zeros(sz.nYears, sz.nFirms)
-    allp = zeros(sz.nYears, sz.nFirms)
     alle = zeros(sz.nYears, sz.nFirms)
     alld = zeros(sz.nYears, sz.nFirms)
 
@@ -16,16 +15,16 @@ function simmodel(answ::NamedTuple)
     phatcdf = cumsum(tmat, dims=2)
     
     cdf_wgt = tmat'^100
-    cdf_wgt = cumsum(cdf_wgt[:, Int(floor(sz.np * sz.ne * 0.5)) + 1])
+    cdf_wgt = cumsum(cdf_wgt[:,Int(floor(sz.ne*0.5))+1])
 
     # ls is the indices of the (p, e) shocks in the simulation. stands for "locations" 
     # This sets the starting locations from the unconditional distribution
-    ls = zeros(Int, sz.nYears + 1, sz.nFirms)
-    Threads.@threads for ifi in 1:sz.nFirms
-        gap = globals.draws[1, ifi] .- cdf_wgt
-        gap = gap .< 0.0
-        ls[1, ifi] = findfirst(gap)
-    end
+    ls = zeros(sz.nYears+1,sz.nFirms);
+    for ifi in 1:sz.nFirms;
+        gap = globals.draws[1,ifi] .- cdf_wgt;
+        gap = gap .< 0.0;
+        ls[1,ifi] = findfirst(gap);
+    end;
 
     # This is the actual simulation 
     global astart = rand(sz.nFirms)
@@ -34,42 +33,36 @@ function simmodel(answ::NamedTuple)
         # Pick the starting point for the time series 
         picka = min(Int(floor(sz.na * astart[ifi])) + 1, sz.na)
         pickd = min(Int(floor(sz.nd * dstart[ifi])) + 1, sz.nd)
-        pick_combined = Int(ls[1, ifi])
-        picke = Int(floor((pick_combined - 1) / (sz.np)) % sz.ne) + 1
-        pickp = Int((pick_combined - 1) % sz.np) + 1
+        picke = Int(ls[1, ifi])
 
-        # Store the initial values
-        alla[1, ifi] = pol.a[pickp, picke, picka, pickd]
-        alld[1, ifi] = pol.d[pickp, picke, picka, pickd]
-        allv[1, ifi] = v[pickp, picke, picka, pickd]
-        allp[1, ifi] = pickp
-        alle[1, ifi] = picke
+        vold =    v[picke,picka,pickd];
+        aold = pol.a[picke,picka,pickd];
+        dold = pol.d[picke,picka,pickd];
+        
+        for iti in 1:sz.nYears
+            eold = grids.ex[Int(ls[iti,ifi]),1];
+            #This updates the simulated variables using simple interpolation
+            vprime = interpol(eold,aold,dold,grids,v);  
+            aprime = interpol(eold,aold,dold,grids,pol.a); 
+            dprime = interpol(eold,aold,dold,grids,pol.d);
+            #This updates the shock index using the transition matrix 
+            gap = globals.draws[iti+1, ifi] .- phatcdf[Int(ls[iti, ifi]),:];
+            gap = gap .< 0.0;
+            ls[iti+1,ifi] = findfirst(gap);
 
-        # Simulate over the years
-        for t in 2:sz.nYears
-            # Draw the next state
-            gap = globals.draws[t, ifi] .- phatcdf[pick_combined, :]
-            gap = gap .< 0.0
-            pick_combined = findfirst(gap)
+            #Update and store
+            eprime = grids.ex[Int(ls[iti+1,ifi]),1];
 
-            # Update the state variables
-            picke = Int(floor((pick_combined - 1) / (sz.np)) % sz.ne) + 1
-            pickp = Int((pick_combined - 1) % sz.np) + 1
-
-            # This updates the simulated variables using simple interpolation
-            vprime = interpol(Float64(pickp), Float64(picke), Float64(picka), Float64(pickd), grids, v)
-            aprime = interpol(Float64(pickp), Float64(picke), Float64(picka), Float64(pickd), grids, pol.a)
-            dprime = interpol(Float64(pickp), Float64(picke), Float64(picka), Float64(pickd), grids, pol.d)
-
-            # Store the values
-            alla[t, ifi] = aprime
-            alld[t, ifi] = dprime
-            allv[t, ifi] = vprime
-            allp[t, ifi] = pickp
-            alle[t, ifi] = picke
+            allv[iti,ifi] =vprime[1]
+            alla[iti,ifi] =aprime[1]
+            alle[iti,ifi] =eprime
+            alld[iti,ifi] =dprime[1]
+            vold=vprime[1]
+            aold=aprime[1]
+            dold=dprime[1]
         end
     end
 
-    outtuple = (v=allv::Array{Float64}, d=alld::Array{Float64}, a=alla::Array{Float64}, p=allp::Array{Float64}, ex=alle::Array{Float64})
-    return outtuple::NamedTuple{(:v, :d, :a, :p, :ex)}
+    outtuple = (v=allv::Array{Float64}, d=alld::Array{Float64}, a=alla::Array{Float64}, ex=alle::Array{Float64})
+    return outtuple::NamedTuple{(:v, :d, :a, :ex)}
 end

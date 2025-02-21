@@ -5,15 +5,15 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::N
     # Constants from `pea`
     beta  = pea[1]
     delta = pea[2]
-    f     = pea[7]
-    w     = pea[10]
-    chi   = pea[11]
+    f     = pea[5]
+    w     = pea[8]
+    chi   = pea[9]
+    pd    = pea[10]
     rr = 1/beta -1
 
     # Extract variables from simulation data
     a = simdata.a[sz.burnin-2:sz.nYears, :]
     d = simdata.d[sz.burnin-2:sz.nYears, :]
-    p = simdata.p[sz.burnin-2:sz.nYears, :]
     ex = simdata.ex[sz.burnin-2:sz.nYears, :]
 
     # Prepare slices of next period's asset and durable values
@@ -23,7 +23,6 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::N
     # Slice current period's variables correctly
     current_a = a[1:end-1, :]
     current_d = d[1:end-1, :]
-    current_p = p[1:end-1, :]
     current_e = ex[1:end-1, :]
 
 
@@ -32,11 +31,12 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::N
     c = zeros(size(current_a))
 
     # Compute consumption using a loop
-    for i in 1:sz.nYears-sz.burnin-2, j in 1:sz.nFirms
+    for i in 1:sz.nYears-(sz.burnin-2), j in 1:sz.nFirms
         if d_next[i, j] == current_d[i, j] * (1 - delta * (1 - chi))  
-            c[i, j] = w + current_e[i, j] * current_a[i, j] * (1 + rr) - current_e[i, j] * current_p[i, j] * delta * chi * current_d[i, j] - current_e[i, j] * a_next[i, j]
+            c[i, j] = w + current_e[i, j] * current_a[i, j] * (1 + rr) - current_e[i, j] * pd * delta * chi * current_d[i, j] - current_e[i, j] * a_next[i, j]
         else
-            c[i, j] = w + current_e[i, j] * current_a[i, j] * (1 + rr) + current_e[i, j] * current_p[i, j] * (1 - delta) * (1-f) * current_d[i, j] - current_e[i, j] * a_next[i, j] - current_e[i, j] * current_p[i, j] * d_next[i, j]
+            c[i, j] = w + current_e[i, j] * current_a[i, j] * (1 + rr) + current_e[i, j] * pd * (1 - delta) * (1-f) * current_d[i, j] 
+            - current_e[i, j] * a_next[i, j] - current_e[i, j] * pd * d_next[i, j]
         end
     end
 
@@ -53,14 +53,14 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::N
     var_c = var(vec(c))
 
     # Calculate ratios
-    ratio_d_income = mean(vec(current_e .* current_d) ./ vec(w .+ current_e .* current_a .* (1 + rr)))
-    ratio_d_wealth = mean(vec(current_e .* current_d) ./ vec(current_e .* current_a .* (1 + rr) .+ current_e .* current_d))
+    ratio_d_income = mean(vec(pd.* current_e .* current_d) ./ vec(w .+ current_e .* current_a .* (1 + rr) ))
+    ratio_d_wealth = mean(vec(pd.*current_e .* current_d) ./ vec(current_e .* current_a .* (1 + rr) .+ pd*current_e .* current_d))
    
     # Ensure the vectors have the same length
-    min_length = min(length(vec(current_e .* current_d)), length(vec(c)))
+    min_length = min(length(vec(pd.*current_e .* current_d)), length(vec(c)))
 
     # Truncate the vectors to the minimum length
-    truncated_numerator = vec(current_e .* current_d)[1:min_length]
+    truncated_numerator = vec(pd.*current_e .* current_d)[1:min_length]
     truncated_denominator = vec(c)[1:min_length]
 
     # Calculate the ratio

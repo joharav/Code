@@ -7,17 +7,15 @@ function printstuff(answ::NamedTuple)
     dpol = pol.d
     grids = answ.g
 
-    filename = "Exchange_Rate/Output/v.txt"
+    filename = "ER_vol/Output/Policy/v.txt"
     io = open(filename, "w")
     
     Threads.@threads for id in 1:sz.nd
         Threads.@threads for ia in 1:sz.na
             Threads.@threads for ie in 1:sz.ne
-                Threads.@threads for ip in 1:sz.np
-                    @printf(io, "%16.8f", vnew[ip, ie, ia, id])
-                    if ip < sz.np
-                        @printf(io, " ")  # Space between p values
-                    end
+                @printf(io, "%16.8f", vnew[ie, ia, id])
+                if ie < sz.ne
+                    @printf(io, " ")  # Space between e values
                 end
                 @printf(io, "\n")  # New line for each e within a w block
             end
@@ -29,17 +27,15 @@ function printstuff(answ::NamedTuple)
     close(io)
 
 
-    filename = "Exchange_Rate/Output/a.txt"
+    filename = "ER_vol/Output/Policy/a.txt"
     io = open(filename, "w")
     
     Threads.@threads for id in 1:sz.nd
         Threads.@threads for ia in 1:sz.na
             Threads.@threads for ie in 1:sz.ne
-                Threads.@threads for ip in 1:sz.np
-                    @printf(io, "%16.8f", apol[ip, ie, ia, id])
-                    if ip < sz.np
-                        @printf(io, " ")  # Space between p values
-                    end
+                @printf(io, "%16.8f", apol[ie, ia, id])
+                if ie < sz.ne
+                    @printf(io, " ")  # Space between e values
                 end
                 @printf(io, "\n")  # New line for each e within a w block
             end
@@ -51,17 +47,15 @@ function printstuff(answ::NamedTuple)
     close(io)
 
 
-    filename = "Exchange_Rate/Output/d.txt"
+    filename = "ER_vol/Output/Policy/d.txt"
     io = open(filename, "w")
     
     Threads.@threads for id in 1:sz.nd
         Threads.@threads for ia in 1:sz.na
             Threads.@threads for ie in 1:sz.ne
-                Threads.@threads for ip in 1:sz.np
-                    @printf(io, "%16.8f", dpol[ip, ie, ia, id])
-                    if ip < sz.np
-                        @printf(io, " ")  # Space between p values
-                    end
+                @printf(io, "%16.8f", dpol[ie, ia, id])
+                if ie < sz.ne
+                    @printf(io, " ")  # Space between p values
                 end
                 @printf(io, "\n")  # New line for each e within a w block
             end
@@ -72,14 +66,15 @@ function printstuff(answ::NamedTuple)
     
     close(io)
 
-    pg = grids.p;
     eg = grids.ex;
     ag = grids.a;
     apg = grids.ap;
     dg = grids.d;
     dpg = grids.dp;
     trans = grids.t; 
-    filname = "Exchange_Rate/Output/statespace.txt"
+
+    filname = "ER_vol/Output/Policy/statespace.txt"
+
     io = open(filname,"w")
     @printf(io," asset state grid\n")
     Threads.@threads for jj in 1:sz.na
@@ -100,10 +95,6 @@ function printstuff(answ::NamedTuple)
     Threads.@threads for jj in 1:sz.npd
         @printf(io,"%16.8f \n",dpg[jj])  
     end
-    @printf(io," price grid\n")
-    Threads.@threads for jj in 1:sz.np
-        @printf(io,"%16.8f \n",pg[jj])  
-    end
     @printf(io," \n")
     @printf(io," exchange rate grid\n")
     Threads.@threads for jj in 1:sz.ne
@@ -111,8 +102,8 @@ function printstuff(answ::NamedTuple)
     end
     @printf(io," \n")
     @printf(io," transition matrix\n")
-    Threads.@threads for jj in 1:(sz.np * sz.ne)
-        Threads.@threads for ii in 1:(sz.np * sz.ne)
+    Threads.@threads for jj in 1:sz.ne
+        Threads.@threads for ii in 1:sz.ne
             @printf(io,"%16.8f",trans[ii,jj]) 
         end
         @printf(io,"\n") 

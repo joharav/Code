@@ -1,35 +1,24 @@
 function maxbellman_noadjust(queuelong::Array{Float64}, util::Array{Float64})
-    vnew = zeros(sz.np, sz.ne, sz.na, sz.nd)
-    gidx = dtp.Ipol(Int.(zeros(sz.np, sz.ne, sz.na, sz.nd)), Int.(zeros(sz.np, sz.ne, sz.na, sz.nd)))
+    vnew = zeros(sz.ne, sz.na, sz.nd)
+    gidx = dtp.Ipol(Int.(zeros(sz.ne, sz.na, sz.nd)), Int.(zeros(sz.ne, sz.na, sz.nd)))
     beta = pea[1]
 
+    # Parallelize only on outermost loop
     Threads.@threads for id in 1:sz.nd
-        Threads.@threads for ia in 1:sz.na
-            Threads.@threads for ie in 1:sz.ne
-                Threads.@threads for ip in 1:sz.np
-                    vstar = -Inf
-                    astar = 0
-                    for iia in 1:sz.npa
-                        bellman = util[ip, ie, ia, id, iia] + beta * queuelong[ip, ie, iia, id]
-                        if bellman > vstar
-                            vstar = bellman
-                            astar = iia
-                        end
+        for ia in 1:sz.na
+            for ie in 1:sz.ne
+                vstar = -1e20  # Avoid numerical instability
+                astar = 0
+                for iia in 1:sz.npa
+                    bellman = util[ie, ia, id, iia] + beta * queuelong[ie, iia, id]
+                    if bellman > vstar
+                        vstar = bellman
+                        astar = iia
                     end
-                    vnew[ip, ie, ia, id] = vstar
-                    gidx.a[ip, ie, ia, id] = astar
                 end
-            end
-        end
-    end
-
-    # Update gidx.d outside the loops
-    Threads.@threads for id in 1:sz.nd
-        Threads.@threads for ia in 1:sz.na
-            Threads.@threads for ie in 1:sz.ne
-                Threads.@threads for ip in 1:sz.np
-                    gidx.d[ip, ie, ia, id] = id
-                end
+                vnew[ie, ia, id] = vstar
+                gidx.a[ie, ia, id] = astar
+                gidx.d[ie, ia, id] = id  # Moved inside to avoid extra loop
             end
         end
     end

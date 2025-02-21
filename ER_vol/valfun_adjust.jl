@@ -2,16 +2,16 @@ function valfun_adjust(pea::Vector{Float64})
     beta = pea[1]
 
     # Initialize arrays
-    v        = zeros(sz.np, sz.ne, sz.na, sz.nd)     # value function
-    vnew     = zeros(sz.np, sz.ne, sz.na, sz.nd)     # new value function 
-    mew      = zeros(sz.np, sz.ne, sz.na, sz.nd)     # stationary distribution
+    v        = zeros(sz.ne, sz.na, sz.nd)     # value function
+    vnew     = zeros(sz.ne, sz.na, sz.nd)     # new value function 
+    mew      = zeros(sz.ne, sz.na, sz.nd)     # stationary distribution
 
     # Initialize and instantiate the integer policy function
-    gidx = dtp.Ipol(Int.(zeros(sz.np, sz.ne, sz.na, sz.nd)), Int.(zeros(sz.np, sz.ne, sz.na, sz.nd)))
-    pol = dtp.Pol(zeros(sz.np, sz.ne, sz.na, sz.nd), zeros(sz.np, sz.ne, sz.na, sz.nd))
+    gidx = dtp.Ipol(Int.(zeros(sz.ne, sz.na, sz.nd)), Int.(zeros(sz.ne, sz.na, sz.nd)))
+    pol = dtp.Pol(zeros(sz.ne, sz.na, sz.nd), zeros(sz.ne, sz.na, sz.nd))
 
     # Initialize and instantiate the old integer policy function
-    old = dtp.Ipol(Int.(zeros(sz.np, sz.ne, sz.na, sz.nd)), Int.(zeros(sz.np, sz.ne, sz.na, sz.nd)))  
+    old = dtp.Ipol(Int.(zeros(sz.ne, sz.na, sz.nd)), Int.(zeros(sz.ne, sz.na, sz.nd)))  
     
     # Make the grids and the profit flow
     grids = makegrids(pea)
@@ -32,17 +32,11 @@ function valfun_adjust(pea::Vector{Float64})
 
         # =====take expectation
         queue = zeros(size(v))
-
-        reshaped_v = reshape(v, sz.np * sz.ne, sz.na,sz.nd)
-        qq=zeros(size(reshaped_v)) 
         # Loop over the third dimension 'd'
         for id in 1:sz.nd
-            # For each 'd', multiply the transition matrix by the 'np x ne' by 'na' slice of 'v'
-            qq[:, :, id] = tmat * reshaped_v[:, :, id]
+            # For each 'd', multiply the transition matrix by the 'ne' by 'na' slice of 'v'
+            queue[:, :, id] = tmat * v[:, :, id]
         end
-
-        # Now reshape the result to the desired shape for 'queue'
-        queue = reshape(qq, sz.np, sz.ne, sz.na, sz.nd)
 
         # =====interpolate
         if sz.na == sz.npa && sz.nd == sz.npd

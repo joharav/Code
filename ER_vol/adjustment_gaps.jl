@@ -16,15 +16,13 @@ function adjustment_gaps(adjust_result::NamedTuple, noadjust_result::NamedTuple)
     d_grid = max.(d_grid, 1e-10)
 
     # Initialize gap array
-    gap = zeros(sz.np, sz.ne, sz.na, sz.nd)
+    gap = zeros(sz.ne, sz.na, sz.nd)
 
     # Compute the gap x = log(d*) - log(d_{-1})
     Threads.@threads for id in 1:sz.nd
         Threads.@threads for ia in 1:sz.na
             Threads.@threads for ie in 1:sz.ne
-                Threads.@threads for ip in 1:sz.np
-                    gap[ip, ie, ia, id] = log(d_a[ip, ie, ia, id]) - log(d_grid[id])
-                end
+                gap[ ie, ia, id] = log(d_a[ie, ia, id]) - log(d_grid[id])
             end
         end
     end
@@ -62,7 +60,7 @@ function adjustment_gaps(adjust_result::NamedTuple, noadjust_result::NamedTuple)
     println("Adjustment Ratio: ", adjustment_ratio)
 
     histogram(vec(adjust_result.v .> noadjust_result.v), bins=2, xlabel="Adjustment (0 = No, 1 = Yes)", ylabel="Frequency", title="Histogram of Adjustments", legend=false)
-    savefig("Output/Gap_adjustment_matrix.png")
+    savefig("ER_vol/Output/Gap_adjustment_matrix.png")
 
 
     # Compute h(x) = f_adj(x) / f(x), avoiding division by zero
