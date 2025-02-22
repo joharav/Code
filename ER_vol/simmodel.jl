@@ -29,6 +29,7 @@ function simmodel(answ::NamedTuple)
     # This is the actual simulation 
     global astart = rand(sz.nFirms)
     global dstart = rand(sz.nFirms)
+    
     Threads.@threads for ifi in 1:sz.nFirms
         # Pick the starting point for the time series 
         picka = min(Int(floor(sz.na * astart[ifi])) + 1, sz.na)

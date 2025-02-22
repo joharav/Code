@@ -31,7 +31,7 @@ module kst;
     const f      = 0.1;        # Adjustment fixed cost
     const w      = 100.0;      # Wage rate
     const chi    = 0.80;       # Required maintenance 
-    const pd     = 4000.0;     # Price of durable goods
+    const pd     = 1.0;     # Price of durable goods
 end;
 
 module dtp;
@@ -61,6 +61,6 @@ end;
 
 module settings; 
     const compstat      = true; 
-    const verbose       = false; 
+    const verbose       = true; 
     const complicated   = false;     # Complicated = true is an identity weight matrix. Otherwise, optimal weight matrix. 
 end

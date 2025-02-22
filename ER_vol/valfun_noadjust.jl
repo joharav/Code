@@ -51,14 +51,14 @@ function valfun_noadjust(pea::Vector{Float64})
         if iter <= sz.earlyiter || sum_in_a_row == 0
             # If you cannot do Howard 
             if sum_in_a_row > 0
-                vnew, gidx = maxbellman_noadjust(queuelong, ut)
+                vnew, gidx = maxbellman(queuelong, ut)
             # Otherwise do Howard
             else
-                vnew, gidx = howard_noadjust(queuelong, ut, gidx)
+                vnew, gidx = howard(queuelong, ut, gidx)
             end
         # If you are past earlyiter and the policy function has not yet converged.
         else
-            vnew, gidx = tinybellman_noadjust(queuelong, ut, gidx)
+            vnew, gidx = tinybellman(queuelong, ut, gidx)
         end
 
         # =====update -- McQueen-Porteus

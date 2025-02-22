@@ -4,7 +4,6 @@ function makegrids(ppp::Vector{Float64});
     rho_e   = ppp[3];
     sigma_e = ppp[4];
     chi     = ppp[9];
-    mew=0.0;
     
     #declare the transition matrix and p grid as local and make them
     local trans;
@@ -12,13 +11,14 @@ function makegrids(ppp::Vector{Float64});
     # Exchange Rate 
     nume = sz.ne
     numstd_e =  sz.nstd_e
+    mew=10.0;
     eg, trans= tauchen(mew,sigma_e,rho_e,nume,numstd_e);
     eg = exp.(eg);
-
+   
 
     # Durable Grid (State)
     dmin = 0.1
-    dmax = 10000
+    dmax = 100.0
     if sz.nd == 1
         dg = [0.0]
     else
@@ -47,8 +47,8 @@ function makegrids(ppp::Vector{Float64});
     
 
     #make the asset grids
-    amin = 0.1
-    amax = 10000 
+    amin = 0.0
+    amax = 300.0
     if sz.na == 1;
         ag = [0.0];
     else;

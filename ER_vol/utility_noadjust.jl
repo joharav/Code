@@ -17,22 +17,25 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
     rr = (1 / beta) - 1 
 
     # Initialize utility array
-    util = zeros(sz.ne, sz.na, sz.nd, sz.npa)
-    
-    Threads.@threads for iia in 1:sz.npa
-        Threads.@threads for id in 1:sz.nd
-            Threads.@threads for ia in 1:sz.na
-                Threads.@threads for ie in 1:sz.ne
-                    # Calculate consumption and durable goods stock
-                    ddp = (1 - delta*(1-chi)) * d[id]
-                    c = w + e[ie] * a[ia] * (1 + rr) - e[ie] * pd * delta * chi * d[id] - e[ie] * ap[iia]
+    util = zeros(sz.ne, sz.na, sz.nd, sz.npa, sz.npd)
+    ddp= zeros(sz.npd)
 
-                    # Check feasibility of consumption and durable goods stock
-                    if c > 0 && ddp > 0
-                        # Calculate utility
-                        util[ie, ia, id, iia] = (((c^nu) * (ddp^(1 - nu)))^(1 - gamma)) / (1 - gamma)
-                    else
-                        util[ie, ia, id, iia] = -1e10
+    Threads.@threads for iid in 1:sz.npd
+        Threads.@threads for iia in 1:sz.npa
+            Threads.@threads for id in 1:sz.nd
+                ddp[iid] = (1 - delta*(1-chi)) * d[id]  # Durable goods next period
+                Threads.@threads for ia in 1:sz.na
+                    Threads.@threads for ie in 1:sz.ne
+                        # Calculate consumption and durable goods stock
+                        c = w + e[ie] * a[ia] * (1 + rr) - e[ie] * pd * delta * chi * d[id] - e[ie] * ap[iia]
+
+                        # Check feasibility of consumption and durable goods stock
+                        if c > 0 && ddp[iid] > 0
+                            # Calculate utility
+                            util[ie, ia, id, iia,iid] = (((c^nu) * (ddp[iid]^(1 - nu)))^(1 - gamma)) / (1 - gamma)
+                        else
+                            util[ie, ia, id, iia,iid] = -1e10
+                        end
                     end
                 end
             end
