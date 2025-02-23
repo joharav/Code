@@ -45,8 +45,8 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::N
     invest = (d[4:skay-0, :] .- (1.0 - delta) .* d[3:skay-1, :]) ./ d[3:skay-1, :]
 
     # Moments calculations
-    mu_i = mean(vec(invest))
-    var_i = var(vec(invest))
+    mu_d = mean(vec(current_d))
+    var_d = var(vec(current_d))
     mu_a = mean(vec(current_a))
     var_a = var(vec(current_a))
     mu_c = mean(vec(c))
@@ -78,8 +78,8 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::N
 
 
     # Populate outmoms
-    outmoms[1] = mu_i
-    outmoms[2] = var_i
+    outmoms[1] = mu_d
+    outmoms[2] = var_d
     outmoms[3] = mu_a
     outmoms[4] = var_a
     outmoms[5] = mu_c
@@ -98,8 +98,8 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::N
     if settings.compstat
         println("----------------------------------------------------------")
         println("\nStatistics:\n")
-        println("Average rate of durable investment: $mu_i\n")
-        println("Variance of the rate of durable investment: $var_i\n")
+        println("Average durables: $mu_d\n")
+        println("Variance of the durable holdings: $var_d\n")
         println("Average assets: $mu_a\n")
         println("Variance of assets: $var_a\n")
         println("Average nondurable consumption: $mu_c\n")

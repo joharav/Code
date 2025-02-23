@@ -1,18 +1,18 @@
 module sz;
-    const nd        = 21;            #number of points in the durable state grid
-    const na        = 21;            #number of points in the asset state grid
-    const ne        = 11;            #number of points in the exchange rate grid
-    const npd       = 51;            #number of points in the durable policy grid
-    const npa       = 51;            #number of points in the asset policy grid
+    const nd        = 50;            #number of points in the durable state grid
+    const na        = 50;            #number of points in the asset state grid
+    const ne        = 7;            #number of points in the exchange rate grid
+    const npd       = 101;            #number of points in the durable policy grid
+    const npa       = 101;            #number of points in the asset policy grid
     const pad       = 11;            #number of points to search around the previous point
     const nYears    = 10100;         #number of years to simulate
-    const burnin    = 100;           #number of initial years to toss
-    const nFirms    = 100;           #number of firms to simulate
+    const burnin    = 250;           #number of initial years to toss
+    const nFirms    = 5000;           #number of firms to simulate
     const nmom      = 14;             #number of moments to calculate
     const maxiter   = 5000;          #maximum number of VFI iterations
     const maxditer  = 1000;          #maximum number of iterations for the stationary distribution
-    const distol    = 0.00001;      #tolerance for the stationary distribution
-    const toler     = 0.00001;      #VFI tolerance
+    const distol    = 0.000001;      #tolerance for the stationary distribution
+    const toler     = 0.000001;      #VFI tolerance
     const earlyiter = 2;             # Number of times to do the full grid search before you do local searches. 
     const maxpolit  = 5 ;            # Number of times the policy function converges before I believe it.
     const nop       = 10;             #maximum number of parameters
@@ -29,9 +29,9 @@ module kst;
     const nu     = 0.88;       # Share parameter for nondurable consumption
     const gamma  = 2;          # Risk aversion parameter
     const f      = 0.1;        # Adjustment fixed cost
-    const w      = 100.0;      # Wage rate
+    const w      = 1.0;      # Wage rate
     const chi    = 0.80;       # Required maintenance 
-    const pd     = 1.0;     # Price of durable goods
+    const pd     = 4.0;     # Price of durable goods
 end;
 
 module dtp;
@@ -61,6 +61,6 @@ end;
 
 module settings; 
     const compstat      = true; 
-    const verbose       = true; 
+    const verbose       = false; 
     const complicated   = false;     # Complicated = true is an identity weight matrix. Otherwise, optimal weight matrix. 
 end

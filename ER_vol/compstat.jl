@@ -8,7 +8,7 @@ using Main.sz, Main.settings, Main.kst, Main.dtp;
 
 commence = time();
 
-momname = ["mu_i", "v_i", "mu_a", "v_a", "mu_c", "v_c", "ratio_d_income", "ratio_d_wealth", "ratio_d_consumption", "mu_gap", "var_gap", "mu_hx", "var_hx", "I_d"]
+momname = ["mu_d", "v_d", "mu_a", "v_a", "mu_c", "v_c", "ratio_d_income", "ratio_d_wealth", "ratio_d_consumption", "mu_gap", "var_gap", "mu_hx", "var_hx", "I_d"]
 
 pname = ["beta", "delta", "rho_e", "sigma_e", "nu", "gamma", "f", "w", "chi", "pd"]
 pea = ptrue(sz.nop);
@@ -17,19 +17,19 @@ nvary  = 5; # Number of variations per parameter
 nparam = sz.nop; 
 
 # Define the subset of parameters you want to vary
-varying_params = [ 2, 3, 4, 5, 6, 7, 8, 9, 10]  # Example: only vary params 2, 4, 6, and 8
+varying_params = [7, 9, 3, 4]  # Example: only vary params 2, 4, 6, and 8
 
 # Define parameter ranges (min, max)
 maxmin = [
     0.95  0.95;  # beta (Discount factor)
     0.10  0.20;  # delta (Depreciation rate)
     0.50  0.85;  # rho_e (Persistence of exchange rate shock)
-    0.2   0.50;  # sigma_e (Volatility of exchange rate shock)
+    0.2   0.80;  # sigma_e (Volatility of exchange rate shock)
     0.40  0.80;  # nu (Share parameter for nondurable consumption)
     2.00  2.50;  # gamma (Risk aversion)
-    0.05  0.50;  # f (Adjustment fixed cost)
+    0.05  0.80;  # f (Adjustment fixed cost)
     100   500;   # w (Wage)
-    0.4   0.9;   # chi (Required maintenance)
+    0.1   0.9;   # chi (Required maintenance)
     3000   5000;   # pd (Price of durables)
 ]
 

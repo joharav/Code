@@ -94,18 +94,11 @@ function valfun_noadjust(pea::Vector{Float64})
                 # Create the policy functions
                 pol.a = makepol(gidx.a, grids.ap)
                 pol.d = makepol(gidx.d, grids.dp)
-             #   pol = makepol_noadjust(gidx, grids)
                 break
             end
         end
     end
     outtuple = (v=vnew::Array{Float64}, gidx=gidx, pol=pol, g=grids::NamedTuple, e=errcode::Int)
-   
-    #if errcode == 0;
-    #    mew = makemew(outtuple); 
-    #end;
-
-    #outtuple = (outtuple..., mew=mew::Array{Float64,3})
 
     return outtuple;
 end

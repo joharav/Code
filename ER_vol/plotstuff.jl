@@ -12,13 +12,13 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         ddpol_slice = dpol[ie, :, :]
 
         plot1 = surface(a, d, dvee_slice, xlabel="Assets", ylabel="Durables", zlabel="Value Function")
-        savefig(plot1, "ER_vol/Output/Policy/vf_slice_e$(ie).png")
+        savefig(plot1, "Output/Policy/vf_slice_e$(ie).png")
 
         plot2 = surface(a, d, dapol_slice, xlabel="Assets", ylabel="Durables", zlabel="Optimal Assets")
-        savefig(plot2, "ER_vol/Output/Policy/Apolicy_slice_e$(ie).png")
+        savefig(plot2, "Output/Policy/Apolicy_slice_e$(ie).png")
 
         plot3 = surface(a, d, ddpol_slice, xlabel="Assets", ylabel="Durables", zlabel="Optimal Durables")
-        savefig(plot3, "ER_vol/Output/Policy/Dpolicy_slice_e$(ie).png")
+        savefig(plot3, "Output/Policy/Dpolicy_slice_e$(ie).png")
     end
 
 

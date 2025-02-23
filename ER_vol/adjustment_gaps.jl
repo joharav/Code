@@ -60,7 +60,7 @@ function adjustment_gaps(adjust_result::NamedTuple, noadjust_result::NamedTuple)
     println("Adjustment Ratio: ", adjustment_ratio)
 
     histogram(vec(adjust_result.v .> noadjust_result.v), bins=2, xlabel="Adjustment (0 = No, 1 = Yes)", ylabel="Frequency", title="Histogram of Adjustments", legend=false)
-    savefig("ER_vol/Output/Gap_adjustment_matrix.png")
+    savefig("Output/Gap_adjustment_matrix.png")
 
 
     # Compute h(x) = f_adj(x) / f(x), avoiding division by zero

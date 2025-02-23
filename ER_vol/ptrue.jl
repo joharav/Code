@@ -7,9 +7,9 @@ function ptrue(enn::Int64)
     pea[5] = 0.88;                               # nu       = Share parameter for nondurable consumption 
     pea[6] = 2.00;                               # gamma    = Risk aversion parameter 
     pea[7] = 0.10;                               # f        = adj cost
-    pea[8] = 100;                                # w        = wage rate
+    pea[8] = 1;                                # w        = wage rate
     pea[9] = 0.8;                                # chi      = Required maintenance 
-    pea[10] = 4000;                               # pd      = price durable goods
+    pea[10] = 4;                               # pd      = price durable goods
 
     return pea::Vector{Float64};
 end
