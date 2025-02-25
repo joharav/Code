@@ -1,7 +1,7 @@
 function valfun(pea::Vector{Float64})
   # Adjusted value function
-  adjust_result = valfun_adjust(pea)
   noadjust_result = valfun_noadjust(pea)
+  adjust_result = valfun_adjust(pea)
 
   # Overall value function
   v = max.(adjust_result.v, noadjust_result.v)  # Broadcasting over arrays

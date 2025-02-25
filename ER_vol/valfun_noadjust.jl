@@ -4,7 +4,6 @@ function valfun_noadjust(pea::Vector{Float64})
     # Initialize arrays
     v        = zeros(sz.ne, sz.na, sz.nd)     # value function
     vnew     = zeros(sz.ne, sz.na, sz.nd)     # new value function 
-    mew      = zeros(sz.ne, sz.na, sz.nd)     # stationary distribution
 
     # Initialize and instantiate the integer policy function
     gidx = dtp.Ipol(Int.(zeros(sz.ne, sz.na, sz.nd)), Int.(zeros(sz.ne, sz.na, sz.nd)))
@@ -15,7 +14,7 @@ function valfun_noadjust(pea::Vector{Float64})
     
     # Make the grids and the profit flow
     grids = makegrids(pea)
-    ut = utility_noadjust(grids, pea)
+    ut, iid = utility_noadjust(grids, pea)
     tmat = grids.t
     errcode = 0
 
@@ -51,14 +50,14 @@ function valfun_noadjust(pea::Vector{Float64})
         if iter <= sz.earlyiter || sum_in_a_row == 0
             # If you cannot do Howard 
             if sum_in_a_row > 0
-                vnew, gidx = maxbellman(queuelong, ut)
+                vnew, gidx = maxbellman_noadjust(queuelong, ut, iid)
             # Otherwise do Howard
             else
-                vnew, gidx = howard(queuelong, ut, gidx)
+                vnew, gidx = howard_noadjust(queuelong, ut, iid, gidx)
             end
         # If you are past earlyiter and the policy function has not yet converged.
         else
-            vnew, gidx = tinybellman(queuelong, ut, gidx)
+            vnew, gidx = tinybellman_noadjust(queuelong, ut, iid, gidx)
         end
 
         # =====update -- McQueen-Porteus
