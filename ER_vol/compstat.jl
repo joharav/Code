@@ -15,7 +15,7 @@ nvary  = 5; # Number of variations per parameter
 nparam = sz.nop; 
 
 # Define the subset of parameters you want to vary
-varying_params = [7, 9, 3, 4]  # Example: only vary params 2, 4, 6, and 8
+varying_params = [7, 2, 3, 4, 5, 6, 8, 9, 10]  # Example: only vary params 2, 4, 6, and 8
 
 # Define parameter ranges (min, max)
 maxmin = [
@@ -26,9 +26,9 @@ maxmin = [
     0.40  0.80;  # nu (Share parameter for nondurable consumption)
     2.00  2.50;  # gamma (Risk aversion)
     0.05  0.80;  # f (Adjustment fixed cost)
-    100   500;   # w (Wage)
-    0.1   0.9;   # chi (Required maintenance)
-    3000   5000;   # pd (Price of durables)
+    1   5;     # w (Wage)
+    0.4   0.9;   # chi (Required maintenance)
+    2   5;       # pd (Price of durables)
 ]
 
 # Initialize storage (size based on the number of varying parameters)
@@ -57,7 +57,7 @@ for iparam in varying_params
         used_params[counter, :] = ppp'
 
         # Compute the moments using the updated parameters
-        global moms = momentgen(ppp);
+        global moms, x_values, f_x, h_x, gap_vec = momentgen(ppp);
 
         # Store the parameter values and moments
         allparams[ivary, iparam] = glop

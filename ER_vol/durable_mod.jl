@@ -11,8 +11,8 @@ module sz;
     const nmom      = 13;             #number of moments to calculate
     const maxiter   = 5000;          #maximum number of VFI iterations
     const maxditer  = 1000;          #maximum number of iterations for the stationary distribution
-    const distol    = 0.000001;      #tolerance for the stationary distribution
-    const toler     = 0.000001;      #VFI tolerance
+    const distol    = 0.0001;      #tolerance for the stationary distribution
+    const toler     = 0.0001;      #VFI tolerance
     const earlyiter = 2;             # Number of times to do the full grid search before you do local searches. 
     const maxpolit  = 5 ;            # Number of times the policy function converges before I believe it.
     const nop       = 10;             #maximum number of parameters
@@ -61,6 +61,6 @@ end;
 
 module settings; 
     const compstat      = true; 
-    const verbose       = true; 
+    const verbose       = false; 
     const complicated   = false;     # Complicated = true is an identity weight matrix. Otherwise, optimal weight matrix. 
 end

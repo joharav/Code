@@ -42,7 +42,6 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     end
     adjustment_indicator = vec(adjust_indicator)
     gap_vec, f_x, x_values, h_x, I_d, mu_gap, var_gap, adjustment_ratio =adjustment_gaps_sim(current_d,d_a,adjustment_indicator)
-    plotgaps(x_values, f_x, h_x, gap_vec)
 
     # Moments calculations
     mu_d = mean(vec(current_d))
@@ -84,11 +83,6 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     x_values_d_wealth = collect(kde_ratio_d_wealth.x)
     x_values_d_consumption = collect(kde_ratio_d_consumption.x)
 
-  # Plot the distribution f(x) separately
-    plotdensities(x_values_d_income, f_d_income, "f_income")
-    plotdensities(x_values_d_wealth, f_d_wealth, "f_wealth")
-    plotdensities(x_values_d_consumption, f_d_consumption, "d_c")
-
     # Populate outmoms
     outmoms[1] = mu_d
     outmoms[2] = var_d
@@ -105,8 +99,8 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     outmoms[13] = adjustment_ratio
 
 
-    # Optionally print statistics
-    if settings.compstat
+    if settings.verbose 
+
         println("----------------------------------------------------------")
         println("\nStatistics:\n")
         println("Average durables: $mu_d\n")
@@ -123,7 +117,20 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
         println("Aggregate durable expenditures: $I_d\n")
         println("Adjustment Ratio: $adjustment_ratio\n")    
         println("----------------------------------------------------------")
-    end 
 
-    return outmoms::Vector{Float64}
+
+        plotgaps(x_values, f_x, h_x, gap_vec)
+        # Plot the distribution f(x) separately
+        plotdensities(x_values_d_income, f_d_income, "f_income")
+        plotdensities(x_values_d_wealth, f_d_wealth, "f_wealth")
+        plotdensities(x_values_d_consumption, f_d_consumption, "d_c")
+
+    end
+
+    # Optionally print statistics
+    if settings.compstat
+        return outmoms::Vector{Float64}, x_values, f_x, h_x, gap_vec
+    else 
+        return outmoms::Vector{Float64}
+    end 
 end
