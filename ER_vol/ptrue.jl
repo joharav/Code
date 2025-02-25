@@ -6,7 +6,7 @@ function ptrue(enn::Int64)
     pea[4] = 0.30;                               # sigma_e  = exchange rate innovation standard deviation
     pea[5] = 0.88;                               # nu       = Share parameter for nondurable consumption 
     pea[6] = 2.00;                               # gamma    = Risk aversion parameter 
-    pea[7] = 0.10;                               # f        = adj cost
+    pea[7] = 0.80;                               # f        = adj cost
     pea[8] = 1;                                # w        = wage rate
     pea[9] = 0.8;                                # chi      = Required maintenance 
     pea[10] = 4;                               # pd      = price durable goods

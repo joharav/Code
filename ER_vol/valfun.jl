@@ -26,8 +26,6 @@ function valfun(pea::Vector{Float64})
   pol_d = ifelse.(indicator_matrix, adjust_result.pol.d, noadjust_result.pol.d)
   pol = dtp.Pol(pol_a, pol_d)  # Reconstructing the Pol object
 
-   #mew=ifelse.(indicator_matrix, adjust_result.mew, noadjust_result.mew)
-
   g = adjust_result.g
   e = adjust_result.e
 

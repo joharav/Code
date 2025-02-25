@@ -23,11 +23,20 @@ function plotgaps_comp(x_values::Vector{Float64}, f_x::Vector{Float64}, h_x::Vec
     savefig(output_dir * "Gap_histogram_$(param_str).png")
 
     # Save individual plots separately
-    p1 = plot(x_values, f_x, label="f(x)", xlabel="Durable gap, log points", ylabel="Density", legend=:topleft, color=:blue)
-    savefig(p1, output_dir * "Gaps_distr_$(param_str).png")
+    p11 = plot(x_values, f_x, label="f(x)", xlabel="Durable gap, log points", ylabel="Density", legend=:topleft, color=:blue)
+    p22 = plot(x_values, h_x, label="h(x)", xlabel="Durable gap, log points", ylabel="Hazard", legend=:topright, color=:red)
 
-    p2 = plot(x_values, h_x, label="h(x)", xlabel="Durable gap, log points", ylabel="Hazard", legend=:topright, color=:red)
-    savefig(p2, output_dir * "Gaps_probability_$(param_str).png")
+    @load joinpath(output_dir, "Gaps_distr.jld2") p1
+    @load joinpath(output_dir, "Gaps_probability.jld2") p2
+
+    # Combine the plots
+    p_combined = plot(p1)
+    plot!(p_combined, p11)
+    savefig(p_combined, joinpath(output_dir, "Combined_Distr_$(param_str).png"))
+
+    p_combined2 = plot(p22)
+    plot!(p_combined2, p22)
+    savefig(p_combined2, joinpath(output_dir, "Combined_Prob_$(param_str).png"))
 
     println("Saved plots for $(param_name) = $(param_value) in Output/Gaps/")
 end

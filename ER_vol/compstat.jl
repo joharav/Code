@@ -1,4 +1,4 @@
-using Random, Distributions, LinearAlgebra, Plots, Statistics, Printf, StatsBase, KernelDensity;
+using Random, Distributions, LinearAlgebra, Plots, Statistics, Printf, StatsBase, KernelDensity, JLD2;
 
 include("durable_mod.jl");
 include("collectfunctions.jl");
@@ -7,9 +7,7 @@ include("plotgaps_comp.jl");
 using Main.sz, Main.settings, Main.kst, Main.dtp; 
 
 commence = time();
-
-momname = ["mu_d", "v_d", "mu_a", "v_a", "mu_c", "v_c", "ratio_d_income", "ratio_d_wealth", "ratio_d_consumption", "mu_gap", "var_gap", "mu_hx", "var_hx", "I_d"]
-
+momname = ["mu_d", "v_d", "mu_a", "v_a", "mu_c", "v_c", "mu_d_income", "mu_d_wealth", "mu_d_c", "mu_gap", "var_gap", "I_d", "adjustment_ratio"]
 pname = ["beta", "delta", "rho_e", "sigma_e", "nu", "gamma", "f", "w", "chi", "pd"]
 pea = ptrue(sz.nop);
 # ============ Run stuff ===================================
@@ -58,21 +56,12 @@ for iparam in varying_params
         # Store the used parameter values
         used_params[counter, :] = ppp'
 
-        answ = valfun(ppp);
-        adjust_result=answ.adjust_result;
-        noadjust_result=answ.noadjust_result;
-
         # Compute the moments using the updated parameters
-        simdata = simmodel(answ)
-        moments = makemoments(simdata, ppp, adjust_result, noadjust_result)
+        global moms = momentgen(ppp);
 
         # Store the parameter values and moments
         allparams[ivary, iparam] = glop
-        allmoms[ivary, iparam, :] = moments
-
-        # Compute adjustment gaps for the current parameter
-        gap, f_x, x_values, h_x, I_d = adjustment_gaps(adjust_result, noadjust_result)
-        gap_vec = vec(gap)
+        allmoms[ivary, iparam, :] = moms'
 
         # Call plotgaps_comp inside the loop
         plotgaps_comp(x_values, f_x, h_x, gap_vec, pname[iparam], glop)

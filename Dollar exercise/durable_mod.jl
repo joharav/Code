@@ -13,13 +13,12 @@ module sz;
     const nmom      = 8;             #number of moments to calculate
     const maxiter   = 5000;          #maximum number of VFI iterations
     const maxditer  = 1000;          #maximum number of iterations for the stationary distribution
-    const distol    = 0.000001;      #tolerance for the stationary distribution
-    const toler     = 0.000001;      #VFI tolerance
+    const distol    = 0.00001;      #tolerance for the stationary distribution
+    const toler     = 0.00001;      #VFI tolerance
     const earlyiter = 2;             # Number of times to do the full grid search before you do local searches. 
     const maxpolit  = 5 ;            # Number of times the policy function converges before I believe it.
     const nop       = 9;             #maximum number of parameters
     const noestp    = 2;             #number of parameters you actual estimate 
-    const nstd      = 3.0;           #number of standard deviations for Tauchen, 1.2 for dollar
     const nstd_e    = 4.0;           #number of standard deviations for Tauchen exchange rate, 1.2 for dollar
     const pick      = [1; 1; 1; 0; 1];     #moments to use
 end;

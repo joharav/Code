@@ -1,4 +1,4 @@
-function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::NamedTuple, noadjust_result::NamedTuple)
+function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     # Initialize the output moments vector
     outmoms = zeros(sz.nmom)
     
@@ -15,6 +15,8 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::N
     a = simdata.a[sz.burnin-2:sz.nYears, :]
     d = simdata.d[sz.burnin-2:sz.nYears, :]
     ex = simdata.ex[sz.burnin-2:sz.nYears, :]
+    d_adjust = simdata.d_adjust[sz.burnin-2:sz.nYears, :]
+    adjust_indicator = simdata.adjust_indicator[sz.burnin-2:sz.nYears, :]
 
     # Prepare slices of next period's asset and durable values
     a_next = a[2:end, :]
@@ -24,12 +26,11 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::N
     current_a = a[1:end-1, :]
     current_d = d[1:end-1, :]
     current_e = ex[1:end-1, :]
-
-
+    d_a = d_adjust[1:end-1, :]
+    adjust_indicator= adjust_indicator[1:end-1, :]
     # Calculate consumption
     # Initialize `c` with the same size as `current_a`
     c = zeros(size(current_a))
-
     # Compute consumption using a loop
     for i in 1:sz.nYears-(sz.burnin-2), j in 1:sz.nFirms
         if d_next[i, j] == current_d[i, j] * (1 - delta * (1 - chi))  
@@ -39,10 +40,9 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::N
             - current_e[i, j] * a_next[i, j] - current_e[i, j] * pd * d_next[i, j]
         end
     end
-
-    # Calculate investment rates and their differences
-    skay = size(d, 1)
-    invest = (d[4:skay-0, :] .- (1.0 - delta) .* d[3:skay-1, :]) ./ d[3:skay-1, :]
+    adjustment_indicator = vec(adjust_indicator)
+    gap_vec, f_x, x_values, h_x, I_d, mu_gap, var_gap, adjustment_ratio =adjustment_gaps_sim(current_d,d_a,adjustment_indicator)
+    plotgaps(x_values, f_x, h_x, gap_vec)
 
     # Moments calculations
     mu_d = mean(vec(current_d))
@@ -53,8 +53,8 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::N
     var_c = var(vec(c))
 
     # Calculate ratios
-    ratio_d_income = mean(vec(pd.* current_e .* current_d) ./ vec(w .+ current_e .* current_a .* (1 + rr) ))
-    ratio_d_wealth = mean(vec(pd.*current_e .* current_d) ./ vec(current_e .* current_a .* (1 + rr) .+ pd*current_e .* current_d))
+    ratio_d_income = (vec(pd.* current_e .* current_d) ./ vec(w .+ current_e .* current_a .* (1 + rr) ))
+    ratio_d_wealth = (vec(pd.*current_e .* current_d) ./ vec(current_e .* current_a .* (1 + rr) .+ pd*current_e .* current_d))
    
     # Ensure the vectors have the same length
     min_length = min(length(vec(pd.*current_e .* current_d)), length(vec(c)))
@@ -64,18 +64,30 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::N
     truncated_denominator = vec(c)[1:min_length]
 
     # Calculate the ratio
-    ratio_d_consumption = mean(truncated_numerator ./ truncated_denominator)
+    ratio_d_consumption = (truncated_numerator ./ truncated_denominator)
    
-    # Adjustment Gaps and distributions
+    mu_d_income = mean(ratio_d_income)
+    mu_d_wealth = mean(ratio_d_wealth) 
+    mu_d_c      = mean(ratio_d_consumption)
 
-    gap, f_x, x_values, h_x, I_d = adjustment_gaps(adjust_result,noadjust_result)
-    gap_vec=vec(gap)
-    mu_gap = mean(gap)
-    var_gap = var(gap)
-    mu_hx = mean(h_x)
-    var_hx = var(h_x)
-    I_d=I_d
+    # Calculate distributions using KDE
+    kde_ratio_d_income = kde(ratio_d_income)
+    kde_ratio_d_wealth = kde(ratio_d_wealth)
+    kde_ratio_d_consumption = kde(ratio_d_consumption)
 
+    # Distribution of simulated KDE 
+    f_d_income      = kde_ratio_d_income.density
+    f_d_wealth      = kde_ratio_d_wealth.density
+    f_d_consumption = kde_ratio_d_consumption.density
+
+    x_values_d_income = collect(kde_ratio_d_income.x)
+    x_values_d_wealth = collect(kde_ratio_d_wealth.x)
+    x_values_d_consumption = collect(kde_ratio_d_consumption.x)
+
+  # Plot the distribution f(x) separately
+    plotdensities(x_values_d_income, f_d_income, "f_income")
+    plotdensities(x_values_d_wealth, f_d_wealth, "f_wealth")
+    plotdensities(x_values_d_consumption, f_d_consumption, "d_c")
 
     # Populate outmoms
     outmoms[1] = mu_d
@@ -84,14 +96,13 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::N
     outmoms[4] = var_a
     outmoms[5] = mu_c
     outmoms[6] = var_c
-    outmoms[7] = ratio_d_income
-    outmoms[8] = ratio_d_wealth
-    outmoms[9] = ratio_d_consumption
+    outmoms[7] = mu_d_income
+    outmoms[8] = mu_d_wealth
+    outmoms[9] = mu_d_c
     outmoms[10] = mu_gap
     outmoms[11] = var_gap
-    outmoms[12] = mu_hx
-    outmoms[13] = var_hx
-    outmoms[14] = I_d
+    outmoms[12] = I_d
+    outmoms[13] = adjustment_ratio
 
 
     # Optionally print statistics
@@ -104,16 +115,14 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}, adjust_result::N
         println("Variance of assets: $var_a\n")
         println("Average nondurable consumption: $mu_c\n")
         println("Variance of nondurable consumption: $var_c\n")
-        println("Ratio of durable holdings to income: $ratio_d_income\n")
-        println("Ratio of durable holdings to wealth: $ratio_d_wealth\n")
-        println("Ratio of durable holdings to consumption: $ratio_d_consumption\n")
+        println("Ratio of durable holdings to income: $mu_d_income\n")
+        println("Ratio of durable holdings to wealth: $mu_d_wealth\n")
+        println("Ratio of durable holdings to consumption: $mu_d_c\n")
         println("Average gap: $mu_gap\n")
         println("Variance of gap: $var_gap\n")
-        println("Average adjustment hazard: $mu_hx\n")
-        println("Variance of adjustment hazard: $var_hx\n")
         println("Aggregate durable expenditures: $I_d\n")
+        println("Adjustment Ratio: $adjustment_ratio\n")    
         println("----------------------------------------------------------")
-        plotgaps(x_values, f_x, h_x,gap_vec)
     end 
 
     return outmoms::Vector{Float64}

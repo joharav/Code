@@ -1,16 +1,18 @@
 function simmodel(answ::NamedTuple)
     # Make and extract all of the variables and arrays you need
-    v     = answ.v
-    pol   = answ.pol
-    grids = answ.g
-    tmat  = grids.t
+    v           = answ.v
+    pol         = answ.pol
+    grids       = answ.g
+    tmat        = grids.t
+    d_adjust    = answ.adjust_result.pol.d
+    #pol_d         = answ.pol.d
 
     # Initialize the outputs
-    allv = zeros(sz.nYears, sz.nFirms)
-    alla = zeros(sz.nYears, sz.nFirms)
-    alle = zeros(sz.nYears, sz.nFirms)
-    alld = zeros(sz.nYears, sz.nFirms)
-
+    allv        = zeros(sz.nYears, sz.nFirms)
+    alla        = zeros(sz.nYears, sz.nFirms)
+    alle        = zeros(sz.nYears, sz.nFirms)
+    alld        = zeros(sz.nYears, sz.nFirms)
+    alld_adjust = zeros(sz.nYears, sz.nFirms)
     # Set up the transition matrix
     phatcdf = cumsum(tmat, dims=2)
     
@@ -39,31 +41,47 @@ function simmodel(answ::NamedTuple)
         vold =    v[picke,picka,pickd];
         aold = pol.a[picke,picka,pickd];
         dold = pol.d[picke,picka,pickd];
+        d_adjustold = d_adjust[picke,picka,pickd];
         
         for iti in 1:sz.nYears
-            eold = grids.ex[Int(ls[iti,ifi]),1];
+            eold = grids.ex[Int(ls[iti,1]),1];
+
             #This updates the simulated variables using simple interpolation
             vprime = interpol(eold,aold,dold,grids,v);  
             aprime = interpol(eold,aold,dold,grids,pol.a); 
             dprime = interpol(eold,aold,dold,grids,pol.d);
+            d_adjustprime = interpol(eold,aold,dold,grids,d_adjust);
+
             #This updates the shock index using the transition matrix 
             gap = globals.draws[iti+1, ifi] .- phatcdf[Int(ls[iti, ifi]),:];
             gap = gap .< 0.0;
             ls[iti+1,ifi] = findfirst(gap);
 
             #Update and store
-            eprime = grids.ex[Int(ls[iti+1,ifi]),1];
+            eprime = grids.ex[Int(ls[iti+1,1]),1];
 
-            allv[iti,ifi] =vprime[1]
-            alla[iti,ifi] =aprime[1]
-            alle[iti,ifi] =eprime
-            alld[iti,ifi] =dprime[1]
+            allv[iti,ifi]           = vprime[1]
+            alla[iti,ifi]           = aprime[1]
+            alle[iti,ifi]           = eprime
+            alld[iti,ifi]           = dprime[1]
+            alld_adjust[iti,ifi]    = d_adjustprime[1]
+
+
             vold=vprime[1]
             aold=aprime[1]
             dold=dprime[1]
+            d_adjustold = d_adjustprime[1]
         end
     end
 
-    outtuple = (v=allv::Array{Float64}, d=alld::Array{Float64}, a=alla::Array{Float64}, ex=alle::Array{Float64})
-    return outtuple::NamedTuple{(:v, :d, :a, :ex)}
+    #check adjustment ratios
+    adjust_indicator=zeros(size(alld))
+    for i in 1:sz.nYears, j in 1:sz.nFirms
+        if alld_adjust[i, j] == alld[i, j]
+            adjust_indicator[i, j] = 1
+        end
+    end
+
+    outtuple = (v=allv::Array{Float64}, d=alld::Array{Float64}, a=alla::Array{Float64}, ex=alle::Array{Float64},d_adjust=alld_adjust::Array{Float64},adjust_indicator=adjust_indicator::Array{Float64})
+    return outtuple::NamedTuple{(:v, :d, :a, :ex, :d_adjust, :adjust_indicator)}
 end

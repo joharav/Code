@@ -31,6 +31,7 @@
 # ============ Plotting and simulation =====================
  include("plotstuff.jl")
  include("plotgaps.jl")
+ include("plotdensities.jl")
  include("printstuff.jl")
  include("simmodel.jl")
  include("interpol.jl")
@@ -40,6 +41,8 @@
  include("momentgen.jl"); #wrapper
  include("makemoments.jl");
  include("adjustment_gaps.jl")
+ include("adjustment_gaps.jl")
+ include("adj_gaps_sim.jl")
  include("transition_path.jl")
  include("welfare.jl")
 
