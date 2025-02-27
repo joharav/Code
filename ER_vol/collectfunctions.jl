@@ -33,7 +33,10 @@
  include("plotgaps.jl")
  include("plotdensities.jl")
  include("printstuff.jl")
- include("simmodel.jl")
+ include("simmodel.jl") 
+ include("girf.jl")
+ include("simmodel_girf.jl")
+ include("compute_girf.jl")
  include("interpol.jl")
 
 # ============Making moments ===============================
@@ -41,9 +44,7 @@
  include("momentgen.jl"); #wrapper
  include("makemoments.jl");
  include("adjustment_gaps.jl")
- include("adjustment_gaps.jl")
  include("adj_gaps_sim.jl")
- include("transition_path.jl")
  include("welfare.jl")
 
 

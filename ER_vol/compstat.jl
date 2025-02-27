@@ -57,14 +57,14 @@ for iparam in varying_params
         used_params[counter, :] = ppp'
 
         # Compute the moments using the updated parameters
-        global moms, x_values, f_x, h_x, gap_vec = momentgen(ppp);
+        global moms = momentgen(ppp);
 
         # Store the parameter values and moments
         allparams[ivary, iparam] = glop
         allmoms[ivary, iparam, :] = moms'
 
         # Call plotgaps_comp inside the loop
-        plotgaps_comp(x_values, f_x, h_x, gap_vec, pname[iparam], glop)
+        #plotgaps_comp(x_values, f_x, h_x, gap_vec, pname[iparam], glop)
 
         global counter += 1  
     end
