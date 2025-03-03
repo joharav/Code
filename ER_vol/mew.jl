@@ -1,114 +1,101 @@
+# Define the function makemew, which takes a tuple as Inputs and returns a matrix as Output
 function makemew(answ::NamedTuple)
-    k_wgt_a = inbetween(answ.g, true, :a) # True is for log spacing
-    k_wgt_d = inbetween(answ.g, true, :d) # True is for log spacing
 
-    interp_wgt, coarse_idx = makeweight(answ, k_wgt_a, k_wgt_d)
+    a_wgt = inbetween(answ.g,true,:a) # True is for log spacing
+    d_wgt = inbetween(answ.g,true,:d) # True is for log spacing
 
-    mew = ones(sz.np, sz.ne, sz.na, sz.nd) ./ float(sz.np * sz.ne * sz.na * sz.nd)
+    interp_wgt, coarse_idx = makeweight(answ, a_wgt, d_wgt)
+
+
+    mew = ones(sz.ne,sz.na,sz.nd) ./ float(sz.ne*sz.na*sz.nd)
     mew_new = mew
 
     for id in 1:sz.maxditer
         mew_new = makedist(coarse_idx, interp_wgt, answ.g, mew_new)
-        disterr = maximum(abs.(mew .- mew_new))
+        disterr = maximum(abs.(mew.-mew_new))
         if disterr < sz.distol
-            break
+          break
         else
-            mew = mew_new
+          mew = mew_new
         end
     end
-    mew = mew ./ sum(mew) # Rounding error
-    return mew::Array{Float64, 4}
+    mew = mew./sum(mew) #Rounding error
+    return mew::Matrix{Float64}
+
 end
 
-function makedist(coarse_idx::Dict{Any, Any}, interp_wgt::Dict{Any, Any}, grids::NamedTuple, mew::Array{Float64, 4})
+function makedist(coarse_idx, interp_wgt, grids, mew)
+
     tmat = grids.t
-    tmat_e = tmat[1:sz.ne, 1:sz.ne]
-    tmat_p = tmat[1:sz.ne:end, 1:sz.ne:end]
-
-    # Initialize the new distribution
     mew_old = mew
-    mew_new = zeros(size(mew))
 
-    # Loop over all state variables to update the distribution
+
     for id in 1:sz.nd
-        for ia in 1:sz.na
+        for ia in 1:sz.na 
             for ie in 1:sz.ne
-                for ip in 1:sz.np
-                    # Get the coarse indices and interpolation weights
-                    (lo_a, hi_a, lo_d, hi_d) = coarse_idx[(ip, ie, ia, id)]
-                    (w_a, w_d) = interp_wgt[(ip, ie, ia, id)]
+                if mew_old[ie,ia,id] > 0.0
+                    a_weight = interp_wgt[ie,ia,id].a_weight
+                    d_weight = interp_wgt[ie,ia,id].d_weight
 
-                    # Update the distribution
-                    for a_increm in 0:1
-                        for d_increm in 0:1
-                            a_weight = w_a[a_increm + 1]
-                            d_weight = w_d[d_increm + 1]
-                            aidx = lo_a + a_increm
-                            didx = lo_d + d_increm
+                    aidx = Int(coarse_idx[ie,ia,id]).a_lo; 
+                    didx = Int(coarse_idx[ie,ia,id]).d_lo; 
 
-                            # Ensure indices are within bounds
-                            if aidx <= sz.na && didx <= sz.nd
-                                for jp in 1:sz.np
-                                    for je in 1:sz.ne
-                                        tmat_val = tmat_e[ie, je] * tmat_p[ip, jp]
-                                        mew_new[jp, je, aidx, didx] += tmat_val * mew_old[ip, ie, ia, id] * a_weight * d_weight
-                                    end
-                                end
-                            end
+                    a_increm = min(sz.na-aidx,1)
+                    d_increm = min(sz.nd-didx,1)
+
+
+
+                    for iee in 1:sz.ne
+                        if tmat[iee,ie] > 0.0
+                            mew[iee,aidx,didx] = mew[iee,aidx,didx] + tmat[iee,ie]*mew_old[ie,ia,id] * (1-a_weight) * (1-d_weight)
+
+                            if sz.npa > sz.na + sz.npd > sz.nd  
+                                mew[iee,aidx+a_increm,didx] = mew[iee,aidx+a_increm,didx] + tmat[iee,ie]*mew_old[ie,ia,id] * a_weight * (1.0-d_weight)
+
+                                mew[iee,aidx,didx+d_increm] = mew[iee,aidx,didx+d_increm] + tmat[iee,ie]*mew_old[ie,ia,id] * (1.0-a_weight) * d_weight
+
+                                mew[iee,aidx+a_increm,didx+d_increm] = mew[iee,aidx+a_increm,didx+d_increm] + tmat[iee,ie]*mew_old[ie,ia,id] * a_weight * d_weight     
+                            end                       
                         end
                     end
                 end
             end
         end
     end
-
-    return mew_new
+    
+    return mew
 end
 
-function makeweight(answ::NamedTuple, k_wgt_a::NamedTuple, k_wgt_d::NamedTuple)
-    # Extract data components from the named tuples
+function makeweight(answ::NamedTuple, a_wgt::NamedTuple, d_wgt::NamedTuple) 
     gidx  = answ.gidx
-    pol   = answ.pol
-    grids = answ.g
-    kpg_a = grids.ap  # Grid points for `a`
-    kpg_d = grids.dp  # Grid points for `d` policy 
 
-    # Initialize interpolation weights and coarse indices dictionaries
-    interp_wgt = Dict()
-    coarse_idx = Dict()
 
-    # Loop over all state variables to calculate weights and indices
+    # Initialize interpolation weight storage
+    interp_wgt = [(a_weight=0.0, d_weight=0.0) for _ in 1:sz.ne, _ in 1:sz.na, _ in 1:sz.nd]
+    
+    # Initialize coarse index storage
+    coarse_idx = [(a_lo=0, d_lo=0) for _ in 1:sz.ne, _ in 1:sz.na, _ in 1:sz.nd]
+
     for id in 1:sz.nd
         for ia in 1:sz.na
             for ie in 1:sz.ne
-                for ip in 1:sz.np
-                    # Get the policy indices
-                    a_idx = gidx.a[ip, ie, ia, id]
-                    d_idx = gidx.d[ip, ie, ia, id]
+                g_idx = gidx[ie, ia, id]
 
-                    # Calculate interpolation weights for assets
-                    lo_a = k_wgt_a.lo[a_idx]
-                    hi_a = k_wgt_a.hi[a_idx]
-                    w_a = [k_wgt_a.w[a_idx], 1.0 - k_wgt_a.w[a_idx]]
+                # Assign lower indices (grid positions just below policy choices)
+                a_lo = a_wgt.lo[g_idx]
+                d_lo = d_wgt.lo[g_idx]
 
-                    # Calculate interpolation weights for durables
-                    lo_d = k_wgt_d.lo[d_idx]
-                    hi_d = k_wgt_d.hi[d_idx]
-                    w_d = [k_wgt_d.w[d_idx], 1.0 - k_wgt_d.w[d_idx]]
+                # Assign interpolation weights
+                a_weight = a_wgt.w[g_idx]
+                d_weight = d_wgt.w[g_idx]
 
-                    # Ensure indices are within bounds
-                    lo_a = min(max(lo_a, 1), sz.na)
-                    hi_a = min(max(hi_a, 1), sz.na)
-                    lo_d = min(max(lo_d, 1), sz.nd)
-                    hi_d = min(max(hi_d, 1), sz.nd)
-
-                    # Store the weights and indices
-                    interp_wgt[(ip, ie, ia, id)] = (w_a, w_d)
-                    coarse_idx[(ip, ie, ia, id)] = (lo_a, hi_a, lo_d, hi_d)
-                end
+                # Store in coarse_idx and interp_wgt
+                coarse_idx[ie, ia, id] = (a_lo=a_lo, d_lo=d_lo)
+                interp_wgt[ie, ia, id] = (a_weight=a_weight, d_weight=d_weight)
             end
         end
     end
 
     return interp_wgt, coarse_idx
 end
+

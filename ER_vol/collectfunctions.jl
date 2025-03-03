@@ -1,4 +1,4 @@
-# This contains all of the programs to do the VFI homework
+# This contains all of the programs
 # ============================================================================================================================
 # ============================================================================================================================
 #      FUNCTIONS FOLLOW
@@ -17,7 +17,6 @@
  include("makepol.jl")
  include("maxbellman_noadjust.jl")
  include("howard_noadjust.jl")
- include("makepol_noadjust.jl")
  include("mew.jl")
  include("tinybellman.jl")
  include("tinybellman_noadjust.jl")
@@ -36,11 +35,9 @@
  include("simmodel.jl") 
  include("girf.jl")
  include("simmodel_girf.jl")
- include("compute_girf.jl")
  include("interpol.jl")
 
 # ============Making moments ===============================
- include("kurtosis.jl"); #new moments
  include("momentgen.jl"); #wrapper
  include("makemoments.jl");
  include("adjustment_gaps.jl")

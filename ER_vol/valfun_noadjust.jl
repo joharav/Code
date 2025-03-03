@@ -1,5 +1,10 @@
 function valfun_noadjust(pea::Vector{Float64})
-    beta = pea[1]
+    beta        = pea[1]        # Discount factor
+    delta       = pea[2]        # Depreciation rate for durables
+    w           = pea[8]        # Wage rate
+    chi         = pea[9]        # Required maintenance
+    pd          = pea[10]       # Price of durables 
+    rr          = (1 / beta) - 1         # Discount rate
 
     # Initialize arrays
     v        = zeros(sz.ne, sz.na, sz.nd)     # value function
@@ -7,7 +12,7 @@ function valfun_noadjust(pea::Vector{Float64})
 
     # Initialize and instantiate the integer policy function
     gidx = dtp.Ipol(Int.(zeros(sz.ne, sz.na, sz.nd)), Int.(zeros(sz.ne, sz.na, sz.nd)))
-    pol = dtp.Pol(zeros(sz.ne, sz.na, sz.nd), zeros(sz.ne, sz.na, sz.nd))
+    pol = dtp.Pol(zeros(sz.ne, sz.na, sz.nd), zeros(sz.ne, sz.na, sz.nd), zeros(sz.ne, sz.na, sz.nd))
 
     # Initialize and instantiate the old integer policy function
     old = dtp.Ipol(Int.(zeros(sz.ne, sz.na, sz.nd)), Int.(zeros(sz.ne, sz.na, sz.nd)))  
@@ -88,11 +93,14 @@ function valfun_noadjust(pea::Vector{Float64})
                 gidx.d = 0
                 pol.a .= 0.0
                 pol.d .= 0.0
+                pol.c .= 0.0
                 break
             else
                 # Create the policy functions
                 pol.a = makepol(gidx.a, grids.ap)
                 pol.d = makepol(gidx.d, grids.dp)
+                pol.c = w .+ grids.ex .* grids.a .* (1 .+ rr) .- grids.ex .* pd .* delta .* chi .* pol.d .-  grids.ex .*  pol.a 
+
                 break
             end
         end

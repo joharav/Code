@@ -13,6 +13,7 @@ function simmodel(answ::NamedTuple)
     alle        = zeros(sz.nYears, sz.nFirms)
     alld        = zeros(sz.nYears, sz.nFirms)
     alld_adjust = zeros(sz.nYears, sz.nFirms)
+    allc        = zeros(sz.nYears, sz.nFirms)
     # Set up the transition matrix
     phatcdf = cumsum(tmat, dims=2)
     
@@ -41,6 +42,7 @@ function simmodel(answ::NamedTuple)
         vold =    v[picke,picka,pickd];
         aold = pol.a[picke,picka,pickd];
         dold = pol.d[picke,picka,pickd];
+        cold = pol.c[picke,picka,pickd];
         d_adjustold = d_adjust[picke,picka,pickd];
         
         for iti in 1:sz.nYears
@@ -51,6 +53,7 @@ function simmodel(answ::NamedTuple)
             aprime = interpol(eold,aold,dold,grids,pol.a); 
             dprime = interpol(eold,aold,dold,grids,pol.d);
             d_adjustprime = interpol(eold,aold,dold,grids,d_adjust);
+            cprime = interpol(eold,aold,dold,grids,pol.c);
 
             #This updates the shock index using the transition matrix 
             gap = globals.draws[iti+1, ifi] .- phatcdf[Int(ls[iti, ifi]),:];
@@ -65,12 +68,14 @@ function simmodel(answ::NamedTuple)
             alle[iti,ifi]           = eprime
             alld[iti,ifi]           = dprime[1]
             alld_adjust[iti,ifi]    = d_adjustprime[1]
+            allc[iti,ifi]           = cprime[1]
 
 
             vold=vprime[1]
             aold=aprime[1]
             dold=dprime[1]
             d_adjustold = d_adjustprime[1]
+            cold = cprime[1]
         end
     end
 
@@ -82,6 +87,6 @@ function simmodel(answ::NamedTuple)
         end
     end
 
-    outtuple = (v=allv::Array{Float64}, d=alld::Array{Float64}, a=alla::Array{Float64}, ex=alle::Array{Float64},d_adjust=alld_adjust::Array{Float64},adjust_indicator=adjust_indicator::Array{Float64})
-    return outtuple::NamedTuple{(:v, :d, :a, :ex, :d_adjust, :adjust_indicator)}
+    outtuple = (v=allv::Array{Float64}, d=alld::Array{Float64}, a=alla::Array{Float64}, ex=alle::Array{Float64},d_adjust=alld_adjust::Array{Float64},adjust_indicator=adjust_indicator::Array{Float64},c=allc::Array{Float64})
+    return outtuple::NamedTuple{(:v, :d, :a, :ex, :d_adjust, :adjust_indicator, :c)}
 end

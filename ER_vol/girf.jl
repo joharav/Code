@@ -1,11 +1,13 @@
 function bootstrap_girf(simul_shock, simul_noshock, B=1000, alpha=0.05)
-    nFirms = size(simul_shock.d, 2)
-    nYears = size(simul_shock.d, 1)
-    girf_bootstrap = zeros(nYears, B) 
+    girf_bootstrap = zeros(sz.nYears, B) 
 
     for b in 1:B
-        resample_idx = rand(1:nFirms, nFirms)  # Sample firms with replacement
-        girf_resample = 100/nFirms * sum(log.(simul_shock.d[:, resample_idx] ./ simul_noshock.d[:, resample_idx]), dims=2)
+        resample_idx = rand(1:sz.nFirms, sz.nFirms)  # Sample firms with replacement
+        if simul_shock==simul_shock.adjust_indicator
+            girf_resample = 100/sz.nFirms * sum(simul_shock[:, resample_idx] .- simul_noshock[:, resample_idx], dims=2)
+        else
+            girf_resample = 100/sz.nFirms * sum(log.(simul_shock[:, resample_idx] ./ simul_noshock[:, resample_idx]), dims=2)
+        end
         girf_bootstrap[:, b] = girf_resample[:]
     end
 
@@ -32,20 +34,18 @@ end
 
 function compute_and_plot_irfs(simul_shock, simul_noshock)
     # Compute GIRFs with bootstrap CIs
-    girf_v = bootstrap_girf(simul_shock.allv_shock, simul_noshock.allv_noshock)
-    girf_c = bootstrap_girf(simul_shock.allc_shock, simul_noshock.allc_noshock)
-    girf_d = bootstrap_girf(simul_shock.alld_shock, simul_noshock.alld_noshock)
-    girf_a = bootstrap_girf(simul_shock.alla_shock, simul_noshock.alla_noshock)
-    girf_dadjust = bootstrap_girf(simul_shock.alld_adjust_shock, simul_noshock.alld_adjust_noshock)
+    girf_c = bootstrap_girf(simul_shock.c, simul_noshock.c)
+    girf_d = bootstrap_girf(simul_shock.d, simul_noshock.d)
+    girf_a = bootstrap_girf(simul_shock.a, simul_noshock.a)
+    girf_adjust = bootstrap_girf(simul_shock.adjust_indicator, simul_noshock.adjust_indicator)
 
     # Plot each IRF
-    plot_irf_with_ci(girf_v.mean, girf_v.lower, girf_v.upper, "IRF - v", "Output/IRFs/IRF_v.png")
     plot_irf_with_ci(girf_c.mean, girf_c.lower, girf_c.upper, "IRF - c", "Output/IRFs/IRF_c.png")
     plot_irf_with_ci(girf_d.mean, girf_d.lower, girf_d.upper, "IRF - d", "Output/IRFs/IRF_d.png")
     plot_irf_with_ci(girf_a.mean, girf_a.lower, girf_a.upper, "IRF - a", "Output/IRFs/IRF_a.png")
-    plot_irf_with_ci(girf_dadjust.mean, girf_dadjust.lower, girf_dadjust.upper, "IRF - dadjust", "Output/IRFs/IRF_dadjust.png")
+    plot_irf_with_ci(girf_dadjust.mean, girf_dadjust.lower, girf_dadjust.upper, "IRF - adjust", "Output/IRFs/IRF_adjust.png")
 
-    return (girf_v, girf_c, girf_d, girf_a, girf_dadjust)
+    return (girf_v, girf_c, girf_d, girf_a, girf_adjust)
 end
 
 # Function to compute cumulative IRF over rolling windows

@@ -46,6 +46,7 @@ module dtp;
     mutable struct Pol
         a::Array{Float64,3}
         d::Array{Float64,3}
+        c::Array{Float64,3}
     end
 end
 

@@ -7,13 +7,13 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
     e = grids.ex       # Exchange rate grid
 
     # Model parameters
-    beta = pea[1]     # Discount factor
-    delta = pea[2]    # Depreciation rate for durables
-    nu = pea[5]       # Share parameter for nondurables
-    gamma = pea[6]    # Risk aversion
-    f = pea[7]        # Adjustment cost
-    w = pea[8]       # Wage rate
-    pd = pea[10]       # Wage rate
+    beta    = pea[1]        # Discount factor
+    delta   = pea[2]        # Depreciation rate for durables
+    nu      = pea[5]        # Share parameter for nondurables
+    gamma   = pea[6]        # Risk aversion
+    f       = pea[7]        # Adjustment cost
+    w       = pea[8]        # Wage rate
+    pd      = pea[10]       # durable price
 
 
     rr = (1 / beta) - 1 

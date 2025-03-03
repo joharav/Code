@@ -12,6 +12,7 @@ function simmodel_girf(answ::NamedTuple, T_shock::Int, shock_size::Float64)
     alle_shock        = zeros(sz.nYears, sz.nFirms)
     alld_shock        = zeros(sz.nYears, sz.nFirms)
     alld_adjust_shock = zeros(sz.nYears, sz.nFirms)
+    allc_shock        = zeros(sz.nYears, sz.nFirms)
     
     phatcdf = cumsum(tmat, dims=2)
     cdf_wgt = tmat'^100
@@ -36,6 +37,7 @@ function simmodel_girf(answ::NamedTuple, T_shock::Int, shock_size::Float64)
             aold = pol.a[picke,picka,pickd];
             dold = pol.d[picke,picka,pickd];
             d_adjustold = d_adjust[picke,picka,pickd];
+            cold = pol.c[picke,picka,pickd];
             
             for iti in 1:sz.nYears
                 eold = grids.ex[Int(ls[iti,1]),1]
@@ -48,7 +50,8 @@ function simmodel_girf(answ::NamedTuple, T_shock::Int, shock_size::Float64)
                 vprime = interpol(eold,aold,dold,grids,v);  
                 aprime = interpol(eold,aold,dold,grids,pol.a); 
                 dprime = interpol(eold,aold,dold,grids,pol.d);
-                d_adjustprime = interpol(eold,aold,dold,grids,d_adjust);           
+                d_adjustprime = interpol(eold,aold,dold,grids,d_adjust);     
+                cprime = interpol(eold,aold,dold,grids,pol.c);      
 
                 gap = globals.draws[iti+1, ifi] .- phatcdf[Int(ls[iti, ifi]),:]
                 gap = gap .< 0.0
@@ -62,12 +65,14 @@ function simmodel_girf(answ::NamedTuple, T_shock::Int, shock_size::Float64)
                 alle_shock[iti,ifi]           = eprime
                 alld_shock[iti,ifi]           = dprime[1]
                 alld_adjust_shock[iti,ifi]    = d_adjustprime[1]
+                allc_shock[iti,ifi]           = cprime[1]
 
 
                 vold=vprime[1]
                 aold=aprime[1]
                 dold=dprime[1]
                 d_adjustold = d_adjustprime[1]
+                cold=cprime[1]
 
                 end
         end
@@ -81,6 +86,6 @@ function simmodel_girf(answ::NamedTuple, T_shock::Int, shock_size::Float64)
         end
     end
     
-    outtuple = (v=allv_shock::Array{Float64}, d=alld_shock::Array{Float64}, a=alla_shock::Array{Float64}, ex=alle_shock::Array{Float64},d_adjust_shock=alld_adjust_shock::Array{Float64},adjust_indicator=adjust_indicator_shock::Array{Float64})
-    return outtuple::NamedTuple{(:v, :d, :a, :ex, :d_adjust, :adjust_indicator)}
+    outtuple = (v=allv_shock::Array{Float64}, d=alld_shock::Array{Float64}, a=alla_shock::Array{Float64}, ex=alle_shock::Array{Float64},d_adjust=alld_adjust_shock::Array{Float64},adjust_indicator=adjust_indicator_shock::Array{Float64}, c=allc_shock::Array{Float64})
+    return outtuple::NamedTuple{(:v, :d, :a, :ex, :d_adjust, :adjust_indicator, :c)}
 end

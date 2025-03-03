@@ -6,13 +6,13 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
     dp = grids.dp     # Future durable grid
     e = grids.ex      # Exchange rate grid
     # Model parameters
-    beta = pea[1]     # Discount factor
-    delta = pea[2]    # Depreciation rate for durables
-    nu = pea[5]       # Share parameter for nondurables
-    gamma = pea[6]    # Risk aversion
-    w = pea[8]        # Wage rate
-    chi = pea[9]      # Required maintenance
-    pd = pea[10]      # Price of durables 
+    beta        = pea[1]        # Discount factor
+    delta       = pea[2]        # Depreciation rate for durables
+    nu          = pea[5]        # Share parameter for nondurables
+    gamma       = pea[6]        # Risk aversion
+    w           = pea[8]        # Wage rate
+    chi         = pea[9]        # Required maintenance
+    pd          = pea[10]       # Price of durables 
 
 
     rr = (1 / beta) - 1 
