@@ -99,7 +99,7 @@ function valfun_noadjust(pea::Vector{Float64})
                 # Create the policy functions
                 pol.a = makepol(gidx.a, grids.ap)
                 pol.d = makepol(gidx.d, grids.dp)
-                pol.c = w .+ grids.ex .* grids.a .* (1 .+ rr) .- grids.ex .* pd .* delta .* chi .* pol.d .-  grids.ex .*  pol.a 
+              #  pol.c = w .+ grids.ex .* grids.a .* (1 .+ rr) .- grids.ex .* pd .* delta .* chi .* pol.d .-  grids.ex .*  pol.a 
 
                 break
             end

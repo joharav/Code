@@ -13,7 +13,8 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
     w           = pea[8]        # Wage rate
     chi         = pea[9]        # Required maintenance
     pd          = pea[10]       # Price of durables 
-
+    tau         = pea[12]       # tax rate
+    h           = pea[13]       # hours worked
 
     rr = (1 / beta) - 1 
 
@@ -28,7 +29,7 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
             Threads.@threads for ia in 1:sz.na
                 Threads.@threads for ie in 1:sz.ne
                     # Calculate consumption and durable goods stock
-                    c = w + e[ie] * a[ia] * (1 + rr) - e[ie] * pd * delta * chi * d[id] - e[ie] * ap[iia]
+                    c = w * h * (1-tau) + e[ie] * a[ia] * (1 + rr) - e[ie] * pd * delta * chi * d[id] - e[ie] * ap[iia]
 
                     # Check feasibility of consumption and durable goods stock
                     if c > 0 && ddp[id] > 0
@@ -41,7 +42,6 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
             end
         end
     end
-    println((iid))
 
     
     return util, iid

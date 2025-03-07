@@ -14,7 +14,9 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
     f       = pea[7]        # Adjustment cost
     w       = pea[8]        # Wage rate
     pd      = pea[10]       # durable price
-
+    ft      = pea[11]       # fixed cost on wage rate
+    tau     = pea[12]       # tax rate
+    h       = pea[13]       # hours worked
 
     rr = (1 / beta) - 1 
     # Initialize utility array
@@ -26,7 +28,7 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
                 Threads.@threads for ia in 1:sz.na
                     Threads.@threads for ie in 1:sz.ne
                         # Calculate consumption and durable goods stock
-                        c = w + e[ie] * a[ia] * (1 + rr) + e[ie] * pd * (1 - f) * (1 - delta) * d[id] -  e[ie] *  ap[iia] - e[ie] * pd * dp[iid]
+                        c = w * h * (1-tau) + e[ie] * a[ia] * (1 + rr) + e[ie] * pd * (1 - f) * (1 - delta) * d[id] -  e[ie] *  ap[iia] - e[ie] * pd * dp[iid] - w * h * ft
 
                         # Check feasibility of consumption and durable goods stock
                         if c > 0

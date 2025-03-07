@@ -99,7 +99,7 @@ function valfun_adjust(pea::Vector{Float64})
                 # Make the non-integer policy function
                 pol.a = makepol(gidx.a, grids.ap)
                 pol.d = makepol(gidx.d, grids.dp)
-                pol.c = w .+ grids.ex .* grids.a .* (1 .+ rr) .+ grids.ex .* pd .* (1 - f) .* (1 .- delta) .* grids.d .-  grids.ex .*  pol.a .-  grids.ex .* pd .* pol.d
+               # pol.c = w .+ grids.ex .* grids.a .* (1 .+ rr) .+ grids.ex .* pd .* (1 - f) .* (1 .- delta) .* grids.d .-  grids.ex .*  pol.a .-  grids.ex .* pd .* pol.d
                 break
             end
         end

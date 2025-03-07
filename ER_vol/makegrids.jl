@@ -13,22 +13,23 @@ function makegrids(ppp::Vector{Float64})
     # Exchange Rate
     nume = sz.ne
     numstd_e = sz.nstd_e
-    mew = 0.0
+    mew = 3.0
     eg, trans = tauchen(mew, sigma_e, rho_e, nume, numstd_e)
-    eg = exp.(eg)
+    println((eg))
+   
 
    
     ### Non-Adjust Case: Asset and Durable Grids
 
     # Asset Grid (Current Asset Holdings)
     a_min = 0.0
-    a_max = 20
+    a_max = 50
     ag = collect(range(a_min, stop=a_max, length=sz.na))
     apg = collect(range(a_min, stop=a_max, length=sz.npa))
 
     # Durable Grid (State)
     dmin = 0.0
-    dmax = 24.0
+    dmax = 60.0
     if sz.nd == 1
         dg = [0.0]
     else
@@ -61,7 +62,3 @@ function makegrids(ppp::Vector{Float64})
     return outtuple::NamedTuple{(:t,:a,:ap,:d,:dp,:ex)};
 end
 
-function maximum_nonadjust(w, rr, delta, chi, dg, eg, pd)
-    # Compute upper bound on assets given no adjustment
-    return w + (1 + rr) * maximum(eg) * w - pd * delta * chi * maximum(dg) * maximum(eg) + 10.0
-end
