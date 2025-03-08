@@ -5,5 +5,8 @@ include("collectfunctions.jl");
 using Main.sz, Main.kst, Main.settings, Main.globals, Main.dtp; 
 
 pea = ptrue(sz.nop); 
-moms = momentgen(pea);
+
+answ=valfun(pea);   
+
+#moms = momentgen(pea);
 #include("compstat.jl");

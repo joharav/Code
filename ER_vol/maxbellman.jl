@@ -1,9 +1,9 @@
 function maxbellman(queuelong::Array{Float64},util::Array{Float64})
     vnew = zeros(sz.ne,sz.na,sz.nd);
-
-    gidx = dtp.Ipol( Int.(zeros(sz.ne,sz.na,sz.nd)), Int.(zeros(sz.ne,sz.na,sz.nd)))
+    gidx = dtp.Ipol(Int.(zeros(sz.ne,sz.na,sz.nd)), Int.(zeros(sz.ne,sz.na,sz.nd)))
     beta = pea[1]
 
+    
     @Threads.threads for id in 1:sz.nd
         @Threads.threads for ia in 1:sz.na;
             @Threads.threads for ie in 1:sz.ne;

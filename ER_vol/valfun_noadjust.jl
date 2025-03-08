@@ -19,7 +19,7 @@ function valfun_noadjust(pea::Vector{Float64})
     
     # Make the grids and the profit flow
     grids = makegrids(pea)
-    ut, iid = utility_noadjust(grids, pea)
+    ut= utility_noadjust(grids, pea)
     tmat = grids.t
     errcode = 0
 
@@ -42,7 +42,6 @@ function valfun_noadjust(pea::Vector{Float64})
             queue[:, :, id] = tmat * v[:, :, id]
         end
 
-
         # =====interpolate
         if sz.na == sz.npa && sz.nd == sz.npd
             queuelong = queue
@@ -50,19 +49,19 @@ function valfun_noadjust(pea::Vector{Float64})
             queuelong = fillin(queue, grids)
         end
 
-        # =====maximize
+       # =====maximize
         # If it's early or if you can do Howard...
         if iter <= sz.earlyiter || sum_in_a_row == 0
             # If you cannot do Howard 
             if sum_in_a_row > 0
-                vnew, gidx = maxbellman_noadjust(queuelong, ut, iid)
+                vnew, gidx = maxbellman(queuelong, ut)
             # Otherwise do Howard
             else
-                vnew, gidx = howard_noadjust(queuelong, ut, iid, gidx)
+                vnew, gidx = howard(queuelong, ut, gidx)
             end
         # If you are past earlyiter and the policy function has not yet converged.
         else
-            vnew, gidx = tinybellman_noadjust(queuelong, ut, iid, gidx)
+            vnew, gidx = tinybellman(queuelong, ut, gidx)
         end
 
         # =====update -- McQueen-Porteus
@@ -89,8 +88,8 @@ function valfun_noadjust(pea::Vector{Float64})
         if gap < sz.toler || errcode > 0
             if errcode > 0
                 vnew = 0.0
-                gidx.a = 0
-                gidx.d = 0
+                gidx.a .= 0
+                gidx.d .= 0
                 pol.a .= 0.0
                 pol.d .= 0.0
                 pol.c .= 0.0
