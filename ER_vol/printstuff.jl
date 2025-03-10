@@ -5,6 +5,7 @@ function printstuff(answ::NamedTuple)
     pol = answ.pol
     apol = pol.a
     dpol = pol.d
+    cpol = pol.c
     grids = answ.g
 
     filename = "Output/Policy/v.txt"
@@ -65,6 +66,27 @@ function printstuff(answ::NamedTuple)
     end
     
     close(io)
+
+    filename = "Output/Policy/c.txt"
+    io = open(filename, "w")
+    
+    Threads.@threads for id in 1:sz.nd
+        Threads.@threads for ia in 1:sz.na
+            Threads.@threads for ie in 1:sz.ne
+                @printf(io, "%16.8f", cpol[ie, ia, id])
+                if ie < sz.ne
+                    @printf(io, " ")  # Space between p values
+                end
+                @printf(io, "\n")  # New line for each e within a w block
+            end
+            @printf(io, "\n")  # New line for each w within an a block
+        end
+        @printf(io, "\n")  # Extra newline to separate blocks of d for readability
+    end
+    
+    close(io)
+
+
 
     eg = grids.ex;
     ag = grids.a;

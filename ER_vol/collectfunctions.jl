@@ -11,15 +11,13 @@
  include("utility.jl")
  include("utility_noadjust.jl")
  include("fillin.jl")
- include("inbetween.jl")
+ #include("inbetween.jl")
  include("maxbellman.jl")
  include("howard.jl")
  include("makepol.jl")
- include("maxbellman_noadjust.jl")
- include("howard_noadjust.jl")
+ include("makepol_c.jl")
  include("mew.jl")
  include("tinybellman.jl")
- include("tinybellman_noadjust.jl")
  include("ptrue.jl")
 
 # ============ VFI =========================================
@@ -40,7 +38,7 @@
 # ============Making moments ===============================
  include("momentgen.jl"); #wrapper
  include("makemoments.jl");
- include("adjustment_gaps.jl")
+ #include("adjustment_gaps.jl")
  include("adj_gaps_sim.jl")
  include("welfare.jl")
 

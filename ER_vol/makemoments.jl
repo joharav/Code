@@ -52,6 +52,26 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     x_values_d_income       = collect(kde_ratio_d_income.x)
     x_values_d_wealth       = collect(kde_ratio_d_wealth.x)
     x_values_d_consumption  = collect(kde_ratio_d_consumption.x)
+    
+    #Dispersion measures
+    disp_d_income           =compute_dispersion(ratio_d_income)
+    disp_d_wealth           =compute_dispersion(ratio_d_wealth)
+    disp_d_c                =compute_dispersion(ratio_d_consumption)
+    disp_d                  =compute_dispersion(vec(d))
+
+    #Interquartile range
+    IQR_d_income            =disp_d_income[2]
+    IQR_d_wealth            =disp_d_wealth[2]
+    IQR_d_c                 =disp_d_c[2]
+    IQR_d                   =disp_d[2]
+
+    #90th to 10th percentile ratio
+    p90_10_d_income         =disp_d_income[3]
+    p90_10_d_wealth         =disp_d_wealth[3]
+    p90_10_d_c              =disp_d_c[3]
+    p90_10_d                =disp_d[3]
+
+
 
     # Populate outmoms
     outmoms[1]  = mu_d
@@ -93,6 +113,19 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
         plotdensities(x_values_d_income, f_d_income, "f_income")
         plotdensities(x_values_d_wealth, f_d_wealth, "f_wealth")
         plotdensities(x_values_d_consumption, f_d_consumption, "d_c")
+    
+        println("----------------------------------------------------------")
+        println("\nInterquartile ratio:\n")
+        println("Durable stock to income: $IQR_d_income\n")
+        println("Durable stock to wealth: $IQR_d_wealth\n")
+        println("Durable to consumption: $IQR_d_c\n")
+        println("Durables: $IQR_d\n")
+        println("\nPercentile 90th to 10th ratio:\n")
+        println("Durable stock to income: $p90_10_d_income\n")
+        println("Durable stock to wealth: $p90_10_d_wealth\n")
+        println("Durable to consumption: $p90_10_d_c\n")
+        println("Durables: $p90_10_d\n")
+        println("----------------------------------------------------------")
 
     end
 

@@ -1,53 +1,25 @@
-function bootstrap_girf(simul_shock, simul_noshock, B=1000, alpha=0.05)
-    girf_bootstrap = zeros(sz.nYears, B) 
-
-    for b in 1:B
-        resample_idx = rand(1:sz.nFirms, sz.nFirms)  # Sample firms with replacement
-        if simul_shock==simul_shock.adjust_indicator
-            girf_resample = 100/sz.nFirms * sum(simul_shock[:, resample_idx] .- simul_noshock[:, resample_idx], dims=2)
-        else
-            girf_resample = 100/sz.nFirms * sum(log.(simul_shock[:, resample_idx] ./ simul_noshock[:, resample_idx]), dims=2)
-        end
-        girf_bootstrap[:, b] = girf_resample[:]
-    end
-
-    lower_bound = quantile(girf_bootstrap, alpha/2, dims=2)
-    upper_bound = quantile(girf_bootstrap, 1 - alpha/2, dims=2)
-    mean_girf   = mean(girf_bootstrap, dims=2)
-
-    return (mean=mean_girf, lower=lower_bound, upper=upper_bound)
-end
-
-function plot_irf_with_ci(irf_mean::Vector{Float64}, irf_lower::Vector{Float64}, 
-    irf_upper::Vector{Float64}, title_str::String, filename::String)
-    x_axis = 1:length(irf_mean)  # X-axis representing time periods (quarters)
-
-    plot1 = plot(x_axis, irf_mean, lw=2, label="Mean IRF", title=title_str, xlabel="Quarters", ylabel="% Change from SS")
-    plot!(x_axis, irf_lower, lw=1, linestyle=:dash, label="Lower Bound", color=:gray)
-    plot!(x_axis, irf_upper, lw=1, linestyle=:dash, label="Upper Bound", color=:gray)
-    
-    # Shaded confidence interval
-    plot!(x_axis, irf_upper, fill_between=irf_lower, color=:gray, fillalpha=0.3, label="Confidence Interval")
-
-    savefig(plot1, filename)
-end
-
-function compute_and_plot_irfs(simul_shock, simul_noshock)
-    # Compute GIRFs with bootstrap CIs
-    girf_c = bootstrap_girf(simul_shock.c, simul_noshock.c)
-    girf_d = bootstrap_girf(simul_shock.d, simul_noshock.d)
-    girf_a = bootstrap_girf(simul_shock.a, simul_noshock.a)
-    girf_adjust = bootstrap_girf(simul_shock.adjust_indicator, simul_noshock.adjust_indicator)
-
-    # Plot each IRF
-    plot_irf_with_ci(girf_c.mean, girf_c.lower, girf_c.upper, "IRF - c", "Output/IRFs/IRF_c.png")
-    plot_irf_with_ci(girf_d.mean, girf_d.lower, girf_d.upper, "IRF - d", "Output/IRFs/IRF_d.png")
-    plot_irf_with_ci(girf_a.mean, girf_a.lower, girf_a.upper, "IRF - a", "Output/IRFs/IRF_a.png")
-    plot_irf_with_ci(girf_dadjust.mean, girf_dadjust.lower, girf_dadjust.upper, "IRF - adjust", "Output/IRFs/IRF_adjust.png")
-
-    return (girf_v, girf_c, girf_d, girf_a, girf_adjust)
-end
-
+using Plots
+function girf_plots(simul_shock::NamedTuple,simul_noshock::NamedTuple)
+     girf_c          = 100/sz.nFirms * sum(log.(simul_shock.c ./ simul_noshock.c), dims=2)
+     girf_d          = 100/sz.nFirms * sum(log.(simul_shock.d ./ simul_noshock.d), dims=2)
+     girf_a          = 100/sz.nFirms * sum(log.(simul_shock.a ./ simul_noshock.a), dims=2)
+ 
+     #Plot IRFs
+     plot1=plot(girf_c, title="IRF", xlabel="Quarters", ylabel="% Change from SS", legend=false)
+     savefig(plot1, "Output/IRFs/IRF_c.png")
+ 
+     plot2=plot(girf_d, title="IRF", xlabel="Quarters", ylabel="% Change from SS", legend=false)
+     savefig(plot2, "Output/IRFs/IRF_d.png")
+ 
+     plot3=plot(girf_a, title="IRF", xlabel="Quarters", ylabel="% Change from SS", legend=false)
+     savefig(plot3, "Output/IRFs/IRF_a.png")
+ 
+     outuple=( girf_c, girf_d, girf_a)
+ 
+     return outuple
+ end
+ 
+ 
 # Function to compute cumulative IRF over rolling windows
 function compute_cirf(irf_results::Vector{Float64}, window_size::Int,x::String)
     param_str = string(x, "_", @sprintf("%.4f", window_size))
@@ -60,7 +32,7 @@ function compute_cirf(irf_results::Vector{Float64}, window_size::Int,x::String)
         end_period = min(t + window_size - 1, irf_periods)  # Ensure we don't go out of bounds
         cirf_vector[t] = sum(irf_results[start_period:end_period])
     end
-
+    local plot 
     plot=plot(cirf_vector, title="Cumulative CIRF", xlabel="Quarters", ylabel="% Change from SS")
     savefig(plot, "Output/IRFs/CIRF_($param_str).png")
 

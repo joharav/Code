@@ -1,24 +1,26 @@
 function makegrids(ppp::Vector{Float64})
-    beta = ppp[1]
     delta = ppp[2]
     rho_e = ppp[3]
     sigma_e = ppp[4]
-    f = ppp[7]
-    w = ppp[8]
-    chi = ppp[9]
-    pd = ppp[10]
+    chi = ppp[5]
 
-    rr = (1 / beta) - 1
 
     # Exchange Rate
     nume = sz.ne
     numstd_e = sz.nstd_e
     mew = 3.0
     eg, trans = tauchen(mew, sigma_e, rho_e, nume, numstd_e)
-    println((eg))
-   
 
-   
+#     # Idiosyncratic income
+#     numy = sz.ne
+#     numstd_y = sz.nstd_e
+#     mew = 0.0
+#     yg, trans_y = tauchen(mew, sigma_y, rho_y, numy, numstd_y)
+
+#    #Kronecker 
+#    trans = kron(trans_e, trans_y)
+
+
     ### Non-Adjust Case: Asset and Durable Grids
 
     # Asset Grid (Current Asset Holdings)

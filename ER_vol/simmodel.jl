@@ -20,7 +20,7 @@ function simmodel(answ::NamedTuple)
     cdf_wgt = tmat'^100
     cdf_wgt = cumsum(cdf_wgt[:,Int(floor(sz.ne*0.5))+1])
 
-    # ls is the indices of the (p, e) shocks in the simulation. stands for "locations" 
+    # ls is the indices of the shocks in the simulation. stands for "locations" 
     # This sets the starting locations from the unconditional distribution
     ls = zeros(sz.nYears+1,sz.nFirms);
     for ifi in 1:sz.nFirms;

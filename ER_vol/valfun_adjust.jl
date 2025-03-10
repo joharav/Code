@@ -1,10 +1,5 @@
 function valfun_adjust(pea::Vector{Float64})
     beta    = pea[1]        # Discount factor
-    delta   = pea[2]        # Depreciation rate for durables
-    f       = pea[7]        # Adjustment cost
-    w       = pea[8]        # Wage rate
-    pd      = pea[10]       # durable price
-    rr      = (1 / beta) - 1     # Discount rate
 
     # Initialize arrays
     v        = zeros(sz.ne, sz.na, sz.nd)     # value function
@@ -28,8 +23,6 @@ function valfun_adjust(pea::Vector{Float64})
     sum_in_a_row    = 1000                  # sum of the last maxpolit policy function differences 
     gap             = 1000.0                # value function difference
     pgap            = 1000                  # policy function difference
-
-
 
     # Do the VFI
     Threads.@threads for iter in 1:sz.maxiter
@@ -98,7 +91,7 @@ function valfun_adjust(pea::Vector{Float64})
                 # Make the non-integer policy function
                 pol.a = makepol(gidx.a, grids.ap)
                 pol.d = makepol(gidx.d, grids.dp)
-               # pol.c = w .+ grids.ex .* grids.a .* (1 .+ rr) .+ grids.ex .* pd .* (1 - f) .* (1 .- delta) .* grids.d .-  grids.ex .*  pol.a .-  grids.ex .* pd .* pol.d
+                pol.c = makepol_c(pol.a, pol.d, grids, 1) 
                 break
             end
         end

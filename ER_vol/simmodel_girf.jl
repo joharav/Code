@@ -1,6 +1,6 @@
 #Generalized Impulse Response Function
 
-function simmodel_girf(answ::NamedTuple, T_shock::Int, shock_size::Float64)
+function simmodel_girf(answ::NamedTuple, T_shock::Int)
     v = answ.v
     pol = answ.pol
     grids = answ.g
@@ -43,15 +43,15 @@ function simmodel_girf(answ::NamedTuple, T_shock::Int, shock_size::Float64)
                 eold = grids.ex[Int(ls[iti,1]),1]
                 
                 if iti == T_shock
-                    eold *= (1 + shock_size)  # Apply the exchange rate shock
+                    eold = grids.ex[sz.ne]  # Apply the exchange rate shock
                 end
 
                 #This updates the simulated variables using simple interpolation
-                vprime = interpol(eold,aold,dold,grids,v);  
                 aprime = interpol(eold,aold,dold,grids,pol.a); 
                 dprime = interpol(eold,aold,dold,grids,pol.d);
                 d_adjustprime = interpol(eold,aold,dold,grids,d_adjust);     
                 cprime = interpol(eold,aold,dold,grids,pol.c);      
+                vprime = interpol(eold,aold,dold,grids,v);  
 
                 gap = globals.draws[iti+1, ifi] .- phatcdf[Int(ls[iti, ifi]),:]
                 gap = gap .< 0.0

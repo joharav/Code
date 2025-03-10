@@ -7,7 +7,7 @@ module sz;
     const pad       = 11;            #number of points to search around the previous point
     const nYears    = 10100;         #number of years to simulate
     const burnin    = 250;           #number of initial years to toss
-    const nFirms    = 5000;           #number of firms to simulate
+    const nFirms    = 1000;           #number of firms to simulate
     const nmom      = 13;             #number of moments to calculate
     const maxiter   = 5000;          #maximum number of VFI iterations
     const maxditer  = 1000;          #maximum number of iterations for the stationary distribution
@@ -35,6 +35,9 @@ module kst;
     const ft     = 0.10;       # Fixed cost on wage rate
     const tau    = 0.25;       # Tax rate
     const h      = 1/3;        # Hours worked
+    #const rho_y  = 0.95;       # AR(1) persistence for idiosyncratic income
+    #const sigma_y= 0.1;        # Volatility of idiosyncratic income shock
+
 end;
 
 module dtp;
@@ -65,6 +68,6 @@ end;
 
 module settings; 
     const compstat      = true; 
-    const verbose       = false; 
+    const verbose       = true; 
     const complicated   = false;     # Complicated = true is an identity weight matrix. Otherwise, optimal weight matrix. 
 end

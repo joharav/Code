@@ -1,10 +1,5 @@
 function valfun_noadjust(pea::Vector{Float64})
     beta        = pea[1]        # Discount factor
-    delta       = pea[2]        # Depreciation rate for durables
-    w           = pea[8]        # Wage rate
-    chi         = pea[9]        # Required maintenance
-    pd          = pea[10]       # Price of durables 
-    rr          = (1 / beta) - 1         # Discount rate
 
     # Initialize arrays
     v        = zeros(sz.ne, sz.na, sz.nd)     # value function
@@ -28,8 +23,6 @@ function valfun_noadjust(pea::Vector{Float64})
     sum_in_a_row    = 1000                  # sum of the last maxpolit policy function differences 
     gap             = 1000.0                # value function difference
     pgap            = 1000                  # policy function difference
-
-
 
     # Do the VFI
     Threads.@threads for iter in 1:sz.maxiter
@@ -98,7 +91,7 @@ function valfun_noadjust(pea::Vector{Float64})
                 # Create the policy functions
                 pol.a = makepol(gidx.a, grids.ap)
                 pol.d = makepol(gidx.d, grids.dp)
-              #  pol.c = w .+ grids.ex .* grids.a .* (1 .+ rr) .- grids.ex .* pd .* delta .* chi .* pol.d .-  grids.ex .*  pol.a 
+                pol.c = makepol_c(pol.a, pol.d, grids, 0) 
 
                 break
             end
