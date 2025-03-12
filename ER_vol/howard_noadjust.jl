@@ -8,7 +8,7 @@ function howard_noadjust(queuelong::Array{Float64}, util::Array{Float64}, iid, g
         Threads.@threads for ia in 1:sz.na
             Threads.@threads for ie in 1:sz.ne
                 iia = gidx.a[ie, ia, id]
-                vnew[ie, ia, id] = util[ie, ia, id, iia] + beta * queuelong[ie, iia, iiid]
+                vnew[ie, ia, id] = util[ie, ia, id, iia,iiid] + beta * queuelong[ie, iia, iiid]
             end
         end
     end

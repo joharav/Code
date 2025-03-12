@@ -1,5 +1,7 @@
 function valfun_noadjust(pea::Vector{Float64})
     beta        = pea[1]        # Discount factor
+    delta       = pea[2]        # Depreciation rate
+    chi         = pea[9]        # Non-adjustment cost
 
     # Initialize arrays
     v        = zeros(sz.ne, sz.na, sz.nd)     # value function
@@ -14,6 +16,10 @@ function valfun_noadjust(pea::Vector{Float64})
     
     # Make the grids and the profit flow
     grids = makegrids(pea)
+    d = grids.d 
+    dp = grids.dp
+    ddp= (1 - delta * (1 - chi)) .* d  # Apply non-adjustment    
+    iid = [argmin(abs.(dp .- ddp[id])) for id in 1:sz.nd]
     ut= utility_noadjust(grids, pea)
     tmat = grids.t
     errcode = 0
@@ -44,18 +50,28 @@ function valfun_noadjust(pea::Vector{Float64})
 
        # =====maximize
         # If it's early or if you can do Howard...
-        if iter <= sz.earlyiter || sum_in_a_row == 0
+       # if iter <= sz.earlyiter || sum_in_a_row == 0
             # If you cannot do Howard 
-            if sum_in_a_row > 0
-                vnew, gidx = maxbellman(queuelong, ut)
+        #    if sum_in_a_row > 0
+                vnew, gidx = maxbellman_noadjust(queuelong, ut,iid)
             # Otherwise do Howard
-            else
-                vnew, gidx = howard(queuelong, ut, gidx)
-            end
+         #   else
+          #      vnew, gidx = howard_noadjust(queuelong, ut, iid, gidx)
+          #  end
         # If you are past earlyiter and the policy function has not yet converged.
-        else
-            vnew, gidx = tinybellman(queuelong, ut, gidx)
+        #else
+         #   vnew, gidx = tinybellman_noadjust(queuelong, ut, iid, gidx)
+        #end
+
+        
+        @Threads.threads for id in 1:sz.nd
+            @Threads.threads for ia in 1:sz.na;
+                @Threads.threads for ie in 1:sz.ne;
+                    gidx.d[ie,ia,id] = iid[id]
+                end
+            end
         end
+
 
         # =====update -- McQueen-Porteus
         vdiff = vnew - v
@@ -90,7 +106,7 @@ function valfun_noadjust(pea::Vector{Float64})
             else
                 # Create the policy functions
                 pol.a = makepol(gidx.a, grids.ap)
-                pol.d = makepol(gidx.d, grids.dp)
+                pol.d = makepol_d_na(grids.d)
                 pol.c = makepol_c(pol.a, pol.d, grids, 0) 
 
                 break
