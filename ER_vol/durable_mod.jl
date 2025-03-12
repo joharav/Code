@@ -32,7 +32,7 @@ module kst;
     const w      = 1.0;        # Wage rate
     const chi    = 0.80;       # Required maintenance 
     const pd     = 5.0;        # Price of durable goods
-    const ft     = 0.10;       # Fixed cost on wage rate
+    const ft     = 0.20;       # Fixed cost on wage rate
     const tau    = 0.25;       # Tax rate
     const h      = 1/3;        # Hours worked
     #const rho_y  = 0.95;       # AR(1) persistence for idiosyncratic income

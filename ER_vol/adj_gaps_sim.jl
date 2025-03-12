@@ -5,9 +5,11 @@ using Plots
 
 function adjustment_gaps_sim(current_d,d_a,adjustment_indicator)
     # Calculate the adjustement gaps
-    gaps    = zeros(size(current_d))
     gaps    = log.(d_a) .- log.(current_d)
     gap_vec = vec(gaps)
+    # Compute KDE for only the adjusted cases
+    @views adjusted_gaps = gap_vec[adjustment_indicator .== 1]
+
 
     # Calculate the moments of the gap 
     mu_gap  = mean(gap_vec)
@@ -19,8 +21,7 @@ function adjustment_gaps_sim(current_d,d_a,adjustment_indicator)
     f_x      = kd.density
     x_values = collect(kd.x)  
 
-    # Compute KDE for only the adjusted cases
-    adjusted_gaps = gap_vec[adjustment_indicator .== 1]
+
 
     if !isempty(adjusted_gaps)  # Ensure we have valid data
         kde_f_adj = kde(adjusted_gaps)
@@ -36,12 +37,11 @@ function adjustment_gaps_sim(current_d,d_a,adjustment_indicator)
     total_states = length(adjustment_indicator)
     adjustment_ratio = num_adjustments / total_states
     
-    println("Total Adjustments: ", num_adjustments)
-    println("Total States: ", total_states)
-    println("Adjustment Ratio: ", adjustment_ratio*100)
+    println("Total Adjustments: $num_adjustments / $total_states")
+    println("Adjustment Ratio: $(round(adjustment_ratio * 100, digits=2))%")
 
     # Compute h(x) = f_adj(x) / f(x), avoiding division by zero
-    h_x = f_adj_x ./ (f_x .+ 1e-10)
+    h_x = max.(f_adj_x ./ (f_x .+ 1e-10), 0)
 
     # Compute the aggregate durable expenditures I_d
     I_d = sum(x_values .* h_x .* f_x)

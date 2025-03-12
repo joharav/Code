@@ -25,8 +25,8 @@ function simmodel_girf(answ::NamedTuple, T_shock::Int)
         ls[1,ifi] = findfirst(gap)
     end
 
-        global astart = rand(sz.nFirms)
-        global dstart = rand(sz.nFirms)
+    global astart = globals.draws[1, :]
+    global dstart = globals.draws[2, :]
 
         Threads.@threads for ifi in 1:sz.nFirms
             picka = min(Int(floor(sz.na * astart[ifi])) + 1, sz.na)

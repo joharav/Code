@@ -30,8 +30,8 @@ function simmodel(answ::NamedTuple)
     end;
 
     # This is the actual simulation 
-    global astart = rand(sz.nFirms)
-    global dstart = rand(sz.nFirms)
+    global astart = globals.draws[1, :]
+    global dstart = globals.draws[2, :]
     
     Threads.@threads for ifi in 1:sz.nFirms
         # Pick the starting point for the time series 

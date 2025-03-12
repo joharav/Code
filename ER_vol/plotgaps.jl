@@ -1,6 +1,6 @@
 function plotgaps(x_values::Vector{Float64}, f_x::Vector{Float64}, h_x::Vector{Float64}, gap_vec::Vector{Float64})
     # Ensure the output directory exists
-    output_dir = "Output/Gaps/Comparative"
+    output_dir = "Output/Gaps"
     if !isdir(output_dir)
         mkpath(output_dir)
     end
