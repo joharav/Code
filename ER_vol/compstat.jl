@@ -7,8 +7,9 @@ using Main.sz, Main.settings, Main.kst, Main.dtp
 
 commence = time()
 
-# Define moment of interest
-momname = ["adjustment_ratio"]
+# Define moments of interest
+momname = ["adjustment_ratio", "mu_d_c", "mu_d_wealth", "mu_gap"]
+momorder = [13, 9, 8, 10]  # Indices of the selected moments
 pname = ["beta", "delta", "rho_e", "sigma_e", "nu", "gamma", "f", "w", "chi", "pd", "ft", "tau", "h"]
 
 # Get the true parameter values
@@ -17,29 +18,30 @@ pea = ptrue(sz.nop)
 # Number of variations per parameter
 nvary  = 8  
 nparam = sz.nop  
+nnmom   = length(momname)  # Number of selected moments
 
 # Define parameters to vary
-varying_params = [7, 9, 1, 2, 3, 4, 5, 6, 8, 10, 11, 12]  
+varying_params = [7, 9, 11]  
 
 # Define parameter ranges (min, max)
 maxmin = [
     0.80  0.95;  # beta (Discount factor)
     0.05  0.40;  # delta (Depreciation rate)
-    0.3  0.8;    # rho_e (Persistence of exchange rate shock)
-    0.2  0.80;   # sigma_e (Volatility of exchange rate shock)
+    0.3   0.8;   # rho_e (Persistence of exchange rate shock)
+    0.2   0.80;  # sigma_e (Volatility of exchange rate shock)
     0.40  0.90;  # nu (Share parameter for nondurable consumption)
     1.00  3.00;  # gamma (Risk aversion)
-    0.10  0.80;  # f (Adjustment fixed cost)
+    0.80  0.90;  # f (Adjustment fixed cost)
     0.50  5.00;  # w (Wage)
-    0.2   0.9;   # chi (Required maintenance)
+    0.1   0.8;   # chi (Required maintenance)
     2     8;     # pd (Price of durables)
-    0.10  0.60;  # ft (Fixed cost on wage rate)
+    0.80  0.90;  # ft (Fixed cost on wage rate)
     0.10  0.60;  # tau (Tax rate)
 ]
 
-# Storage for parameter values and the adjustment ratio
+# Storage for parameter values and selected moments
 allparams = zeros(nvary, nparam)  
-adjustment_ratios = zeros(nvary, nparam)  # Only storing this moment
+allmoms = zeros(nvary, nparam, nnmom)  # Store only the selected moments
 
 # Loop over selected parameters
 for iparam in varying_params
@@ -56,22 +58,24 @@ for iparam in varying_params
         # Compute the moments
         moms = momentgen(ppp)
 
-        # Store only the adjustment ratio
+        # Store parameter values and selected moments
         allparams[ivary, iparam] = glop
-        adjustment_ratios[ivary, iparam] = moms[1]  # Assuming adjustment_ratio is the first moment
+        allmoms[ivary, iparam, :] = moms[momorder]  # Select relevant moments
 
     end
 end
 
-# Plot results for the adjustment ratio
+# Generate plots for each selected parameter and moment
 for iparam in varying_params
-    ptitle = "Parameter: $(pname[iparam]), Moment: Adjustment Ratio"
-    plot_comp = Plots.plot(allparams[:, iparam], adjustment_ratios[:, iparam], 
-                           xlabel=pname[iparam], ylabel="Adjustment Ratio",
-                           legend=false, label=" ")
+    for (i, imom) in enumerate(momorder)
+        ptitle = "Parameter: $(pname[iparam]), Moment: $(momname[i])"
+        plot_comp = Plots.plot(allparams[:, iparam], allmoms[:, iparam, i], 
+                               xlabel=pname[iparam], ylabel=momname[i],
+                               legend=false, label=" ")
 
-    filename = "Output/Comparative/moment_$(pname[iparam])_adjustment_ratio.png"
-    savefig(plot_comp, filename)
+        filename = "Output/Comparative/moment_$(pname[iparam])_$(momname[i]).png"
+        savefig(plot_comp, filename)
+    end
 end
 
 # Time tracking

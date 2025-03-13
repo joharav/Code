@@ -31,7 +31,7 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
                 Threads.@threads for ia in 1:sz.na
                     Threads.@threads for ie in 1:sz.ne
                         # Calculate consumption and durable goods stock
-                        c = w * h * (1-tau) + e[ie] * a[ia] * (1 + rr) - e[ie] * pd * delta * chi * d[id] - e[ie] * ap[iia]
+                        c = w * h * (1-tau) + a[ia] * (1 + rr) - e[ie] * pd * delta * chi * d[id] -  ap[iia]
                         ddp = (1 - delta) * d[id]
                         # Check feasibility of consumption and durable goods stock
                         if c > 0 && ddp > 0
@@ -47,9 +47,9 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
             end
         end
     end
-     penalty_share = penalty_count / (sz.ne * sz.na * sz.nd * sz.npa * sz.npd)
-     println("Number of penalized states NA: ", penalty_count)
-     println("Share of penalized states NA: ", penalty_share)
+#     penalty_share = penalty_count / (sz.ne * sz.na * sz.nd * sz.npa * sz.npd)
+#     println("Number of penalized states NA: ", penalty_count)
+#     println("Share of penalized states NA: ", penalty_share)
 
 
 #     filename = "Output/Policy/U_NoAdjust.txt"
