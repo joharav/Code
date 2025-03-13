@@ -2,8 +2,8 @@ module sz;
     const nd        = 21;            #number of points in the durable state grid
     const na        = 21;            #number of points in the asset state grid
     const ne        = 7;            #number of points in the exchange rate grid
-    const npd       = 81;            #number of points in the durable policy grid
-    const npa       = 81;            #number of points in the asset policy grid
+    const npd       = 51;            #number of points in the durable policy grid
+    const npa       = 51;            #number of points in the asset policy grid
     const pad       = 11;            #number of points to search around the previous point
     const nYears    = 10100;         #number of years to simulate
     const burnin    = 250;           #number of initial years to toss
@@ -28,11 +28,11 @@ module kst;
     const sigma_e= 0.64;       # Volatility of exchange rate shock
     const nu     = 0.88;       # Share parameter for nondurable consumption
     const gamma  = 2;          # Risk aversion parameter
-    const f      = 0.2;        # Adjustment fixed cost
+    const f      = 0.5;        # Adjustment fixed cost
     const w      = 1.0;        # Wage rate
     const chi    = 0.80;       # Required maintenance 
     const pd     = 5.0;        # Price of durable goods
-    const ft     = 0.20;       # Fixed cost on wage rate
+    const ft     = 0.50;       # Fixed cost on wage rate
     const tau    = 0.25;       # Tax rate
     const h      = 1/3;        # Hours worked
     #const rho_y  = 0.95;       # AR(1) persistence for idiosyncratic income
@@ -68,6 +68,6 @@ end;
 
 module settings; 
     const compstat      = true; 
-    const verbose       = false; 
+    const verbose       = true; 
     const complicated   = false;     # Complicated = true is an identity weight matrix. Otherwise, optimal weight matrix. 
 end

@@ -1,0 +1,171 @@
+GKS: cannot open display - headless operation mode active
+┌ Warning: No strict ticks found
+└ @ PlotUtils ~/.julia/packages/PlotUtils/dVEMd/src/ticks.jl:194
+┌ Warning: No strict ticks found
+└ @ PlotUtils ~/.julia/packages/PlotUtils/dVEMd/src/ticks.jl:194
+ERROR: LoadError: boundary (a,b) must have a < b
+Stacktrace:
+ [1] error(s::String)
+   @ Base ./error.jl:35
+ [2] kde_range
+   @ ~/.julia/packages/KernelDensity/uv9BT/src/univariate.jl:83 [inlined]
+ [3] #kde#1
+   @ ~/.julia/packages/KernelDensity/uv9BT/src/univariate.jl:172 [inlined]
+ [4] kde(data::Vector{Float64}; bandwidth::Float64, kernel::Type, npoints::Int64, boundary::Tuple{Float64, Float64}, weights::KernelDensity.UniformWeights{9853000})
+   @ KernelDensity ~/.julia/packages/KernelDensity/uv9BT/src/univariate.jl:187
+ [5] kde(data::Vector{Float64})
+   @ KernelDensity ~/.julia/packages/KernelDensity/uv9BT/src/univariate.jl:183
+ [6] makemoments(simdata::@NamedTuple{v::Matrix{Float64}, d::Matrix{Float64}, a::Matrix{Float64}, ex::Matrix{Float64}, d_adjust::Matrix{Float64}, adjust_indicator::Matrix{Float64}, c::Matrix{Float64}}, pea::Vector{Float64})
+   @ Main /nfs/turbo/lsa-joharav/Lumpy_Durable_Dollar/Code/Dollar/ER_vol/makemoments.jl:44
+ [7] momentgen(p::Vector{Float64})
+   @ Main /nfs/turbo/lsa-joharav/Lumpy_Durable_Dollar/Code/Dollar/ER_vol/momentgen.jl:11
+ [8] top-level scope
+   @ /nfs/turbo/lsa-joharav/Lumpy_Durable_Dollar/Code/Dollar/ER_vol/compstat.jl:57
+in expression starting at /nfs/turbo/lsa-joharav/Lumpy_Durable_Dollar/Code/Dollar/ER_vol/compstat.jl:45
+Varying parameter f iteration 1
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 139.9567461013794
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter f iteration 2
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 131.38151693344116
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter f iteration 3
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 134.09073281288147
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter f iteration 4
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 134.65385818481445
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter f iteration 5
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 134.02024698257446
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter f iteration 6
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 131.75079202651978
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter f iteration 7
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 133.65945410728455
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter f iteration 8
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 136.0038239955902
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter chi iteration 1
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 135.063570022583
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter chi iteration 2
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 133.53958415985107
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter chi iteration 3
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 133.80304098129272
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter chi iteration 4
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 133.73444890975952
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter chi iteration 5
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 135.4351098537445
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter chi iteration 6
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 135.88102006912231
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter chi iteration 7
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 133.41888785362244
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter chi iteration 8
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 135.9124240875244
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter beta iteration 1
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 132.90894603729248
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter beta iteration 2
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 134.4757080078125
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter beta iteration 3
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 133.50166988372803
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter beta iteration 4
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 134.3179190158844
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%
+Varying parameter beta iteration 5
+Total Adjustments: 3087
+Total States: 3087
+Adjustment Ratio: 1.0
+elapse of time in seconds = 132.2536540031433
+Total Adjustments: 9853000 / 9853000
+Adjustment Ratio: 100.0%

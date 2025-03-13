@@ -23,7 +23,7 @@ function makepol_c(apol::Array{Float64}, dpol::Array{Float64}, grid::NamedTuple,
                 if ind==0
                     cpol[ie,ia,id] = w * h * (1-tau) + e[ie] * a[ia] * (1 .+  rr) - e[ie] * pd * delta * chi * d[id] -  e[ie] *  apol[ie,ia,id]
                 else
-                    cpol[ie,ia,id] = w * h * (1-tau) + e[ie] * a[ia] + e[ie] * pd * (1 - f) * (1 - delta) * d[id] -   e[ie] *  apol[ie,ia,id] - e[ie] * pd * dpol[ie,ia,id] - w * h * ft
+                    cpol[ie,ia,id] = w * h * (1-tau) + e[ie] * a[ia] * (1 .+  rr) + e[ie] * pd * (1 - f) * (1 - delta) * d[id] -   e[ie] *  apol[ie,ia,id] - e[ie] * pd * dpol[ie,ia,id] - w * h * ft
                 end;
                 cpol[ie,ia,id] = max(cpol[ie,ia,id], 0.1)  # Ensure c is at least 0.1
 

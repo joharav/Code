@@ -44,18 +44,18 @@ function valfun_adjust(pea::Vector{Float64})
 
         # =====maximize
         # If it's early or if you can do Howard...
-        #if iter <= sz.earlyiter || sum_in_a_row == 0
+        if iter <= sz.earlyiter || sum_in_a_row == 0
             # If you cannot do Howard 
-        #    if sum_in_a_row > 0
+            if sum_in_a_row > 0
                 vnew, gidx = maxbellman(queuelong, ut)
             # Otherwise do Howard
-         #   else
-          #      vnew, gidx = howard(queuelong, ut, gidx)
-           # end
+            else
+                vnew, gidx = howard(queuelong, ut, gidx)
+            end
         # If you are past earlyiter and the policy function has not yet converged.
-        #else
-         #   vnew, gidx = tinybellman(queuelong, ut, gidx)
-        #end
+        else
+            vnew, gidx = tinybellman(queuelong, ut, gidx)
+        end
 
         # =====update -- McQueen-Porteus
         vdiff = vnew - v
@@ -69,7 +69,7 @@ function valfun_adjust(pea::Vector{Float64})
         v = vnew .+ adjfactor
         old.a = gidx.a
         old.d = gidx.d
-        if mod(iter, 10) == 0 && settings.verbose
+        if mod(iter, 50) == 0 && settings.verbose
             println("iter = ", iter, " function diff = ", gap, " policy diff = ", pgap)
         end
         if iter == sz.maxiter
