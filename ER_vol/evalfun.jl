@@ -9,9 +9,15 @@ pea = ptrue(sz.nop);
 #answ=valfun(pea);   
 
 moms = momentgen(pea);
-#include("compstat.jl");
 
+if settings.specif_two
+    include("Specification_2/evalfun.jl")
+end
+
+if settings.compstat
+    include("compstat.jl")
+end
 
 println("done with solving the model")
-#include("compare_utilities.jl");
-include("Specification_2/evalfun.jl")
+
+

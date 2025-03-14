@@ -67,8 +67,9 @@ module globals;
 end;
 
 module settings; 
-    const compstat      = true; 
+    const compstat      = false; 
     const verbose       = true; 
     const complicated   = false;     # Complicated = true is an identity weight matrix. Otherwise, optimal weight matrix. 
     const irfsshock     = true;     
+    const specif_two    = false;
 end
