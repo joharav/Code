@@ -1,6 +1,6 @@
-using Plots
+function plotdensities(x_values::Vector{Float64}, f_x::Vector{Float64}, variable_name::String; shock::Bool = settings.irfsshock)
+    filename_suffix = shock ? "_shock" : ""
 
-function plotdensities(x_values::Vector{Float64}, f_x::Vector{Float64}, variable_name::String)
     # Plot the density
     p1 = plot(x_values, f_x, label="Density", xlabel="Values", ylabel="Density", legend=:topleft, color=:blue)
 
@@ -11,5 +11,5 @@ function plotdensities(x_values::Vector{Float64}, f_x::Vector{Float64}, variable
     end
 
     # Save the plot with a specific filename
-    savefig(p1, joinpath(output_dir, "Density_ratios_$variable_name.png"))
+    savefig(p1, joinpath(output_dir, "Density_ratios_$variable_name$filename_suffix.png"))
 end

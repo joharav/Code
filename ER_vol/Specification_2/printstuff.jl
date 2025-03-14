@@ -8,7 +8,7 @@ function printstuff(answ::NamedTuple)
     cpol = pol.c
     grids = answ.g
 
-    filename = "Output/Policy/v.txt"
+    filename = "Specification_2/Output/Policy/v.txt"
     io = open(filename, "w")
     
     Threads.@threads for id in 1:sz.nd
@@ -28,7 +28,7 @@ function printstuff(answ::NamedTuple)
     close(io)
 
 
-    filename = "Output/Policy/a.txt"
+    filename = "Specification_2/Output/Policy/a.txt"
     io = open(filename, "w")
     
     Threads.@threads for id in 1:sz.nd
@@ -48,7 +48,7 @@ function printstuff(answ::NamedTuple)
     close(io)
 
 
-    filename = "Output/Policy/d.txt"
+    filename = "Specification_2/Output/Policy/d.txt"
     io = open(filename, "w")
     
     Threads.@threads for id in 1:sz.nd
@@ -67,7 +67,7 @@ function printstuff(answ::NamedTuple)
     
     close(io)
 
-    filename = "Output/Policy/c.txt"
+    filename = "Specification_2/Output/Policy/c.txt"
     io = open(filename, "w")
     
     Threads.@threads for id in 1:sz.nd
@@ -95,7 +95,7 @@ function printstuff(answ::NamedTuple)
     dpg = grids.dp;
     trans = grids.t; 
 
-    filname = "Output/Policy/statespace.txt"
+    filname = "Specification_2/Output/Policy/statespace.txt"
 
     io = open(filname,"w")
     @printf(io," asset state grid\n")

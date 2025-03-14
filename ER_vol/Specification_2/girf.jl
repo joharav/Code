@@ -7,12 +7,12 @@ function girf_plots(simul_shock::NamedTuple,simul_noshock::NamedTuple)
      T_shock=Int(sz.nYears/2)
      #Plot IRFs
      plot1=plot(girf_c[T_shock-4:T_shock+24], title="IRF", xlabel="Quarters", ylabel="% Change from SS", legend=false)
-     savefig(plot1, "Output/IRFs/IRF_c.png")
+     savefig(plot1, "Specification_2/Output/IRFs/IRF_c.png")
  
      plot2=plot(girf_d[T_shock-4:T_shock+24], title="IRF", xlabel="Quarters", ylabel="% Change from SS", legend=false)
-     savefig(plot2, "Output/IRFs/IRF_d.png")
+     savefig(plot2, "Specification_2/Output/IRFs/IRF_d.png")
      plot3=plot(girf_a[T_shock-4:T_shock+24], title="IRF", xlabel="Quarters", ylabel="% Change from SS", legend=false)
-     savefig(plot3, "Output/IRFs/IRF_a.png")
+     savefig(plot3, "Specification_2/Output/IRFs/IRF_a.png")
  
      outuple=( girf_c, girf_d, girf_a)
  
@@ -35,7 +35,7 @@ function compute_cirf(irf_results::Vector{Float64}, window_size::Int,x::String)
     end
 
     pp1=plot(cirf_vector[T_shock-4:T_shock+24], title="Cumulative CIRF", xlabel="Quarters", ylabel="% Change from SS")
-    savefig(pp1, "Output/IRFs/CIRF_($param_str).png")
+    savefig(pp1, "Specification_2/Output/IRFs/CIRF_($param_str).png")
 
 
     return cirf_vector

@@ -67,7 +67,7 @@ for ift in 1:nvary
             # Store parameter values and relevant moments
             allparams[counter, :] = ppp
             allmoms[counter, :] = moms[momorder]
-            counter += 1
+            global counter += 1
         end
     end
 end
