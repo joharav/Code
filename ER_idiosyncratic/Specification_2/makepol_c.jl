@@ -13,20 +13,23 @@ function makepol_c(apol::Array{Float64}, dpol::Array{Float64}, grid::NamedTuple,
     a = grid.a       # Asset grid
     d = grid.d       # Durable goods grid
     e = grid.ex       # Exchange rate grid
+    y = grid.y       # Income grid
 
 
 
-    cpol = zeros(sz.ne,sz.na,sz.nd);
+    cpol = zeros(sz.ne,sz.ny,sz.na,sz.nd);
     Threads.@threads for id in 1:sz.nd
         Threads.@threads for ia in 1:sz.na;
-            Threads.@threads for ie in 1:sz.ne;
-                if ind==0
-                    cpol[ie,ia,id] = w * h * (1-tau) +  a[ia] * (1 .+  rr) - e[ie] * pd * delta * chi * d[id] -   apol[ie,ia,id]
-                else
-                    cpol[ie,ia,id] = w * h * (1-tau) +  a[ia] * (1 .+  rr) + e[ie] * pd * (1 - f) * (1 - delta) * d[id] -    apol[ie,ia,id] - e[ie] * pd * dpol[ie,ia,id] - w * h * ft
-                end;
-                cpol[ie,ia,id] = max(cpol[ie,ia,id], 0.1)  # Ensure c is at least 0.1
+            Threads.@threads for iy in 1:sz.ny;
+                Threads.@threads for ie in 1:sz.ne;
+                    if ind==0
+                        cpol[ie,iy,ia,id] = w * h * (1-tau) * y[iy] +  a[ia] * (1 .+  rr) - e[ie] * pd * delta * chi * d[id] -   apol[ie,iy,ia,id]
+                    else
+                        cpol[ie,iy,ia,id] = w * h * (1-tau) * y[iy] +  a[ia] * (1 .+  rr) + e[ie] * pd * (1 - f) * (1 - delta) * d[id] -    apol[ie,iy,ia,id] - e[ie] * pd * dpol[ie,iy,ia,id] - w * h * ft * y[iy]
+                    end;
+                    cpol[ie,iy,ia,id] = max(cpol[ie,iy,ia,id], 0.1)  # Ensure c is at least 0.1
 
+                end
             end
         end;
     end;

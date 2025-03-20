@@ -3,26 +3,28 @@ function makegrids(ppp::Vector{Float64})
     rho_e = ppp[3]
     sigma_e = ppp[4]
     chi = ppp[5]
+    rho_y = ppp[14]
+    sigma_y = ppp[15]
 
 
     # Exchange Rate
     nume = sz.ne
     numstd_e = sz.nstd_e
     mew = 3.0
-    eg, trans = tauchen(mew, sigma_e, rho_e, nume, numstd_e)
+    eg, trans_e = tauchen(mew, sigma_e, rho_e, nume, numstd_e)
 
     # Rescale to (0,2]
     eg = 0.01 .+ (1.99) .* (eg .- minimum(eg)) ./ (maximum(eg) - minimum(eg))
     
     
-#     # Idiosyncratic income
-#     numy = sz.ne
-#     numstd_y = sz.nstd_e
-#     mew = 0.0
-#     yg, trans_y = tauchen(mew, sigma_y, rho_y, numy, numstd_y)
-
-#    #Kronecker 
-#    trans = kron(trans_e, trans_y)
+     # Idiosyncratic income
+     numy = sz.ny
+     numstd_y = sz.nstd_e
+     mew = 0.0
+     yg, trans_y = tauchen(mew, sigma_y, rho_y, numy, numstd_y)
+    yg=exp.(yg)
+    #Kronecker 
+    trans = kron(trans_e, trans_y)
 
 
     ### Non-Adjust Case: Asset and Durable Grids
@@ -63,8 +65,8 @@ function makegrids(ppp::Vector{Float64})
 
 
 
-    outtuple = (t=trans::Array{Float64},a=ag::Vector{Float64},ap=apg::Vector{Float64},d=dg::Vector{Float64},dp = dpg::Vector{Float64}, ex = eg::Vector{Float64});
+    outtuple = (t=trans::Array{Float64},a=ag::Vector{Float64},ap=apg::Vector{Float64},d=dg::Vector{Float64},dp = dpg::Vector{Float64}, ex = eg::Vector{Float64}, y = yg::Vector{Float64});
    
-    return outtuple::NamedTuple{(:t,:a,:ap,:d,:dp,:ex)};
+    return outtuple::NamedTuple{(:t,:a,:ap,:d,:dp,:ex,:y)};
 end
 

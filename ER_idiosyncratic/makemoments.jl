@@ -12,6 +12,7 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     a                   = simdata.a[sz.burnin-2:sz.nYears, :]
     d                   = simdata.d[sz.burnin-2:sz.nYears, :]
     ex                  = simdata.ex[sz.burnin-2:sz.nYears, :]
+    y                   = simdata.y[sz.burnin-2:sz.nYears, :]
     c                   = simdata.c[sz.burnin-2:sz.nYears, :]
     d_adjust            = simdata.d_adjust[sz.burnin-2:sz.nYears, :]
     adjust_indicator    = simdata.adjust_indicator[sz.burnin-2:sz.nYears, :]
@@ -29,7 +30,7 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     var_c = var(vec(c))
 
     # Calculate ratios
-    ratio_d_income = (vec(pd.* ex .* d) ./ vec(w .+ ex .* a .* (1 + rr) ))
+    ratio_d_income = (vec(pd.* ex .* d) ./ vec(w.*y .+ ex .* a .* (1 + rr) ))
     ratio_d_wealth = (vec(pd.*ex .* d) ./ vec(ex .* a .* (1 + rr) .+ pd*ex .* d))
 
     # Calculate the ratio
