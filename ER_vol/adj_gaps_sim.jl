@@ -9,7 +9,17 @@ function adjustment_gaps_sim(current_d,d_a,adjustment_indicator)
     gap_vec = vec(gaps)
     # Compute KDE for only the adjusted cases
     @views adjusted_gaps = gap_vec[adjustment_indicator .== 1]
+    output_dir = "Output/Gaps"
 
+    p = scatter(gap_vec, adjustment_indicator, 
+    markersize = 3, alpha = 0.6,
+    xlabel = "Gap values", 
+    ylabel = "Adjustment Indicator\n(1 = Adjusted, 0 = Not Adjusted)",
+    title = "Adjustment Decisions by Gap Size",
+    legend = false)
+
+    # Save the plot
+    savefig(p,joinpath(output_dir, "Adjustment_scatter.png"))  
 
     # Calculate the moments of the gap 
     mu_gap  = mean(gap_vec)
@@ -20,6 +30,7 @@ function adjustment_gaps_sim(current_d,d_a,adjustment_indicator)
     kd       = kde(gap_vec)
     f_x      = kd.density
     x_values = collect(kd.x)  
+
 
 
 
@@ -41,7 +52,7 @@ function adjustment_gaps_sim(current_d,d_a,adjustment_indicator)
     println("Adjustment Ratio: $(round(adjustment_ratio * 100, digits=2))%")
 
     # Compute h(x) = f_adj(x) / f(x), avoiding division by zero
-    h_x = max.(f_adj_x ./ (f_x .+ 1e-10), 0)
+    h_x = max.(f_adj_x ./ (f_x .+ 1e-6), 0)
 
     # Compute the aggregate durable expenditures I_d
     I_d = sum(x_values .* h_x .* f_x)

@@ -12,16 +12,16 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         ddpol_slice = dpol[ie, :, :]
         dcpol_slice = cpol[ie, :, :]
 
-        plot1 = surface(a, d, dvee_slice, xlabel="Assets", ylabel="Durables", zlabel="Value Function")
+        plot1 = surface(a, d, dvee_slice, xlabel="Assets", ylabel="Durables", zlabel="Value Function",legend=false)
         savefig(plot1, "Output/Policy/vf_slice_e$(ie).png")
 
-        plot2 = surface(a, d, dapol_slice, xlabel="Assets", ylabel="Durables", zlabel="Optimal Assets")
+        plot2 = surface(a, d, dapol_slice, xlabel="Assets", ylabel="Durables", zlabel="Optimal Assets",legend=false)
         savefig(plot2, "Output/Policy/Apolicy_slice_e$(ie).png")
 
-        plot3 = surface(a, d, ddpol_slice, xlabel="Assets", ylabel="Durables", zlabel="Optimal Durables")
+        plot3 = surface(a, d, ddpol_slice, xlabel="Assets", ylabel="Durables", zlabel="Optimal Durables",legend=false)
         savefig(plot3, "Output/Policy/Dpolicy_slice_e$(ie).png")
 
-        plot4 = surface(a, d, dcpol_slice, xlabel="Assets", ylabel="Durables", zlabel="Optimal Consumption")
+        plot4 = surface(a, d, dcpol_slice, xlabel="Assets", ylabel="Durables", zlabel="Optimal Consumption",legend=false)
         savefig(plot4, "Output/Policy/Cpolicy_slice_e$(ie).png")
 
     end

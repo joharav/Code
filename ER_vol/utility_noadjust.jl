@@ -48,8 +48,8 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
         end
     end
      penalty_share = penalty_count / (sz.ne * sz.na * sz.nd * sz.npa * sz.npd)
-     println("Number of penalized states NA: ", penalty_count)
-     println("Share of penalized states NA: ", penalty_share)
+    # println("Number of penalized states NA: ", penalty_count)
+    # println("Share of penalized states NA: ", penalty_share)
 
 
 #     filename = "Output/Policy/U_NoAdjust.txt"

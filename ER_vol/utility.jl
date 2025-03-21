@@ -49,8 +49,8 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
     end
 
     penalty_share = penalty_count / (sz.ne * sz.na * sz.nd * sz.npa * sz.npd)
-    println("Number of penalized states ADJUST: ", penalty_count)
-    println("Share of penalized states ADJUST: ", penalty_share)
+   # println("Number of penalized states ADJUST: ", penalty_count)
+   # println("Share of penalized states ADJUST: ", penalty_share)
 
 #     filename = "Output/Policy/U_Adjust.txt"
 #     io = open(filename, "w")

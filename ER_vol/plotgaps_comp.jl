@@ -9,11 +9,11 @@ function plotgaps_comp(x_values::Vector{Float64}, f_x::Vector{Float64}, h_x::Vec
     param_str = string(param_name, "_", @sprintf("%.4f", param_value))
 
     # Plot the distribution f(x) on the left y-axis
-    p = plot(x_values, f_x, label="f(x)", xlabel="Durable gap, log points", ylabel="Density", legend=:topleft, color=:blue)
+    p = plot(x_values, f_x, label="f(x)", xlabel="Durable gap, log points", ylabel="Density", legend=false, color=:blue)
 
     # Plot the adjustment probability h(x) on the right y-axis
     pp = twinx()
-    plot!(pp, x_values, h_x, label="h(x)", ylabel="Hazard", legend=:topright, yaxis=:right, color=:red)
+    plot!(pp, x_values, h_x, label="h(x)", ylabel="Hazard", legend=false, yaxis=:right, color=:red)
 
     # Save the combined plot
     savefig(p, output_dir * "Gaps_distr_probability_$(param_str).png")
@@ -23,8 +23,8 @@ function plotgaps_comp(x_values::Vector{Float64}, f_x::Vector{Float64}, h_x::Vec
     savefig(output_dir * "Gap_histogram_$(param_str).png")
 
     # Save individual plots separately
-    p11 = plot(x_values, f_x, label="f(x)", xlabel="Durable gap, log points", ylabel="Density", legend=:topleft, color=:blue)
-    p22 = plot(x_values, h_x, label="h(x)", xlabel="Durable gap, log points", ylabel="Hazard", legend=:topright, color=:red)
+    p11 = plot(x_values, f_x, label="f(x)", xlabel="Durable gap, log points", ylabel="Density", legend=false, color=:blue)
+    p22 = plot(x_values, h_x, label="h(x)", xlabel="Durable gap, log points", ylabel="Hazard", legend=false, color=:red)
 
     @load joinpath(output_dir, "Gaps_distr.jld2") p1
     @load joinpath(output_dir, "Gaps_probability.jld2") p2

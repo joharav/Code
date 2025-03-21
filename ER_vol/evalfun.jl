@@ -7,7 +7,8 @@ using Main.sz, Main.kst, Main.settings, Main.globals, Main.dtp;
 pea = ptrue(sz.nop); 
 
 #answ=valfun(pea);   
-
+#simdata = simmodel(answ);
+#moms = makemoments(simdata, pea)
 moms = momentgen(pea);
 
 if settings.specif_two

@@ -10,7 +10,9 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
 
     # Extract variables from simulation data
     a                   = simdata.a[sz.burnin-2:sz.nYears, :]
+    a_state             = simdata.a[sz.burnin-3:sz.nYears-1, :]
     d                   = simdata.d[sz.burnin-2:sz.nYears, :]
+    d_state             = simdata.d[sz.burnin-3:sz.nYears-1, :]
     ex                  = simdata.ex[sz.burnin-2:sz.nYears, :]
     c                   = simdata.c[sz.burnin-2:sz.nYears, :]
     d_adjust            = simdata.d_adjust[sz.burnin-2:sz.nYears, :]
@@ -18,7 +20,7 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
 
     # Calculate the gaps
     adjustment_indicator = vec(adjust_indicator)
-    gap_vec, f_x, x_values, h_x, I_d, mu_gap, var_gap, adjustment_ratio =adjustment_gaps_sim(d,d_adjust,adjustment_indicator)
+    gap_vec, f_x, x_values, h_x, I_d, mu_gap, var_gap, adjustment_ratio =adjustment_gaps_sim(d_state,d_adjust,adjustment_indicator)
 
     # Moments calculations
     mu_d = mean(vec(d))
@@ -29,8 +31,8 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     var_c = var(vec(c))
 
     # Calculate ratios
-    ratio_d_income = (vec(pd.* ex .* d) ./ vec(w .+ ex .* a .* (1 + rr) ))
-    ratio_d_wealth = (vec(pd.*ex .* d) ./ vec(ex .* a .* (1 + rr) .+ pd*ex .* d))
+    ratio_d_income = (vec(pd.* ex .* d) ./ vec(w .+ ex .* a_state .* (1 + rr) ))
+    ratio_d_wealth = (vec(pd.*ex .* d) ./ vec(ex .* a_state .* (1 + rr) .+ pd*ex .* d_state))
 
     # Calculate the ratio
     ratio_d_consumption = (vec(pd.* ex .* d) ./ vec(c))
@@ -87,6 +89,9 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     outmoms[11] = var_gap
     outmoms[12] = I_d
     outmoms[13] = adjustment_ratio
+    
+    plotgaps(x_values, f_x, h_x, gap_vec)
+    println("Adjustment Ratio: $adjustment_ratio\n")    
 
 
     if settings.verbose 
