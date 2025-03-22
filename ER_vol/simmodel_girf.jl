@@ -79,9 +79,9 @@ function simmodel_girf(answ::NamedTuple, T_shock::Int)
     
 
     
-    adjust_indicator_shock=zeros(size(alld_adjust_shock))
+    adjust_indicator_shock=zeros(size(alld_shock))
     for i in 1:sz.nYears, j in 1:sz.nFirms
-        if alld_adjust_shock[i, j] == alld_adjust_shock[i, j]
+        if alld_adjust_shock[i, j] == alld_shock[i, j]
             adjust_indicator_shock[i, j] = 1
         end
     end

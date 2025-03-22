@@ -1,4 +1,4 @@
-function makemoments(simdata::NamedTuple, pea::Vector{Float64})
+function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = false)
     # Initialize the output moments vector
     outmoms = zeros(sz.nmom)
     
@@ -90,11 +90,14 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     outmoms[12] = I_d
     outmoms[13] = adjustment_ratio
     
-    plotgaps(x_values, f_x, h_x, gap_vec)
+    plotgaps(x_values, f_x, h_x, gap_vec; shock=shock)
+    plotdensities(x_values_d_income, f_d_income, "f_income"; shock=shock)
+    plotdensities(x_values_d_wealth, f_d_wealth, "f_wealth"; shock=shock)
+    plotdensities(x_values_d_consumption, f_d_consumption, "d_c"; shock=shock)
     println("Adjustment Ratio: $adjustment_ratio\n")    
 
 
-    if settings.verbose 
+    if settings.verbose && settings.irfsshock==false
 
         println("----------------------------------------------------------")
         println("\nStatistics:\n")
@@ -112,12 +115,6 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
         println("Aggregate durable expenditures: $I_d\n")
         println("Adjustment Ratio: $adjustment_ratio\n")    
         println("----------------------------------------------------------")
-
-
-        plotgaps(x_values, f_x, h_x, gap_vec)
-        plotdensities(x_values_d_income, f_d_income, "f_income")
-        plotdensities(x_values_d_wealth, f_d_wealth, "f_wealth")
-        plotdensities(x_values_d_consumption, f_d_consumption, "d_c")
     
         println("----------------------------------------------------------")
         println("\nInterquartile ratio:\n")

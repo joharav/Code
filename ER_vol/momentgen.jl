@@ -7,14 +7,14 @@ function momentgen(p::Vector{Float64})
 
     if answ.e == 0
         simdata = simmodel(answ)
-        moms = makemoments(simdata, p)
+        moms = makemoments(simdata, p; shock=false)
         
         if settings.irfsshock
             # Simulate shock 
             simdata_irf = simmodel_girf(answ, Int(sz.nYears/2))
             
             # Get moments for simulation with shock
-            moms_shock = makemoments(simdata_irf, p)
+            moms_shock = makemoments(simdata_irf, p; shock=true)
             
             # Create GIRF plots
             girf = girf_plots(simdata_irf, simdata)

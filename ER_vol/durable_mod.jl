@@ -21,24 +21,6 @@ module sz;
     const pick      = [1; 1; 1; 0; 1];     #moments to use
 end;
 
-module kst;
-    const beta   = 0.95;       # Discount factor
-    const delta  = 0.2;        # Depreciation rate for durable goods
-    const rho_e  = 0.44;       # AR(1) persistence for exchange rate
-    const sigma_e= 0.64;       # Volatility of exchange rate shock
-    const nu     = 0.88;       # Share parameter for nondurable consumption
-    const gamma  = 2;          # Risk aversion parameter
-    const f      = 0.5;        # Adjustment fixed cost
-    const w      = 1.0;        # Wage rate
-    const chi    = 0.80;       # Required maintenance 
-    const pd     = 5.0;        # Price of durable goods
-    const ft     = 0.50;       # Fixed cost on wage rate
-    const tau    = 0.25;       # Tax rate
-    const h      = 1/3;        # Hours worked
-    #const rho_y  = 0.95;       # AR(1) persistence for idiosyncratic income
-    #const sigma_y= 0.1;        # Volatility of idiosyncratic income shock
-
-end;
 
 module dtp;
 
@@ -68,8 +50,7 @@ end;
 
 module settings; 
     const compstat      = false; 
-    const verbose       = false; 
-    const complicated   = false;     # Complicated = true is an identity weight matrix. Otherwise, optimal weight matrix. 
+    const verbose       = true; 
     const irfsshock     = false;     
     const specif_two    = false;
 end

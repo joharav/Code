@@ -2,7 +2,7 @@ function plotdensities(x_values::Vector{Float64}, f_x::Vector{Float64}, variable
     filename_suffix = shock ? "_shock" : ""
 
     # Plot the density
-    p1 = plot(x_values, f_x, label="Density", xlabel="Values", ylabel="Density", legend=:topleft, color=:blue)
+    p1 = plot(x_values, f_x, label="Density", xlabel="$variable_name", ylabel="Density of $variable_name", legend=false, color=:blue, xlims=(0, 10))
 
     # Ensure the output directory exists
     output_dir = "Output/Ratios"
