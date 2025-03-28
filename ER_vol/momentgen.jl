@@ -8,6 +8,7 @@ function momentgen(p::Vector{Float64})
     if answ.e == 0
         simdata = simmodel(answ)
         moms = makemoments(simdata, p; shock=false)
+        decision_rules(answ)
         
         if settings.irfsshock
             # Simulate shock 

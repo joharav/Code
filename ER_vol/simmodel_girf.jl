@@ -43,7 +43,7 @@ function simmodel_girf(answ::NamedTuple, T_shock::Int)
                 eold = grids.ex[Int(ls[iti,1]),1]
                 
                 if iti == T_shock
-                    eold = grids.ex[sz.ne]  # Apply the exchange rate shock
+                    eold = grids.ex[Int(ls[iti,1])+2,1] # Apply the exchange rate shock
                 end
 
                 #This updates the simulated variables using simple interpolation

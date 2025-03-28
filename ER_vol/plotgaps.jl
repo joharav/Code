@@ -8,7 +8,7 @@ function plotgaps(x_values::Vector{Float64}, f_x::Vector{Float64}, h_x::Vector{F
     end
 
     # Plot the distribution f(x) on the left y-axis
-    p = plot(x_values, f_x, label="f(x)", xlabel="Durable gap, log points", ylabel="Density", legend=false, color=:blue)
+    p = plot(x_values, f_x, label="f(x)", xlabel="Durable gap, log points, x", ylabel="Density", legend=false, color=:blue)
 
     # Plot the adjustment probability h(x) on the right y-axis
     pp=twinx()
@@ -22,12 +22,12 @@ function plotgaps(x_values::Vector{Float64}, f_x::Vector{Float64}, h_x::Vector{F
     savefig(hist, joinpath(output_dir, "Gap_histogram$filename_suffix.png"))
 
     # Plot the distribution f(x) separately
-    p1 = plot(x_values, f_x, label="f(x)", xlabel="Durable gap, log points", ylabel="Density", legend=false, color=:blue)
+    p1 = plot(x_values, f_x, label="f(x)", xlabel="Durable gap, log points, x", ylabel="Density", legend=false, color=:blue)
     savefig(p1, joinpath(output_dir, "Gaps_distr$filename_suffix.png"))
     @save joinpath(output_dir, "Gaps_distr.jld2") p1
 
     # Plot the adjustment probability h(x) separately
-    p2 = plot(x_values, h_x, seriestype=:scatter, marker=:o, label="h(x)", xlabel="Durable gap, log points", ylabel="Hazard", legend=false, color=:red)
+    p2 = plot(x_values, h_x, seriestype=:scatter, marker=:o, label="h(x)", xlabel="Durable gap, log points, x", ylabel="Hazard", legend=false, color=:red)
     savefig(p2, joinpath(output_dir, "Gaps_probability$filename_suffix.png"))
     @save joinpath(output_dir, "Gaps_probability.jld2") p2
 end

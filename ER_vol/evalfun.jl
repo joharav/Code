@@ -5,6 +5,7 @@ include("collectfunctions.jl");
 using Main.sz,  Main.settings, Main.globals, Main.dtp; 
 
 pea = ptrue(sz.nop); 
+
 moms = momentgen(pea);
 
 if settings.specif_two

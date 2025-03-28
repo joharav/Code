@@ -34,7 +34,7 @@ function compute_cirf(irf_results::Vector{Float64}, window_size::Int,x::String)
         cirf_vector[t] = sum(irf_results[start_period:end_period])
     end
 
-    pp1=plot(cirf_vector[T_shock-4:T_shock+24], title="Cumulative CIRF", xlabel="Quarters", ylabel="% Change from SS")
+    pp1=plot(cirf_vector[T_shock-4:T_shock+24], title="Cumulative CIRF", xlabel="Quarters", ylabel="% Change from SS", legend=false)
     savefig(pp1, "Output/IRFs/CIRF_($param_str).png")
 
 

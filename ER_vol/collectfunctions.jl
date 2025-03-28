@@ -36,6 +36,9 @@ include("howard_noadjust.jl")
  include("girf.jl")
  include("simmodel_girf.jl")
  include("interpol.jl")
+ include("aggregate_series.jl")
+ include("d_adjust_time_size.jl")
+ include("decision_rules.jl")
 
 # ============Making moments ===============================
  include("momentgen.jl"); #wrapper

@@ -37,7 +37,7 @@ function adjustment_gaps_sim(current_d,d_a,adjustment_indicator)
         if total_in_bin > 0
             hazard_empirical[i] = adjusted_in_bin / total_in_bin
         else
-            hazard_empirical[i] = 0  # Avoid division by zero
+            hazard_empirical[i] = NaN  # Avoid division by zero
         end
     end
 
