@@ -3,13 +3,12 @@ using Random, Distributions, LinearAlgebra, Plots, Statistics, Printf, StatsBase
 include("durable_mod.jl")
 include("collectfunctions.jl")
 
-using Main.sz, Main.settings, Main.kst, Main.dtp 
+using Main.sz,  Main.settings, Main.globals, Main.dtp; 
 
 commence = time()
 
 # Define moments of interest
-momname = ["adjustment_ratio", "mu_d_c", "mu_d_wealth", "mu_gap"]
-momorder = [13, 9, 8, 10]  # Indices of the selected moments
+momname = ["mu_d", "var_d", "mu_a", "var_a", "mu_c", "var_c", "mu_d_income", "mu_d_wealth", "mu_d_c", "mu_gap", "var_gap", "I_d", "adjustment_ratio"]
 pname = ["beta", "delta", "rho_e", "sigma_e", "nu", "gamma", "f", "w", "chi", "pd", "ft", "tau", "h"]
 
 # Get the true parameter values
@@ -21,21 +20,21 @@ nparam = sz.nop
 nnmom   = length(momname)  # Number of selected moments
 
 # Define parameters to vary
-varying_params = [7, 9, 11]  
+varying_params = [7, 9, 11, 3, 4, 6]  
 
 # Define parameter ranges (min, max)
 maxmin = [
     0.80  0.95;  # beta (Discount factor)
     0.05  0.40;  # delta (Depreciation rate)
-    0.3   0.8;   # rho_e (Persistence of exchange rate shock)
-    0.2   0.80;  # sigma_e (Volatility of exchange rate shock)
+    0.3   0.9;   # rho_e (Persistence of exchange rate shock)
+    0.1   0.90;  # sigma_e (Volatility of exchange rate shock)
     0.40  0.90;  # nu (Share parameter for nondurable consumption)
-    1.00  3.00;  # gamma (Risk aversion)
-    0.80  0.90;  # f (Adjustment fixed cost)
+    0.50  2.00;  # gamma (Risk aversion)
+    0.10  0.95;  # f (Adjustment fixed cost)
     0.50  5.00;  # w (Wage)
-    0.1   0.8;   # chi (Required maintenance)
+    0.1   0.9;   # chi (Required maintenance)
     2     8;     # pd (Price of durables)
-    0.80  0.90;  # ft (Fixed cost on wage rate)
+    0.10  0.95;  # ft (Fixed cost on wage rate)
     0.10  0.60;  # tau (Tax rate)
 ]
 
@@ -60,7 +59,7 @@ for iparam in varying_params
 
         # Store parameter values and selected moments
         allparams[ivary, iparam] = glop
-        allmoms[ivary, iparam, :] = moms[momorder]  # Select relevant moments
+        allmoms[ivary, iparam, :] = moms'  # Select relevant moments
 
     end
 end

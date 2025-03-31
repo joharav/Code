@@ -14,7 +14,7 @@
  include("maxbellman.jl")
  include("maxbellman_noadjust.jl")
  include("howard.jl")
-include("howard_noadjust.jl")
+ include("howard_noadjust.jl")
  include("makepol.jl")
  include("makepol_c.jl")
  include("makepol_d_na.jl")
@@ -39,6 +39,7 @@ include("howard_noadjust.jl")
  include("aggregate_series.jl")
  include("d_adjust_time_size.jl")
  include("decision_rules.jl")
+ include("plotgaps_shock.jl")
 
 # ============Making moments ===============================
  include("momentgen.jl"); #wrapper

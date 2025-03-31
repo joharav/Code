@@ -21,14 +21,20 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
     # Calculate the gaps
     adjustment_indicator = vec(adjust_indicator)
     gap_vec, f_x, x_values, h_x, I_d, mu_gap, var_gap, adjustment_ratio =adjustment_gaps_sim(d_state,d_adjust,adjustment_indicator)
+    d_invest = 100*(d .- d_state)./d_state
+    a_change = 100*(a .- a_state)./a_state
+    c_change = 100 * (c[2:end] .- c[1:end-1]) ./ c[1:end-1]
+
 
     # Moments calculations
-    mu_d = mean(vec(d))
-    var_d = var(vec(d))
-    mu_a = mean(vec(a))
-    var_a = var(vec(a))
-    mu_c = mean(vec(c))
-    var_c = var(vec(c))
+    mu_d = mean(vec(d_invest))
+    var_d = var(vec(d_invest))
+    mu_a = mean(vec(a_change))
+    var_a = var(vec(a_change))
+    mu_c = mean(vec(c_change))
+    var_c = var(vec(c_change))
+    mu_d1 = mean(vec(d_state))
+    var_d1 = var(vec(d_state))
 
     # Calculate ratios
     ratio_d_income = (vec(pd.* ex .* d) ./ vec(w .+ ex .* a_state .* (1 + rr) ))
@@ -133,6 +139,6 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
 
     end
 
-        return outmoms::Vector{Float64}
+        return outmoms::Vector{Float64}, x_values, f_x, h_x
 
 end

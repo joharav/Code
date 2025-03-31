@@ -15,12 +15,12 @@ function d_adjust_time_size(simdata)
 
     # Timing - Histogram
     timing_of_adjustments = sum(adjust_indicator, dims=2)[:]  # Sum across firms (dims=2 → time)
-    histogram(timing_of_adjustments, bins=30, title="Timing of Adjustments", xlabel="Time", ylabel="Frequency",legend=false)
+    histogram(timing_of_adjustments, bins=30, xlabel="Time", ylabel="Frequency",legend=false)
     savefig(joinpath(output_dir, "Adjustment_Timing.png"))
 
     # Size - Histogram
     adjust_size = abs.(vec(d[adjust_indicator .== 1]) .- vec(d_state[adjust_indicator .== 1]))
-    histogram(adjust_size, bins=50, xlabel="Adjustment Size", ylabel="Frequency", title="Distribution of Adjustment Sizes", color=:red,legend=false)
+    histogram(adjust_size, bins=80, xlabel="Adjustment Size", ylabel="Frequency", color=:red,legend=false)
     savefig(joinpath(output_dir, "Adjustment_Size.png"))
 
 end 
