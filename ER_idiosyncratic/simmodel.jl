@@ -87,9 +87,6 @@ function simmodel(answ::NamedTuple)
             d_adjustprime       = interpol(eold,yold,aold,dold,grids,d_adjust);     
             cprime              = interpol(eold,yold,aold,dold,grids,pol.c);      
             vprime              = interpol(eold,yold,aold,dold,grids,v);  
-
-            #Update and store
-            combinedprime = Int(ls[iti+1,ifi])
                             
             # Corrected extraction of e' and y' using the same logic as before
             picke = all_picke[iti+1, ifi]
@@ -113,21 +110,6 @@ function simmodel(answ::NamedTuple)
             d_adjustold = d_adjustprime[1]
             cold=cprime[1]
 
-            if isnan(ls[iti+1,ifi])
-                println("NaN found in ls at iti+1=$iti+1, ifi=$ifi")
-            end
-
-            if isnan(eold) || isnan(yold) || isnan(aold) || isnan(dold)
-                println("NaN detected before interpolation at iti=$iti, ifi=$ifi")
-                println("eold=$eold, yold=$yold, aold=$aold, dold=$dold")
-            end
-
-            if picke < 1 || picke > sz.ne
-                println("Invalid picke at iti=$iti, ifi=$ifi -> picke=$picke")
-            end
-            if picky < 1 || picky > sz.ny
-                println("Invalid picky at iti=$iti, ifi=$ifi -> picky=$picky")
-            end
 
         end
     end

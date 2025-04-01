@@ -1,4 +1,4 @@
-function makemoments(simdata::NamedTuple, pea::Vector{Float64})
+function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = false)
     # Initialize the output moments vector
     outmoms = zeros(sz.nmom)
     
@@ -8,30 +8,39 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     pd    = pea[10]
     rr = 1/beta -1
 
-    # Extract variables from simulation data
+# Extract variables from simulation data
     a                   = simdata.a[sz.burnin-2:sz.nYears, :]
+    a_state             = simdata.a[sz.burnin-3:sz.nYears-1, :]
     d                   = simdata.d[sz.burnin-2:sz.nYears, :]
+    d_state             = simdata.d[sz.burnin-3:sz.nYears-1, :]
     ex                  = simdata.ex[sz.burnin-2:sz.nYears, :]
-    y                   = simdata.y[sz.burnin-2:sz.nYears, :]
     c                   = simdata.c[sz.burnin-2:sz.nYears, :]
     d_adjust            = simdata.d_adjust[sz.burnin-2:sz.nYears, :]
     adjust_indicator    = simdata.adjust_indicator[sz.burnin-2:sz.nYears, :]
+    y                   = simdata.y[sz.burnin-2:sz.nYears, :]
+  
 
     # Calculate the gaps
     adjustment_indicator = vec(adjust_indicator)
-    gap_vec, f_x, x_values, h_x, I_d, mu_gap, var_gap, adjustment_ratio =adjustment_gaps_sim(d,d_adjust,adjustment_indicator)
+    gap_vec, f_x, x_values, h_x, I_d, mu_gap, var_gap, adjustment_ratio =adjustment_gaps_sim(d_state,d_adjust,adjustment_indicator)
+    d_invest = 100*(d .- d_state)./d_state
+    a_change = 100*(a .- a_state)./a_state
+    c_change = 100 * (c[2:end] .- c[1:end-1]) ./ c[1:end-1]
+
 
     # Moments calculations
-    mu_d = mean(vec(d))
-    var_d = var(vec(d))
-    mu_a = mean(vec(a))
-    var_a = var(vec(a))
-    mu_c = mean(vec(c))
-    var_c = var(vec(c))
+    mu_d = mean(vec(d_invest))
+    var_d = var(vec(d_invest))
+    mu_a = mean(vec(a_change))
+    var_a = var(vec(a_change))
+    mu_c = mean(vec(c_change))
+    var_c = var(vec(c_change))
+    mu_d1 = mean(vec(d_state))
+    var_d1 = var(vec(d_state))
 
     # Calculate ratios
-    ratio_d_income = (vec(pd.* ex .* d) ./ vec(w.*y .+ ex .* a .* (1 + rr) ))
-    ratio_d_wealth = (vec(pd.*ex .* d) ./ vec(ex .* a .* (1 + rr) .+ pd*ex .* d))
+    ratio_d_income = (vec(pd.* ex .* d) ./ vec(w.*y .+ ex .* a_state .* (1 + rr) ))
+    ratio_d_wealth = (vec(pd.*ex .* d) ./ vec(ex .* a_state .* (1 + rr) .+ pd*ex .* d_state))
 
     # Calculate the ratio
     ratio_d_consumption = (vec(pd.* ex .* d) ./ vec(c))
@@ -90,7 +99,16 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
     outmoms[13] = adjustment_ratio
 
 
-    if settings.verbose 
+    plotgaps(x_values, f_x, h_x, gap_vec; shock=shock)
+    plotdensities(x_values_d_income, f_d_income, "f_income"; shock=shock)
+    plotdensities(x_values_d_wealth, f_d_wealth, "f_wealth"; shock=shock)
+    plotdensities(x_values_d_consumption, f_d_consumption, "d_c"; shock=shock)
+    plot_aggregates(simdata)
+    d_adjust_time_size(simdata)
+    println("Adjustment Ratio: $adjustment_ratio\n")    
+
+
+    if settings.verbose && settings.irfsshock==false
 
         println("----------------------------------------------------------")
         println("\nStatistics:\n")
@@ -108,12 +126,6 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
         println("Aggregate durable expenditures: $I_d\n")
         println("Adjustment Ratio: $adjustment_ratio\n")    
         println("----------------------------------------------------------")
-
-
-        plotgaps(x_values, f_x, h_x, gap_vec)
-        plotdensities(x_values_d_income, f_d_income, "f_income")
-        plotdensities(x_values_d_wealth, f_d_wealth, "f_wealth")
-        plotdensities(x_values_d_consumption, f_d_consumption, "d_c")
     
         println("----------------------------------------------------------")
         println("\nInterquartile ratio:\n")
@@ -130,6 +142,6 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64})
 
     end
 
-        return outmoms::Vector{Float64}
+        return outmoms::Vector{Float64}, x_values, f_x, h_x
 
 end

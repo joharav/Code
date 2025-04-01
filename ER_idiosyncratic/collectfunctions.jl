@@ -6,44 +6,45 @@
 # ============================================================================================================================
 
 # ============ Stuff that goes into VFI ====================
- include("makegrids.jl")
- include("tauchen.jl")
- include("utility.jl")
- include("utility_noadjust.jl")
- include("fillin.jl")
- #include("inbetween.jl")
- include("maxbellman.jl")
- include("maxbellman_noadjust.jl")
- include("howard.jl")
+include("makegrids.jl")
+include("tauchen.jl")
+include("utility.jl")
+include("utility_noadjust.jl")
+include("fillin.jl")
+include("maxbellman.jl")
+include("maxbellman_noadjust.jl")
+include("howard.jl")
 include("howard_noadjust.jl")
- include("makepol.jl")
- include("makepol_c.jl")
- include("makepol_d_na.jl")
- include("mew.jl")
- include("tinybellman.jl")
- include("tinybellman_noadjust.jl")
- include("ptrue.jl")
+include("makepol.jl")
+include("makepol_c.jl")
+include("makepol_d_na.jl")
+include("tinybellman.jl")
+include("tinybellman_noadjust.jl")
+include("ptrue.jl")
 
 # ============ VFI =========================================
- include("valfun_adjust.jl")
- include("valfun_noadjust.jl")
- include("valfun.jl")
+include("valfun_adjust.jl")
+include("valfun_noadjust.jl")
+include("valfun.jl")
 
 # ============ Plotting and simulation =====================
- include("plotstuff.jl")
- include("plotgaps.jl")
- include("plotdensities.jl")
- include("printstuff.jl")
- include("simmodel.jl") 
- include("girf.jl")
- include("simmodel_girf.jl")
- include("interpol.jl")
+include("plotstuff.jl")
+include("plotgaps.jl")
+include("plotdensities.jl")
+include("printstuff.jl")
+include("simmodel.jl") 
+include("girf.jl")
+include("simmodel_girf.jl")
+include("interpol.jl")
+include("aggregate_series.jl")
+include("d_adjust_time_size.jl") 
+include("decision_rules.jl") 
+include("plotgaps_shock.jl")
 
 # ============Making moments ===============================
- include("momentgen.jl"); #wrapper
- include("makemoments.jl");
- #include("adjustment_gaps.jl")
- include("adj_gaps_sim.jl")
- include("welfare.jl")
+include("momentgen.jl"); #wrapper
+include("makemoments.jl");
+include("adj_gaps_sim.jl")
+include("welfare.jl")
 
 

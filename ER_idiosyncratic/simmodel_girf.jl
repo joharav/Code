@@ -85,9 +85,6 @@ function simmodel_girf(answ::NamedTuple, T_shock::Int)
                 vprime              = interpol(eold,yold,aold,dold,grids,v);  
 
                 
-                #Update and store
-                combinedprime = Int(ls[iti+1,ifi])
-                
                 # Corrected extraction of e' and y' using the same logic as before
                 picke = all_picke[iti+1, ifi]
                 picky = all_picky[iti+1, ifi]
