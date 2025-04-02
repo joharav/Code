@@ -1,4 +1,4 @@
-using Random, Distributions, LinearAlgebra, Plots, Statistics, Printf, StatsBase, KernelDensity, JLD2
+using Random, Distributions, LinearAlgebra, Plots, Statistics, Printf, StatsBase, KernelDensity, JLD2, Polynomials
 
 include("durable_mod.jl")
 include("collectfunctions.jl")
@@ -20,7 +20,7 @@ nparam = sz.nop
 nnmom   = length(momname)  # Number of selected moments
 
 # Define parameters to vary
-varying_params = [7, 9, 11, 3, 4, 6]  
+varying_params = [3, 4, 6, 7, 9, 11]   
 
 # Define parameter ranges (min, max)
 maxmin = [
@@ -30,7 +30,7 @@ maxmin = [
     0.1   0.90;  # sigma_e (Volatility of exchange rate shock)
     0.40  0.90;  # nu (Share parameter for nondurable consumption)
     0.50  2.00;  # gamma (Risk aversion)
-    0.10  0.95;  # f (Adjustment fixed cost)
+    0.50  0.9;  # f (Adjustment fixed cost)
     0.50  5.00;  # w (Wage)
     0.1   0.9;   # chi (Required maintenance)
     2     8;     # pd (Price of durables)
@@ -63,17 +63,40 @@ for iparam in varying_params
 
     end
 end
+degree = 3  # Try degree 3 or 4 for better fit
 
 # Generate plots for each selected parameter and moment
 for iparam in varying_params
-    for (i, imom) in enumerate(momorder)
-        ptitle = "Parameter: $(pname[iparam]), Moment: $(momname[i])"
-        plot_comp = Plots.plot(allparams[:, iparam], allmoms[:, iparam, i], 
-                               xlabel=pname[iparam], ylabel=momname[i],
+    for imom in 1:sz.nmom
+        ptitle = "Parameter: $(pname[iparam]), Moment: $(momname[imom])"
+        plot_comp = Plots.plot(allparams[:, iparam], allmoms[:, iparam, imom], 
+                               xlabel=pname[iparam], ylabel=momname[imom],
                                legend=false, label=" ")
 
-        filename = "Output/Comparative/moment_$(pname[iparam])_$(momname[i]).png"
+        filename = "Output/Comparative/moment_$(pname[iparam])_$(momname[imom]).png"
         savefig(plot_comp, filename)
+
+        x_data = allparams[:, iparam]  # Parameter values
+        y_data = allmoms[:, iparam, imom]  # Moment values
+
+        # Fit a higher-degree polynomial
+        poly_fit = fit(x_data, y_data, degree)
+
+        # Generate smooth x values
+        x_smooth = range(minimum(x_data), stop=maximum(x_data), length=100)
+        y_smooth = poly_fit.(x_smooth)
+
+        # Plot
+        plot_comp_smooth = plot(x_data, y_data, seriestype=:scatter, label="Raw Data", xlabel=pname[iparam], ylabel=momname[imom])
+        plot!(x_smooth, y_smooth, linewidth=2, label="Polynomial Fit (deg=$degree)", linestyle=:dash)
+
+        # Save plot
+        filename = "Output/Comparative/smoothed_moment_$(pname[iparam])_$(momname[imom]).png"
+        savefig(plot_comp_smooth)
+
+
+
+
     end
 end
 

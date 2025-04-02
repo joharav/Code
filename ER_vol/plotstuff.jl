@@ -99,9 +99,6 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         # Save the plot
         savefig(plot6b, "Output/Policy/Apolicy_lines_dhigh.png")
 
-
-
-
     end
 
 
