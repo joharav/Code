@@ -98,13 +98,15 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
     outmoms[12] = I_d
     outmoms[13] = adjustment_ratio
 
+    if settings.compstat==false
 
-    plotgaps(x_values, f_x, h_x, gap_vec; shock=shock)
-    plotdensities(x_values_d_income, f_d_income, "f_income"; shock=shock)
-    plotdensities(x_values_d_wealth, f_d_wealth, "f_wealth"; shock=shock)
-    plotdensities(x_values_d_consumption, f_d_consumption, "d_c"; shock=shock)
-    plot_aggregates(simdata)
-    d_adjust_time_size(simdata)
+        plotgaps(x_values, f_x, h_x, gap_vec; shock=shock)
+        plotdensities(x_values_d_income, f_d_income, "f_income"; shock=shock)
+        plotdensities(x_values_d_wealth, f_d_wealth, "f_wealth"; shock=shock)
+        plotdensities(x_values_d_consumption, f_d_consumption, "d_c"; shock=shock)
+        plot_aggregates(simdata)
+        d_adjust_time_size(simdata)
+    end
     println("Adjustment Ratio: $adjustment_ratio\n")    
 
 

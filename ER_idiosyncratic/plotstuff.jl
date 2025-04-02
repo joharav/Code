@@ -31,7 +31,7 @@ function plotstuff(vee::Array{Float64, 4}, apol::Array{Int64, 4}, dpol::Array{In
             for ie in 1:sz.ne
                 # Extract the policy function for the current economic state
                 # Assuming dpol[ie, :, :] gives the durable policy for all (a, d) at fixed e
-                    plot!(a, dpol[ie, :, Int(floor(sz.nd/2))], label="e=$ie")
+                    plot!(a, dpol[ie,Int(floor(sz.ny/2)), :, Int(floor(sz.nd/2))], label="e=$ie")
             end
     
             # Save the plot

@@ -19,17 +19,22 @@ function decision_rules(answ)
     # Identify adjustment decision
     adjust_indicator_policy = d_pol .!= d_adjust_pol  # 1 if adjusting, 0 otherwise
 
-    for id in 1:sz.nd
-        heatmap(a, ex, adjust_indicator_policy[:, :, id], 
-            ylabel="Exchange Rate",
-            xlabel="Assets",
-            title="Decision Rule: Adjustment Regions",
-            color=:blues
-        )
-        savefig(joinpath(output_dir, "Decision_Rules_d$id.png"))
-    end 
-    mean_adjust = dropdims(mean(adjust_indicator_policy, dims=3), dims=3)
-    heatmap(a, ex, mean_adjust, 
+    for iy in 1:sz.ny 
+        for id in 1:sz.nd
+            heatmap(a, ex, adjust_indicator_policy[:, iy, :, id], 
+                ylabel="Exchange Rate",
+                xlabel="Assets",
+                title="Decision Rule: Adjustment Regions",
+                color=:blues
+            )
+            savefig(joinpath(output_dir, "Decision_Rules_d$id$iy.png"))
+        end 
+    end
+    
+    mean_adjust = dropdims(mean(adjust_indicator_policy, dims=4), dims=4)
+    mean_adjust_avg = dropdims(mean(mean_adjust, dims=2), dims=2)  # Reduce `iy` dimension
+
+    heatmap(a, ex, mean_adjust_avg', 
     ylabel="Exchange Rate",
     xlabel="Assets",
     color=:blues

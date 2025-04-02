@@ -1,10 +1,10 @@
 module sz;
-    const nd        = 11;            #number of points in the durable state grid
-    const na        = 11;            #number of points in the asset state grid
-    const ne        = 7;            #number of points in the exchange rate grid
+    const nd        = 21;            #number of points in the durable state grid
+    const na        = 21;            #number of points in the asset state grid
+    const ne        = 3;            #number of points in the exchange rate grid
     const ny        = 7;            #number of points in the idiosyncratic income grid
-    const npd       = 31;            #number of points in the durable policy grid
-    const npa       = 31;            #number of points in the asset policy grid
+    const npd       = 51;            #number of points in the durable policy grid
+    const npa       = 51;            #number of points in the asset policy grid
     const pad       = 11;            #number of points to search around the previous point
     const nYears    = 300;         #number of years to simulate
     const burnin    = 250;           #number of initial years to toss
@@ -70,7 +70,6 @@ end;
 module settings; 
     const compstat      = false; 
     const verbose       = true; 
-    const complicated   = false;     # Complicated = true is an identity weight matrix. Otherwise, optimal weight matrix. 
-    const irfsshock     = true;     
+    const irfsshock     = false;     
     const specif_two    = false;
 end

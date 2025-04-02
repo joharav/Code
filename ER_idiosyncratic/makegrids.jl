@@ -8,13 +8,24 @@ function makegrids(ppp::Vector{Float64})
 
 
     # Exchange Rate
-    nume = sz.ne
-    numstd_e = sz.nstd_e
-    mew = 3.0
-    eg, trans_e = tauchen(mew, sigma_e, rho_e, nume, numstd_e)
+    if sz.ne == 3 
+        # Exchange Rate
+        trans_e = [0.5 0.4 0.1; 0.3 0.5 0.2 ; 0.1 0.5 0.4];
+        eg = zeros(3);
+        eg[1] = 0.5;
+        eg[2] = 1.0;
+        eg[3] = 2.0;
+    else
+        nume = sz.ne
+        numstd_e = sz.nstd_e
+        mew = 3.0
+        eg, trans_e = tauchen(mew, sigma_e, rho_e, nume, numstd_e)
+            # Rescale to (0,2]
+        eg = 0.01 .+ (1.99) .* (eg .- minimum(eg)) ./ (maximum(eg) - minimum(eg))
+    end
 
-    # Rescale to (0,2]
-    eg = 0.01 .+ (1.99) .* (eg .- minimum(eg)) ./ (maximum(eg) - minimum(eg))
+
+
     
     
      # Idiosyncratic income
