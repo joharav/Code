@@ -20,7 +20,7 @@ nparam = sz.nop
 nnmom   = length(momname)  # Number of selected moments
 
 # Define parameters to vary
-varying_params = [3, 4, 6, 7, 9, 11, 14, 15]   
+varying_params = [6, 7, 9, 11, 14, 15]   
 
 # Define parameter ranges (min, max)
 maxmin = [
@@ -30,7 +30,7 @@ maxmin = [
     0.1   0.90;  # sigma_e (Volatility of exchange rate shock)
     0.40  0.90;  # nu (Share parameter for nondurable consumption)
     0.50  2.00;  # gamma (Risk aversion)
-    0.10  0.95;  # f (Adjustment fixed cost)
+    0.50  0.9;  # f (Adjustment fixed cost)
     0.50  5.00;  # w (Wage)
     0.1   0.9;   # chi (Required maintenance)
     2     8;     # pd (Price of durables)
@@ -84,7 +84,7 @@ for iparam in varying_params
         y_data = allmoms[:, iparam, imom]  # Moment values
 
         # Fit a higher-degree polynomial
-        poly_fit = fit(x_data, y_data, degree)
+        poly_fit = Polynomials.fit(x_data, y_data, degree)
 
         # Generate smooth x values
         x_smooth = range(minimum(x_data), stop=maximum(x_data), length=100)
@@ -96,7 +96,7 @@ for iparam in varying_params
 
         # Save plot
         filename = "Output/Comparative/smoothed_moment_$(pname[iparam])_$(momname[imom]).png"
-        savefig(plot_comp_smooth)
+        savefig(plot_comp_smooth,filename)
 
 
 
@@ -107,3 +107,4 @@ end
 # Time tracking
 arret = time()
 println("Elapsed time in seconds = ", arret - commence)
+

@@ -6,9 +6,9 @@ module sz;
     const npd       = 51;            #number of points in the durable policy grid
     const npa       = 51;            #number of points in the asset policy grid
     const pad       = 11;            #number of points to search around the previous point
-    const nYears    = 300;         #number of years to simulate
+    const nYears    = 10100;         #number of years to simulate
     const burnin    = 250;           #number of initial years to toss
-    const nFirms    = 100;           #number of firms to simulate
+    const nFirms    = 1000;           #number of firms to simulate
     const nmom      = 13;             #number of moments to calculate
     const maxiter   = 5000;          #maximum number of VFI iterations
     const maxditer  = 1000;          #maximum number of iterations for the stationary distribution
@@ -69,7 +69,7 @@ end;
 
 module settings; 
     const compstat      = false; 
-    const verbose       = true; 
+    const verbose       = false; 
     const irfsshock     = false;     
     const specif_two    = false;
 end
