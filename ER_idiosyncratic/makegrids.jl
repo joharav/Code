@@ -28,15 +28,25 @@ function makegrids(ppp::Vector{Float64})
 
     
     
-     # Idiosyncratic income
-     numy = sz.ny
-     numstd_y = sz.nstd_e
-     mew = 0.0
-     yg, trans_y = tauchen(mew, sigma_y, rho_y, numy, numstd_y)
-    yg=exp.(yg)
-    #Kronecker 
-    trans = kron(trans_e, trans_y)
+    # Idiosyncratic income
 
+    if sz.ny == 3 
+        trans_y = [0.5 0.4 0.1; 0.3 0.5 0.2 ; 0.1 0.5 0.4];
+        yg = zeros(3);
+        yg[1] = 0.90;
+        yg[2] = 1.0;
+        yg[3] = 1.10;
+    else
+
+        numy = sz.ny
+        numstd_y = sz.nstd_y
+        mew = 0.0
+        yg, trans_y = tauchen(mew, sigma_y, rho_y, numy, numstd_y)
+        yg=exp.(yg)
+
+    end
+        #Kronecker 
+        trans = kron(trans_e, trans_y)
 
     ### Non-Adjust Case: Asset and Durable Grids
 

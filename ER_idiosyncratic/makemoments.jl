@@ -39,11 +39,11 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
     var_d1 = var(vec(d_state))
 
     # Calculate ratios
-    ratio_d_income = (vec(pd.* ex .* d) ./ vec(w.*y .+ ex .* a_state .* (1 + rr) ))
-    ratio_d_wealth = (vec(pd.*ex .* d) ./ vec(ex .* a_state .* (1 + rr) .+ pd*ex .* d_state))
+    ratio_d_income = (vec(y.*pd.* ex .* d) ./ vec(w .+ y.*ex .* a_state .* (1 + rr) ))
+    ratio_d_wealth = (vec(y.*pd.*ex .* d) ./ vec(y.*ex .* a_state .* (1 + rr) .+ y.*pd*ex .* d_state))
 
     # Calculate the ratio
-    ratio_d_consumption = (vec(pd.* ex .* d) ./ vec(c))
+    ratio_d_consumption = (vec(y.*pd.* ex .* d) ./ vec(c))
    
     mu_d_income = mean(ratio_d_income)
     mu_d_wealth = mean(ratio_d_wealth) 

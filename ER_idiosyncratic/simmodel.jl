@@ -123,9 +123,12 @@ function simmodel(answ::NamedTuple)
     end
     
     # Adjustment indicator
-    adjust_indicator = zeros(Int, sz.nYears, sz.nFirms)
+    #check adjustment ratios
+    adjust_indicator=zeros(size(alld))
     for i in 1:sz.nYears, j in 1:sz.nFirms
-        adjust_indicator[i, j] = alld_adjust[i, j] == alld[i, j] ? 1 : 0
+        if alld_adjust[i, j] == alld[i, j]
+            adjust_indicator[i, j] = 1
+        end
     end
     
     return (v=allv, d=alld, a=alla, ex=alle, d_adjust=alld_adjust,

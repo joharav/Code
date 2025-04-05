@@ -2,7 +2,7 @@ module sz;
     const nd        = 21;            #number of points in the durable state grid
     const na        = 21;            #number of points in the asset state grid
     const ne        = 3;            #number of points in the exchange rate grid
-    const ny        = 7;            #number of points in the idiosyncratic income grid
+    const ny        = 3;            #number of points in the idiosyncratic income grid
     const npd       = 51;            #number of points in the durable policy grid
     const npa       = 51;            #number of points in the asset policy grid
     const pad       = 11;            #number of points to search around the previous point
@@ -19,6 +19,7 @@ module sz;
     const nop       = 15;             #maximum number of parameters
     const noestp    = 2;             #number of parameters you actual estimate 
     const nstd_e    = 3.0;           #number of standard deviations for Tauchen exchange rate, 1.2 for dollar
+    const nstd_y    = 1.0;           #number of standard deviations for Tauchen exchange rate, 1.2 for dollar
     const pick      = [1; 1; 1; 0; 1];     #moments to use
 end;
 
@@ -69,7 +70,7 @@ end;
 
 module settings; 
     const compstat      = false; 
-    const verbose       = false; 
+    const verbose       = true; 
     const irfsshock     = false;     
     const specif_two    = false;
 end

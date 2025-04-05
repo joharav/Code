@@ -20,7 +20,7 @@ nparam = sz.nop
 nnmom   = length(momname)  # Number of selected moments
 
 # Define parameters to vary
-varying_params = [6, 7, 9, 11, 14, 15]   
+varying_params = [6]   #, 7, 9, 11, 14, 15
 
 # Define parameter ranges (min, max)
 maxmin = [
