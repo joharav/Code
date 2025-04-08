@@ -8,8 +8,8 @@
 # ============ Stuff that goes into VFI ====================
  include("../makegrids.jl")
  include("../tauchen.jl")
- include("utility.jl")
- include("utility_noadjust.jl")
+ include("../utility.jl")
+ include("../utility_noadjust.jl")
  include("../fillin.jl")
  #include("inbetween.jl")
  include("../maxbellman.jl")
@@ -17,7 +17,7 @@
  include("../howard.jl")
 include("../howard_noadjust.jl")
  include("../makepol.jl")
- include("makepol_c.jl")
+ include("../makepol_c.jl")
  include("../makepol_d_na.jl")
  include("../mew.jl")
  include("../tinybellman.jl")
@@ -38,6 +38,9 @@ include("../howard_noadjust.jl")
  include("girf.jl") 
  include("../simmodel_girf.jl")
  include("../interpol.jl")
+ include("aggregate_series.jl")
+ include("d_adjust_time_size.jl")
+ include("decision_rules.jl")
 
 # ============Making moments ===============================
  include("../momentgen.jl"); #wrapper

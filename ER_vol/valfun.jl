@@ -8,6 +8,12 @@ function valfun(pea::Vector{Float64})
 
   # # Create an indicator matrix (1 if adjusted value is greater, 0 otherwise)
   indicator_matrix = adjust_result.v .> noadjust_result.v
+  adjustment_indicator = vec(indicator_matrix)  # Flattening the matrix to a vector
+  num_adjustments = sum(adjustment_indicator.==1)
+  total_states = length(adjustment_indicator)
+  adjustment_ratio = num_adjustments / total_states
+  
+  println("Theoretical Adjustment Ratio: $(round(adjustment_ratio * 100, digits=2))%")
 
   # # Conditional assignments based on the indicator_matrix
   gidx_a = ifelse.(indicator_matrix, adjust_result.gidx.a, noadjust_result.gidx.a)

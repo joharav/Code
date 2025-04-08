@@ -17,7 +17,7 @@ function simmodel(answ::NamedTuple)
     # Set up the transition matrix
     phatcdf = cumsum(tmat, dims=2)
     
-    cdf_wgt = tmat'^100
+    cdf_wgt = Matrix(tmat')^100
     cdf_wgt = cumsum(cdf_wgt[:,Int(floor(sz.ne*0.5))+1])
 
     # ls is the indices of the shocks in the simulation. stands for "locations" 

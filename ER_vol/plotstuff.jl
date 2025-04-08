@@ -40,7 +40,7 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         plot5a = plot(xlabel="Assets", ylabel="Durable Policy", title="Durable Policy Function", legend=:topright)
 
         # Loop over economic states
-        for ie in 1:sz.ne
+        for ie in (1, 3, 7)
             # Extract the policy function for the current economic state
             # Assuming dpol[ie, :, :] gives the durable policy for all (a, d) at fixed e
                 plot!(a, dpol[ie, :, Int(floor(sz.nd/3))], label="e=$ie")
@@ -52,7 +52,7 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         plot5b = plot(xlabel="Assets", ylabel="Durable Policy", title="Durable Policy Function", legend=:topright)
 
         # Loop over economic states
-        for ie in 1:sz.ne
+        for ie in (1, 3, 7)
             # Extract the policy function for the current economic state
             # Assuming dpol[ie, :, :] gives the durable policy for all (a, d) at fixed e
                 plot!(a, dpol[ie, :, Int(floor(2/3*sz.nd))], label="e=$ie")
@@ -66,7 +66,7 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         plot6 = plot(xlabel="Assets", ylabel="Asset Policy", title="Asset Policy Function", legend=:topright)
 
         # Loop over economic states
-        for ie in 1:sz.ne
+        for ie in (1, 3, 7)
         # Extract the policy function for the current economic state
         # Assuming dpol[ie, :, :] gives the durable policy for all (a, d) at fixed e
             plot!(a, apol[ie, :, Int(floor(sz.nd/2))], label="e=$ie")
@@ -78,7 +78,7 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         plot6a = plot(xlabel="Assets", ylabel="Asset Policy", title="Asset Policy Function", legend=:topright)
 
         # Loop over economic states
-        for ie in 1:sz.ne
+        for ie in (1, 3, 7)
             # Extract the policy function for the current economic state
             # Assuming dpol[ie, :, :] gives the durable policy for all (a, d) at fixed e
                 plot!(a, apol[ie, :, Int(floor(sz.nd/3))], label="e=$ie")
@@ -90,7 +90,7 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         plot6b = plot(xlabel="Assets", ylabel="Asset Policy", title="Asset Policy Function", legend=:topright)
 
         # Loop over economic states
-        for ie in 1:sz.ne
+        for ie in (1, 3, 7)
             # Extract the policy function for the current economic state
             # Assuming apol[ie, :, :] gives the durable policy for all (a, d) at fixed e
                 plot!(a, apol[ie, :, Int(floor(2/3*sz.nd))], label="e=$ie")

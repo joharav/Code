@@ -6,25 +6,19 @@ function makegrids(ppp::Vector{Float64})
 
 
     # Exchange Rate
-    nume = sz.ne
-    numstd_e = sz.nstd_e
-    mew = 3.0
-    eg, trans = tauchen(mew, sigma_e, rho_e, nume, numstd_e)
+    if sz.ne==1
+        eg=[1.0]
+        trans = [1.0]
+    else
+        nume = sz.ne
+        numstd_e = sz.nstd_e
+        mew = 3.0
+        eg, trans = tauchen(mew, sigma_e, rho_e, nume, numstd_e)
 
-    # Rescale to (0,2]
-    eg = 0.01 .+ (1.99) .* (eg .- minimum(eg)) ./ (maximum(eg) - minimum(eg))
+        # Rescale to (0,2]
+        eg = 0.01 .+ (1.99) .* (eg .- minimum(eg)) ./ (maximum(eg) - minimum(eg))
+    end
     
-    
-#     # Idiosyncratic income
-#     numy = sz.ne
-#     numstd_y = sz.nstd_e
-#     mew = 0.0
-#     yg, trans_y = tauchen(mew, sigma_y, rho_y, numy, numstd_y)
-
-#    #Kronecker 
-#    trans = kron(trans_e, trans_y)
-
-
     ### Non-Adjust Case: Asset and Durable Grids
 
     # Asset Grid (Current Asset Holdings)

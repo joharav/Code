@@ -20,7 +20,7 @@ nparam = sz.nop
 nnmom   = length(momname)  # Number of selected moments
 
 # Define parameters to vary
-varying_params = [3, 4, 6, 7, 9, 11]   
+varying_params = [3]   #, 4, 6, 7, 9, 11
 
 # Define parameter ranges (min, max)
 maxmin = [
@@ -80,7 +80,7 @@ for iparam in varying_params
         y_data = allmoms[:, iparam, imom]  # Moment values
 
         # Fit a higher-degree polynomial
-        poly_fit = fit(x_data, y_data, degree)
+        poly_fit = Polynomials.fit(x_data, y_data, degree)
 
         # Generate smooth x values
         x_smooth = range(minimum(x_data), stop=maximum(x_data), length=100)
@@ -92,7 +92,7 @@ for iparam in varying_params
 
         # Save plot
         filename = "Output/Comparative/smoothed_moment_$(pname[iparam])_$(momname[imom]).png"
-        savefig(plot_comp_smooth)
+        savefig(plot_comp_smooth,filename)
 
 
 

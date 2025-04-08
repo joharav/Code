@@ -30,5 +30,5 @@ function momentgen(p::Vector{Float64})
         moms = -100.0*ones(sz.nmom)
     end
     
-    return moms::Vector{Float64}
+    return moms::Vector{Float64}, answ 
 end

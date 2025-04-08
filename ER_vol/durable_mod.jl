@@ -49,8 +49,9 @@ module globals;
 end;
 
 module settings; 
-    const compstat      = true; 
+    const compstat      = false; 
     const verbose       = true; 
-    const irfsshock     = true;     
-    const specif_two    = false;
+    const irfsshock     = false;     
+    const specif_two    = true;
+    const specif_three    = true;
 end
