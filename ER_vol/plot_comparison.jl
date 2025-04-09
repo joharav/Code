@@ -16,7 +16,7 @@ function plot_policy_functions(policies::OrderedDict)
     p1=plot(
         xlabel = "Current assets",
         ylabel = "Durable Policy",
-        title = "Durable Policy Function Comparison",
+        title = "Durable Policy Function",
         legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
         ylims = (0, 60),
@@ -89,7 +89,7 @@ function plot_policy_functions(policies::OrderedDict)
     p2=plot(
         xlabel = "Current assets",
         ylabel = "Asset Policy",
-        title = "Asset Policy Function Comparison",
+        title = "Asset Policy Function",
         legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
         ylims = (0, 60),
@@ -110,6 +110,54 @@ function plot_policy_functions(policies::OrderedDict)
     end
     savefig(p2, joinpath(output_dir, "AssetPolicy.png"))
 
+
+    p2_1=plot(
+        xlabel = "Current assets",
+        ylabel = "Asset Policy",
+        title = "Asset Policy before adjustment",
+        legend = :outerbottom, legend_orientation = :horizontal,
+        xlims = (0, 50),
+        ylims = (0, 60),
+        size = (800, 600)
+    )
+
+    for (i, label) in enumerate(style_keys)
+
+            policy = policies[label]
+            if label == "Fixed Exchange Rate"
+                ne_fix = 1
+            else
+                ne_fix = 4
+            end
+            avg_policy =policy.pol.a[ne_fix, 1:3, Int(floor(sz.nd/2))+1]
+            plot!(policy.g.a[1:3], avg_policy,      label = label,
+            linestyle = linestyles[mod1(i, length(linestyles))])
+    end
+    savefig(p2_1, joinpath(output_dir, "AssetPolicy_1.png"))
+
+    p2_2=plot(
+        xlabel = "Current assets",
+        ylabel = "Asset Policy",
+        title = "Asset Policy at adjustment",
+        legend = :outerbottom, legend_orientation = :horizontal,
+        xlims = (0, 50),
+        ylims = (0, 60),
+        size = (800, 600)
+    )
+
+    for (i, label) in enumerate(style_keys)
+
+            policy = policies[label]
+            if label == "Fixed Exchange Rate"
+                ne_fix = 1
+            else
+                ne_fix = 4
+            end
+            avg_policy =policy.pol.a[ne_fix, 1:4, Int(floor(sz.nd/2))+1]
+            plot!(policy.g.a[1:4], avg_policy,      label = label,
+            linestyle = linestyles[mod1(i, length(linestyles))])
+    end
+    savefig(p2_2, joinpath(output_dir, "AssetPolicy_2.png"))
 
     p3=plot(
         xlabel = "Current assets",

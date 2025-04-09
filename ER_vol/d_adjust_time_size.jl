@@ -21,7 +21,8 @@ function d_adjust_time_size(simdata)
 
     # Size - Histogram
     adjust_size = abs.(vec(d[adjust_indicator .== 1]) .- vec(d_state[adjust_indicator .== 1]))
-    histogram(adjust_size, bins=80, xlabel="Adjustment Size", ylabel="Frequency", color=:red,legend=false)
+    adjust_size = adjust_size[adjust_size .> 0.5]  # Filter out zero adjustments
+    histogram(adjust_size, bins=100, xlabel="Adjustment Size", ylabel="Frequency", color=:red,legend=false)
     savefig(joinpath(output_dir, "Adjustment_Size.png"))
 
 end 
