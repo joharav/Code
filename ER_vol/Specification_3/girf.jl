@@ -1,4 +1,6 @@
 using Plots
+default(fontfamily = "Computer Modern")  # Looks like LaTeX
+
 function girf_plots(simul_shock::NamedTuple,simul_noshock::NamedTuple)
      girf_c          = 100/sz.nFirms * sum(log.(simul_shock.c ./ simul_noshock.c), dims=2)
      girf_d          = 100/sz.nFirms * sum(log.(simul_shock.d ./ simul_noshock.d), dims=2)

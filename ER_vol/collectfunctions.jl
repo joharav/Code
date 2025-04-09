@@ -40,6 +40,7 @@
  include("d_adjust_time_size.jl")
  include("decision_rules.jl")
  include("plotgaps_shock.jl")
+ include("plot_comparison.jl")
 
 # ============Making moments ===============================
  include("momentgen.jl"); #wrapper

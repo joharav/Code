@@ -2,6 +2,7 @@ using StatsBase
 using KernelDensity
 using Interpolations
 using Plots
+default(fontfamily = "Computer Modern")  # Looks like LaTeX
 
 function adjustment_gaps_sim(current_d,d_a,adjustment_indicator)
     # Calculate the adjustement gaps

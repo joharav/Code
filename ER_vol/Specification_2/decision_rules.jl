@@ -1,4 +1,6 @@
 using Plots
+default(fontfamily = "Computer Modern")  # Looks like LaTeX
+
 function decision_rules(answ)
 
     # Example of how to call the function

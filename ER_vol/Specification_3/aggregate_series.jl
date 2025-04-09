@@ -1,4 +1,5 @@
 using Plots
+default(fontfamily = "Computer Modern")  # Looks like LaTeX
 
 function plot_aggregates(simdata)
     # Extract assets and durable stock information

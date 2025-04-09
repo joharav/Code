@@ -1,5 +1,6 @@
 using Plots
 gr() # switch to the GR backend
+default(fontfamily = "Computer Modern")  # Looks like LaTeX
 
 # Define function to calculate average moment across variations for a given parameter
 function avg_moments_for_param(allmoms, param_index, nmom)

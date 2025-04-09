@@ -1,4 +1,4 @@
-using Random, Distributions, LinearAlgebra, Plots, Statistics, Printf, StatsBase, KernelDensity, JLD2;
+using Random, Distributions, LinearAlgebra, Plots, Statistics, Printf, StatsBase, KernelDensity, JLD2, DataStructures;
 include("durable_mod.jl");
 include("collectfunctions.jl");
 
@@ -18,10 +18,10 @@ if settings.specif_two
 end
 
 # Store policy objects for comparison
-policies = Dict(
-    "baseline" => answ_baseline,
-    "high_vol" => answ_high_vol,
-    "fixed_er" => answ_fixed_er
+policies = OrderedDict(
+    "Baseline" => answ_baseline,
+    "High Volatility" => answ_high_vol,
+    "Fixed Exchange Rate" => answ_fixed_er
 )
 # Plot policy functions for comparisonfixed_er
 

@@ -1,4 +1,5 @@
 using Plots
+default(fontfamily = "Computer Modern")  # Looks like LaTeX
 
 function d_adjust_time_size(simdata)
     

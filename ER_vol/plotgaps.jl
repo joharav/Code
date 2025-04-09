@@ -1,3 +1,5 @@
+default(fontfamily = "Computer Modern")  # Looks like LaTeX
+
 function plotgaps(x_values::Vector{Float64}, f_x::Vector{Float64}, h_x::Vector{Float64}, gap_vec::Vector{Float64}; shock::Bool = settings.irfsshock)
     filename_suffix = shock ? "_shock" : ""
 

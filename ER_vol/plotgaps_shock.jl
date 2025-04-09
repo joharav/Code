@@ -1,4 +1,5 @@
 using Plots
+default(fontfamily = "Computer Modern")  # Looks like LaTeX
 
 function plotgaps_shock(x_values::Vector{Float64}, f_x::Vector{Float64}, h_x::Vector{Float64},  
                   x_values_shock::Vector{Float64}, f_x_shock::Vector{Float64}, h_x_shock::Vector{Float64})

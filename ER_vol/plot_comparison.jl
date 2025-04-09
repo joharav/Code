@@ -1,7 +1,7 @@
 using Plots
 default(fontfamily = "Computer Modern")  # Looks like LaTeX
 
-function plot_policy_functions(policies::Dict)
+function plot_policy_functions(policies::OrderedDict)
 
     output_dir = "Output/PolicyPictures/"
     if !isdir(output_dir)
@@ -26,7 +26,7 @@ function plot_policy_functions(policies::Dict)
     for (i, label) in enumerate(style_keys)
 
             policy = policies[label]
-            if label == "fixed_er"
+            if label == "Fixed Exchange Rate"
                 ne_fix = 1
             else
                 ne_fix = 4
@@ -50,7 +50,7 @@ function plot_policy_functions(policies::Dict)
     for (i, label) in enumerate(style_keys)
 
             policy = policies[label]
-            if label == "fixed_er"
+            if label == "Fixed Exchange Rate"
                 ne_fix = 1
             else
                 ne_fix = 4
@@ -75,7 +75,7 @@ function plot_policy_functions(policies::Dict)
     for (i, label) in enumerate(style_keys)
 
             policy = policies[label]
-            if label == "fixed_er"
+            if label == "Fixed Exchange Rate"
                 ne_fix = 1
             else
                 ne_fix = 4
@@ -99,7 +99,7 @@ function plot_policy_functions(policies::Dict)
     for (i, label) in enumerate(style_keys)
 
             policy = policies[label]
-            if label == "fixed_er"
+            if label == "Fixed Exchange Rate"
                 ne_fix = 1
             else
                 ne_fix = 4
@@ -124,7 +124,7 @@ function plot_policy_functions(policies::Dict)
     for (i, label) in enumerate(style_keys)
 
             policy = policies[label]
-            if label == "fixed_er"
+            if label == "Fixed Exchange Rate"
                 ne_fix = 1
             else
                 ne_fix = 4
@@ -148,7 +148,7 @@ function plot_policy_functions(policies::Dict)
     for (i, label) in enumerate(style_keys)
 
             policy = policies[label]
-            if label == "fixed_er"
+            if label == "Fixed Exchange Rate"
                 ne_fix = 1
             else
                 ne_fix = 4
@@ -173,10 +173,10 @@ function plot_policy_functions(policies::Dict)
     
     nd_fix = Int(floor(sz.nd / 2)) + 1
     e_states = [1, 4, 7]
-    e_labels = ["low", "one", "high"]
+    e_labels = ["Low e", "e=1", "High e"]
     
     for (i, (ie, elabel)) in enumerate(zip(e_states, e_labels))
-        label = "baseline"
+        label = "Baseline"
         policy = policies[label]
     
         durable_policy = policy.pol.d[ie, :, nd_fix]
@@ -199,10 +199,10 @@ function plot_policy_functions(policies::Dict)
     
     nd_fix = Int(floor(sz.nd* 2/ 3)) + 1
     e_states = [1, 4, 7]
-    e_labels = ["low", "one", "high"]
+    e_labels = ["Low e", "e=1", "High e"]
     
     for (i, (ie, elabel)) in enumerate(zip(e_states, e_labels))
-        label = "baseline"
+        label = "Baseline"
         policy = policies[label]
     
         durable_policy = policy.pol.d[ie, :, nd_fix]
@@ -226,10 +226,10 @@ function plot_policy_functions(policies::Dict)
     
     nd_fix = Int(floor(sz.nd* 1/ 3)) + 1
     e_states = [1, 4, 7]
-    e_labels = ["low", "one", "high"]
+    e_labels = ["Low e", "e=1", "High e"]
     
     for (i, (ie, elabel)) in enumerate(zip(e_states, e_labels))
-        label = "baseline"
+        label = "Baseline"
         policy = policies[label]
     
         durable_policy = policy.pol.d[ie, :, nd_fix]
@@ -254,10 +254,10 @@ function plot_policy_functions(policies::Dict)
     
     nd_fix = Int(floor(sz.nd / 2)) + 1
     e_states = [1, 4, 7]
-    e_labels = ["low", "one", "high"]
+    e_labels = ["Low e", "e=1", "High e"]
     
     for (i, (ie, elabel)) in enumerate(zip(e_states, e_labels))
-        label = "baseline"
+        label = "Baseline"
         policy = policies[label]
     
         asset_policy = policy.pol.a[ie, :, nd_fix]
@@ -280,10 +280,10 @@ function plot_policy_functions(policies::Dict)
     
     nd_fix = Int(floor(sz.nd* 2/ 3)) + 1
     e_states = [1, 4, 7]
-    e_labels = ["low", "one", "high"]
+    e_labels = ["Low e", "e=1", "High e"]
     
     for (i, (ie, elabel)) in enumerate(zip(e_states, e_labels))
-        label = "baseline"
+        label = "Baseline"
         policy = policies[label]
     
         asset_policy = policy.pol.a[ie, :, nd_fix]
@@ -307,10 +307,10 @@ function plot_policy_functions(policies::Dict)
     
     nd_fix = Int(floor(sz.nd* 1/ 3)) + 1
     e_states = [1, 4, 7]
-    e_labels = ["low", "one", "high"]
+    e_labels = ["Low e", "e=1", "High e"]
     
     for (i, (ie, elabel)) in enumerate(zip(e_states, e_labels))
-        label = "baseline"
+        label = "Baseline"
         policy = policies[label]
     
         asset_policy = policy.pol.a[ie, :, nd_fix]

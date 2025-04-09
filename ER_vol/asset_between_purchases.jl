@@ -1,5 +1,6 @@
 # Sample household indices
 sample_households = 1:5  # Assume indices 1 to 5
+default(fontfamily = "Computer Modern")  # Looks like LaTeX
 
 function plot_asset_path_between_purchases(simdata, sample_households)
     a                   = simdata.a[sz.burnin-2:sz.nYears, :]

@@ -1,4 +1,5 @@
 using Plots
+default(fontfamily = "Computer Modern")  # Looks like LaTeX
 
 function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{Int64, 3},  cpol::Array{Float64, 3}, g::NamedTuple)
 

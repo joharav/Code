@@ -1,3 +1,4 @@
+default(fontfamily = "Computer Modern")  # Looks like LaTeX
 function plotdensities(x_values::Vector{Float64}, f_x::Vector{Float64}, variable_name::String; shock::Bool = settings.irfsshock)
     filename_suffix = shock ? "_shock" : ""
 

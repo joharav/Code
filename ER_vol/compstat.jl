@@ -4,6 +4,7 @@ include("durable_mod.jl")
 include("collectfunctions.jl")
 
 using Main.sz,  Main.settings, Main.globals, Main.dtp; 
+default(fontfamily = "Computer Modern")  # Looks like LaTeX
 
 commence = time()
 
