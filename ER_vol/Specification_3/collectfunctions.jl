@@ -6,7 +6,7 @@
 # ============================================================================================================================
 
 # ============ Stuff that goes into VFI ====================
- include("../makegrids.jl")
+ include("../makegrids.jl") 
  include("../tauchen.jl")
  include("../utility.jl")
  include("../utility_noadjust.jl")

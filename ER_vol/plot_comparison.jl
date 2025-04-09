@@ -17,7 +17,7 @@ function plot_policy_functions(policies::OrderedDict)
         xlabel = "Current assets",
         ylabel = "Durable Policy",
         title = "Durable Policy Function Comparison",
-        legend = :outerbottom,
+        legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
         ylims = (0, 60),
         size = (800, 600)
@@ -41,7 +41,7 @@ function plot_policy_functions(policies::OrderedDict)
         xlabel = "Current assets",
         ylabel = "Durable Policy",
         title = "Durable Policy Function Comparison",
-        legend = :outerbottom,
+        legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
         ylims = (0, 60),
         size = (800, 600)
@@ -66,7 +66,7 @@ function plot_policy_functions(policies::OrderedDict)
         xlabel = "Current assets",
         ylabel = "Durable Policy",
         title = "Durable Policy Function Comparison",
-        legend = :outerbottom,
+        legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
         ylims = (0, 60),
         size = (800, 600)
@@ -90,7 +90,7 @@ function plot_policy_functions(policies::OrderedDict)
         xlabel = "Current assets",
         ylabel = "Asset Policy",
         title = "Asset Policy Function Comparison",
-        legend = :outerbottom,
+        legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
         ylims = (0, 60),
         size = (800, 600)
@@ -115,7 +115,7 @@ function plot_policy_functions(policies::OrderedDict)
         xlabel = "Current assets",
         ylabel = "Asset Policy",
         title = "Asset Policy Function Comparison",
-        legend = :outerbottom,
+        legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
         ylims = (0, 60),
         size = (800, 600)
@@ -139,7 +139,7 @@ function plot_policy_functions(policies::OrderedDict)
         xlabel = "Current assets",
         ylabel = "Asset Policy",
         title = "Asset Policy Function Comparison",
-        legend = :outerbottom,
+        legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
         ylims = (0, 60),
         size = (800, 600)
@@ -165,7 +165,7 @@ function plot_policy_functions(policies::OrderedDict)
         xlabel = "Current assets",
         ylabel = "Durable Policy",
         title = "Durable Policy Function by Exchange Rate State",
-        legend = :outerbottom,
+        legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
         ylims = (0, 60),
         size = (800, 600)
@@ -191,7 +191,7 @@ function plot_policy_functions(policies::OrderedDict)
         xlabel = "Current assets",
         ylabel = "Durable Policy",
         title = "Durable Policy Function by Exchange Rate State",
-        legend = :outerbottom,
+        legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
         ylims = (0, 60),
         size = (800, 600)
@@ -218,7 +218,7 @@ function plot_policy_functions(policies::OrderedDict)
         xlabel = "Current assets",
         ylabel = "Durable Policy",
         title = "Durable Policy Function by Exchange Rate State",
-        legend = :outerbottom,
+        legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
         ylims = (0, 60),
         size = (800, 600)
@@ -246,7 +246,7 @@ function plot_policy_functions(policies::OrderedDict)
         xlabel = "Current assets",
         ylabel = "Asset Policy",
         title = "Asset Policy Function by Exchange Rate State",
-        legend = :outerbottom,
+        legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
         ylims = (0, 60),
         size = (800, 600)
@@ -272,7 +272,7 @@ function plot_policy_functions(policies::OrderedDict)
         xlabel = "Current assets",
         ylabel = "Asset Policy",
         title = "Asset Policy Function by Exchange Rate State",
-        legend = :outerbottom,
+        legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
         ylims = (0, 60),
         size = (800, 600)

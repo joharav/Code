@@ -14,18 +14,8 @@ function makegrids(ppp::Vector{Float64})
         numstd_e = sz.nstd_e
         mew = 3.0
         eg_raw, trans = tauchen(mew, sigma_e, rho_e, nume, numstd_e)
-
-        # Get the index of the middle point
         mid_idx = Int(ceil(nume / 2))
-        mid_val = eg_raw[mid_idx]
-        
-        # Rescale to target range (0.01, 2) and force eg[mid_idx] = 1
-        # Step 1: linear scaling to [0.01, 2]
-        eg_rescaled = 0.01 .+ (1.99) .* (eg_raw .- minimum(eg_raw)) ./ (maximum(eg_raw) - minimum(eg_raw))
-        
-        # Step 2: normalize so that eg[mid_idx] = 1
-        eg = eg_rescaled ./ eg_rescaled[mid_idx]
-        
+        eg = eg_raw ./ eg_raw[mid_idx]  # Center at 1.0, spread reflects σ
     end
     
     ### Non-Adjust Case: Asset and Durable Grids
