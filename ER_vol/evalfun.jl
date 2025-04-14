@@ -15,17 +15,18 @@ moms, answ_baseline = momentgen(pea);
 
 if settings.specif_two
     include("Specification_2/evalfun.jl")
+    # Store policy objects for comparison
+    policies = OrderedDict(
+        "Baseline (Floating exchange rate)" => answ_baseline,
+        #"High Volatility" => answ_high_vol,
+        "Fixed Exchange Rate" => answ_fixed_er
+    )
+    # Plot policy functions for comparisonfixed_er
+
+    plot_policy_functions(policies)
 end
 
-# Store policy objects for comparison
-policies = OrderedDict(
-    "Baseline" => answ_baseline,
-    #"High Volatility" => answ_high_vol,
-    "Fixed Exchange Rate" => answ_fixed_er
-)
-# Plot policy functions for comparisonfixed_er
 
-plot_policy_functions(policies)
 
 if settings.compstat
     include("compstat.jl")

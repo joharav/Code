@@ -52,6 +52,6 @@ module settings;
     const compstat      = false; 
     const verbose       = true; 
     const irfsshock     = false;     
-    const specif_two    = true;
-    const specif_three    = true;
+    const specif_two    = false;
+    const specif_three    = false;
 end

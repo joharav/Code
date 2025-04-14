@@ -14,8 +14,8 @@ function plot_policy_functions(policies::OrderedDict)
 
 
     p1=plot(
-        xlabel = "Current assets",
-        ylabel = "Durable Policy",
+        xlabel = "Current assets, a",
+        ylabel = "Durable Policy, d'",
         title = "Durable Policy Function",
         legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
@@ -38,8 +38,8 @@ function plot_policy_functions(policies::OrderedDict)
     savefig(p1, joinpath(output_dir, "DurablePolicy.png"))
 
     p1h=plot(
-        xlabel = "Current assets",
-        ylabel = "Durable Policy",
+        xlabel = "Current assets, a",
+        ylabel = "Durable Policy, d'",
         title = "Durable Policy Function Comparison",
         legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
@@ -63,8 +63,8 @@ function plot_policy_functions(policies::OrderedDict)
 
 
     p1l=plot(
-        xlabel = "Current assets",
-        ylabel = "Durable Policy",
+        xlabel = "Current assets, a",
+        ylabel = "Durable Policy, d'",
         title = "Durable Policy Function Comparison",
         legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
@@ -87,8 +87,8 @@ function plot_policy_functions(policies::OrderedDict)
     savefig(p1l, joinpath(output_dir, "DurablePolicy_low.png"))
 
     p2=plot(
-        xlabel = "Current assets",
-        ylabel = "Asset Policy",
+        xlabel = "Current assets, a",
+        ylabel = "Asset Policy, a'",
         title = "Asset Policy Function",
         legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
@@ -112,8 +112,8 @@ function plot_policy_functions(policies::OrderedDict)
 
 
     p2_1=plot(
-        xlabel = "Current assets",
-        ylabel = "Asset Policy",
+        xlabel = "Current assets, a",
+        ylabel = "Asset Policy, a'",
         title = "Asset Policy before adjustment",
         legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
@@ -136,8 +136,8 @@ function plot_policy_functions(policies::OrderedDict)
     savefig(p2_1, joinpath(output_dir, "AssetPolicy_1.png"))
 
     p2_2=plot(
-        xlabel = "Current assets",
-        ylabel = "Asset Policy",
+        xlabel = "Current assets, a",
+        ylabel = "Asset Policy, a'",
         title = "Asset Policy at adjustment",
         legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
@@ -160,8 +160,8 @@ function plot_policy_functions(policies::OrderedDict)
     savefig(p2_2, joinpath(output_dir, "AssetPolicy_2.png"))
 
     p3=plot(
-        xlabel = "Current assets",
-        ylabel = "Asset Policy",
+        xlabel = "Current assets, a",
+        ylabel = "Asset Policy, a'",
         title = "Asset Policy Function Comparison",
         legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
@@ -184,8 +184,8 @@ function plot_policy_functions(policies::OrderedDict)
     savefig(p3, joinpath(output_dir, "AssetPolicyComparison_high.png"))
 
     p4=plot(
-        xlabel = "Current assets",
-        ylabel = "Asset Policy",
+        xlabel = "Current assets, a",
+        ylabel = "Asset Policy, a'",
         title = "Asset Policy Function Comparison",
         legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
@@ -210,8 +210,8 @@ function plot_policy_functions(policies::OrderedDict)
 
 
     p5 = plot(
-        xlabel = "Current assets",
-        ylabel = "Durable Policy",
+        xlabel = "Current assets, a",
+        ylabel = "Durable Policy, d'",
         title = "Durable Policy Function by Exchange Rate State",
         legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
@@ -224,7 +224,7 @@ function plot_policy_functions(policies::OrderedDict)
     e_labels = ["Low e", "e=1", "High e"]
     
     for (i, (ie, elabel)) in enumerate(zip(e_states, e_labels))
-        label = "Baseline"
+        label = "Baseline (Floating exchange rate)"
         policy = policies[label]
     
         durable_policy = policy.pol.d[ie, :, nd_fix]
@@ -236,8 +236,8 @@ function plot_policy_functions(policies::OrderedDict)
     savefig(p5, joinpath(output_dir, "DurablePolicy_by_exchange_rate.png"))
 
     p5h = plot(
-        xlabel = "Current assets",
-        ylabel = "Durable Policy",
+        xlabel = "Current assets, a",
+        ylabel = "Durable Policy, d'",
         title = "Durable Policy Function by Exchange Rate State",
         legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
@@ -250,7 +250,7 @@ function plot_policy_functions(policies::OrderedDict)
     e_labels = ["Low e", "e=1", "High e"]
     
     for (i, (ie, elabel)) in enumerate(zip(e_states, e_labels))
-        label = "Baseline"
+        label = "Baseline (Floating exchange rate)"
         policy = policies[label]
     
         durable_policy = policy.pol.d[ie, :, nd_fix]
@@ -263,8 +263,8 @@ function plot_policy_functions(policies::OrderedDict)
 
 
     p5l = plot(
-        xlabel = "Current assets",
-        ylabel = "Durable Policy",
+        xlabel = "Current assets, a",
+        ylabel = "Durable Policy, d'",
         title = "Durable Policy Function by Exchange Rate State",
         legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
@@ -277,7 +277,7 @@ function plot_policy_functions(policies::OrderedDict)
     e_labels = ["Low e", "e=1", "High e"]
     
     for (i, (ie, elabel)) in enumerate(zip(e_states, e_labels))
-        label = "Baseline"
+        label = "Baseline (Floating exchange rate)"
         policy = policies[label]
     
         durable_policy = policy.pol.d[ie, :, nd_fix]
@@ -291,8 +291,8 @@ function plot_policy_functions(policies::OrderedDict)
 
 
     p6 = plot(
-        xlabel = "Current assets",
-        ylabel = "Asset Policy",
+        xlabel = "Current assets, a",
+        ylabel = "Asset Policy, a'",
         title = "Asset Policy Function by Exchange Rate State",
         legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
@@ -305,7 +305,7 @@ function plot_policy_functions(policies::OrderedDict)
     e_labels = ["Low e", "e=1", "High e"]
     
     for (i, (ie, elabel)) in enumerate(zip(e_states, e_labels))
-        label = "Baseline"
+        label = "Baseline (Floating exchange rate)"
         policy = policies[label]
     
         asset_policy = policy.pol.a[ie, :, nd_fix]
@@ -317,8 +317,8 @@ function plot_policy_functions(policies::OrderedDict)
     savefig(p6, joinpath(output_dir, "AssetPolicy_by_exchange_rate.png"))
 
     p6h = plot(
-        xlabel = "Current assets",
-        ylabel = "Asset Policy",
+        xlabel = "Current assets, a",
+        ylabel = "Asset Policy, a'",
         title = "Asset Policy Function by Exchange Rate State",
         legend = :outerbottom, legend_orientation = :horizontal,
         xlims = (0, 50),
@@ -331,7 +331,7 @@ function plot_policy_functions(policies::OrderedDict)
     e_labels = ["Low e", "e=1", "High e"]
     
     for (i, (ie, elabel)) in enumerate(zip(e_states, e_labels))
-        label = "Baseline"
+        label = "Baseline (Floating exchange rate)"
         policy = policies[label]
     
         asset_policy = policy.pol.a[ie, :, nd_fix]
@@ -344,8 +344,8 @@ function plot_policy_functions(policies::OrderedDict)
 
 
     p6l = plot(
-        xlabel = "Current assets",
-        ylabel = "Asset Policy",
+        xlabel = "Current assets, a",
+        ylabel = "Asset Policy, a'",
         title = "Asset Policy Function by Exchange Rate State",
         legend = :outerbottom,
         xlims = (0, 50),
@@ -358,7 +358,7 @@ function plot_policy_functions(policies::OrderedDict)
     e_labels = ["Low e", "e=1", "High e"]
     
     for (i, (ie, elabel)) in enumerate(zip(e_states, e_labels))
-        label = "Baseline"
+        label = "Baseline (Floating exchange rate)"
         policy = policies[label]
     
         asset_policy = policy.pol.a[ie, :, nd_fix]

@@ -1,4 +1,4 @@
-using Random, Distributions, LinearAlgebra, Plots, Statistics, Printf, StatsBase, KernelDensity, JLD2, Polynomials
+using Random, Distributions, LinearAlgebra, Plots, Statistics, Printf, StatsBase, KernelDensity, JLD2, Polynomials, DataStructures;
 
 include("durable_mod.jl")
 include("collectfunctions.jl")
@@ -56,7 +56,7 @@ for iparam in varying_params
         ppp[iparam] = glop  
 
         # Compute the moments
-        moms = momentgen(ppp)
+        moms, answ_compstat = momentgen(ppp)
 
         # Store parameter values and selected moments
         allparams[ivary, iparam] = glop
