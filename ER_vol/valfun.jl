@@ -30,7 +30,7 @@ function valfun(pea::Vector{Float64})
   e = adjust_result.e
 
   # Constructing the output tuple
-  outtuple = (v = v, gidx = gidx, pol = pol, g = g, e = e, adjust_result=adjust_result, noadjust_result=noadjust_result) 
+  outtuple = (v = v, gidx = gidx, pol = pol, g = g, e = e, adjust_result=adjust_result, noadjust_result=noadjust_result,adjustment_indicator=indicator_matrix) 
 
   # Optional debug or visualization
   if settings.verbose && adjust_result.e == 0 && noadjust_result.e == 0

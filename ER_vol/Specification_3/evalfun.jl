@@ -8,7 +8,7 @@ pea = ptrue(sz.nop);
 
 #answ=valfun(pea);   
 
-moms_3, answ_high_vol = momentgen(pea);
+moms_3, answ_zero_vol = momentgen(pea);
 #include("compstat.jl");
 
 

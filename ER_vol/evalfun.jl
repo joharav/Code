@@ -18,7 +18,7 @@ if settings.specif_two
     # Store policy objects for comparison
     policies = OrderedDict(
         "Baseline (Floating exchange rate)" => answ_baseline,
-        #"High Volatility" => answ_high_vol,
+        #"Fixed Exchange Rate" => answ_ero_vol,
         "Fixed Exchange Rate" => answ_fixed_er
     )
     # Plot policy functions for comparisonfixed_er

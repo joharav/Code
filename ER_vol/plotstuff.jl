@@ -41,7 +41,7 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         plot5a = plot(xlabel="Assets", ylabel="Durable Policy", title="Durable Policy Function", legend=:topright)
 
         # Loop over economic states
-        for ie in (1, 3, 7)
+        for ie in 1:sz.ne#(1, 3, 7)
             # Extract the policy function for the current economic state
             # Assuming dpol[ie, :, :] gives the durable policy for all (a, d) at fixed e
                 plot!(a, dpol[ie, :, Int(floor(sz.nd/3))], label="e=$ie")
@@ -53,7 +53,7 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         plot5b = plot(xlabel="Assets", ylabel="Durable Policy", title="Durable Policy Function", legend=:topright)
 
         # Loop over economic states
-        for ie in (1, 3, 7)
+        for ie in 1:sz.ne#(1, 3, 7)
             # Extract the policy function for the current economic state
             # Assuming dpol[ie, :, :] gives the durable policy for all (a, d) at fixed e
                 plot!(a, dpol[ie, :, Int(floor(2/3*sz.nd))], label="e=$ie")
@@ -67,7 +67,7 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         plot6 = plot(xlabel="Assets", ylabel="Asset Policy", title="Asset Policy Function", legend=:topright)
 
         # Loop over economic states
-        for ie in (1, 3, 7)
+        for ie in 1:sz.ne#(1, 3, 7)
         # Extract the policy function for the current economic state
         # Assuming dpol[ie, :, :] gives the durable policy for all (a, d) at fixed e
             plot!(a, apol[ie, :, Int(floor(sz.nd/2))], label="e=$ie")
@@ -79,7 +79,7 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         plot6a = plot(xlabel="Assets", ylabel="Asset Policy", title="Asset Policy Function", legend=:topright)
 
         # Loop over economic states
-        for ie in (1, 3, 7)
+        for ie in 1:sz.ne#(1, 3, 7)
             # Extract the policy function for the current economic state
             # Assuming dpol[ie, :, :] gives the durable policy for all (a, d) at fixed e
                 plot!(a, apol[ie, :, Int(floor(sz.nd/3))], label="e=$ie")
@@ -91,7 +91,7 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         plot6b = plot(xlabel="Assets", ylabel="Asset Policy", title="Asset Policy Function", legend=:topright)
 
         # Loop over economic states
-        for ie in (1, 3, 7)
+        for ie in 1:sz.ne#(1, 3, 7)
             # Extract the policy function for the current economic state
             # Assuming apol[ie, :, :] gives the durable policy for all (a, d) at fixed e
                 plot!(a, apol[ie, :, Int(floor(2/3*sz.nd))], label="e=$ie")
@@ -99,6 +99,84 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
 
         # Save the plot
         savefig(plot6b, "Output/Policy/Apolicy_lines_dhigh.png")
+
+
+   # Choose a few e-levels to loop over (e.g., low, medium, high)
+
+# Durable indices (used in both plots)
+d_idx = [round(Int, sz.nd ÷ 2)+1, sz.nd]  # median and high durable index
+
+for ie in 1:sz.ne
+    # Asset Policy Plot
+    plotA = plot(
+        xlabel = "Initial Assets",
+        ylabel = "Asset Policy",
+        title = "Asset Policy by Durable Level",
+        legend = :outerbottom,
+        legend_orientation = :horizontal
+    )
+
+    for id in d_idx
+        label_d = "d=$(round(d[id]; digits=2))"
+        plot!(a, apol[ie, :, id], label = label_d)
+    end
+
+    savefig(plotA, "Output/Policy/Apolicy_byD_fixedE$(ie).png")
+
+    # Durable Policy Plot
+    plotD = plot(
+        xlabel = "Initial Assets",
+        ylabel = "Durable Policy",
+        title = "Durable Policy by Durable Level",
+        legend = :outerbottom,
+        legend_orientation = :horizontal
+    )
+
+    for id in d_idx
+        label_d = "d=$(round(d[id]; digits=2))"
+        plot!(a, dpol[ie, :, id], label = label_d)
+    end
+
+    savefig(plotD, "Output/Policy/Dpolicy_byD_fixedE$(ie).png")
+end
+
+# Select low, medium, high indices for assets and durables
+a_idx = [2, Int(floor(sz.na / 2))+1, sz.na-1]  # low, medium, high
+d_idx = [2, Int(floor(sz.nd / 2))+1, sz.nd-1]  # low, medium, high
+
+e_vals = g.ex  # actual exchange rate values
+
+for ia in a_idx
+    for id in d_idx
+        # Asset Policy over exchange rates
+        plotA = plot(
+            e_vals,
+            apol[:, ia, id],
+            ylims = (0, 60),
+            xlabel = "Exchange Rate",
+            ylabel = "Asset Policy",
+            title = "a' vs e (a = $(round(a[ia], digits=2)), d = $(round(d[id], digits=2)))",
+            marker = :circle,
+            label = false
+        )
+        savefig(plotA, "Output/Policy/Apolicy_byE_a$(ia)_d$(id).png")
+
+        # Durable Policy over exchange rates
+        plotD = plot(
+            e_vals,
+            dpol[:, ia, id],
+            ylims = (0, 60),
+            xlabel = "Exchange Rate",
+            ylabel = "Durable Policy",
+            title = "d' vs e (a = $(round(a[ia], digits=2)), d = $(round(d[id], digits=2)))",
+            marker = :square,
+            label = false
+        )
+        savefig(plotD, "Output/Policy/Dpolicy_byE_a$(ia)_d$(id).png")
+    end
+end
+
+
 
     end
 

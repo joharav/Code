@@ -17,6 +17,7 @@ function decision_rules(answ)
     # Extract policy functions
     d_pol           = answ.pol.d  # Optimal durable choice
     d_adjust_pol    = answ.adjust_result.pol.d  # Adjusted durable choice
+    d_change        = d_pol .- d  # Change in durable choice
 
     # Identify adjustment decision
     adjust_indicator_policy = d_pol .!= d_adjust_pol  # 1 if adjusting, 0 otherwise

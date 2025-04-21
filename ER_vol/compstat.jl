@@ -4,9 +4,46 @@ include("durable_mod.jl")
 include("collectfunctions.jl")
 
 using Main.sz,  Main.settings, Main.globals, Main.dtp; 
-default(fontfamily = "Computer Modern")  # Looks like LaTeX
+default(fontfamily = "Computer Modern", titlefont = font(10), guidefont = font(9))  # Already done!
+
+param_labels = Dict(
+    "beta" => "\$\\beta\$",
+    "delta" => "\$\\delta\$",
+    "rho_e" => "\$\\rho\$",
+    "sigma_e" => "\$\\sigma\$",
+    "nu" => "\$\\nu\$",
+    "gamma" => "\$\\gamma\$",
+    "f" => "f",
+    "w" => "w",
+    "chi" => "\$\\chi\$",
+    "pd" => "\$p_d\$",
+    "ft" => "\$\\phi\$",
+    "tau" => "\$\\tau\$",
+    "h" => "h"
+)
+
+# Map raw moment names to prettier labels
+mom_labels = Dict(
+    "mu_d" => "Mean Durable",
+    "var_d" => "Var Durable",
+    "mu_a" => "Mean Assets",
+    "var_a" => "Var Assets",
+    "mu_c" => "Mean Consumption",
+    "var_c" => "Var Consumption",
+    "mu_d_income" => "Durables-Income Corr.",
+    "mu_d_wealth" => "Durables-Wealth Corr.",
+    "mu_d_c" => "Durables-Cons. Corr.",
+    "mu_gap" => "Mean Gap",
+    "var_gap" => "Var Gap",
+    "I_d" => "Durables Gini",
+    "adjustment_ratio" => "Adj. Ratio"
+)
+
 
 commence = time()
+
+
+
 
 # Define moments of interest
 momname = ["mu_d", "var_d", "mu_a", "var_a", "mu_c", "var_c", "mu_d_income", "mu_d_wealth", "mu_d_c", "mu_gap", "var_gap", "I_d", "adjustment_ratio"]
@@ -21,17 +58,17 @@ nparam = sz.nop
 nnmom   = length(momname)  # Number of selected moments
 
 # Define parameters to vary
-varying_params = [3]   #, 4, 6, 7, 9, 11
+varying_params = [4]#7   #3, 4, 6, 7, 9, 11
 
 # Define parameter ranges (min, max)
 maxmin = [
     0.80  0.95;  # beta (Discount factor)
     0.05  0.40;  # delta (Depreciation rate)
     0.3   0.9;   # rho_e (Persistence of exchange rate shock)
-    0.1   0.90;  # sigma_e (Volatility of exchange rate shock)
+    0.0   1.00;  # sigma_e (Volatility of exchange rate shock)
     0.40  0.90;  # nu (Share parameter for nondurable consumption)
     0.50  2.00;  # gamma (Risk aversion)
-    0.50  0.9;  # f (Adjustment fixed cost)
+    0.6  0.9;  # f (Adjustment fixed cost)
     0.50  5.00;  # w (Wage)
     0.1   0.9;   # chi (Required maintenance)
     2     8;     # pd (Price of durables)
@@ -95,7 +132,18 @@ for iparam in varying_params
         filename = "Output/Comparative/smoothed_moment_$(pname[iparam])_$(momname[imom]).png"
         savefig(plot_comp_smooth,filename)
 
+        # Generate smoothed fit without scatter
+        plot_only_smooth = plot(
+        x_smooth,
+        y_smooth,
+        linewidth = 2,
+        label = false,
+        xlabel = param_labels[pname[iparam]],
+        ylabel = mom_labels[momname[imom]],
+        title = "Effect of $(param_labels[pname[iparam]]) on $(mom_labels[momname[imom]])"
+        )
 
+        savefig(plot_only_smooth, "Output/Comparative/clean_moment_$(pname[iparam])_$(momname[imom]).png")
 
 
     end
