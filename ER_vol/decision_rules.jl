@@ -66,7 +66,7 @@ function decision_rules(answ)
     color=:blues
     )
     savefig(joinpath(output_dir, "Decision_Rules_average.png"))
-    cmap = cgrad([:blue, :yellow])
+    cmap = cgrad([:blue, :white])
 
     for id in 1:sz.nd
         heatmap(a, ex, d_change_adjust[:, :, id], 
