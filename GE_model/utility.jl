@@ -5,6 +5,7 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
     ap = grids.ap     # Future asset grid
     dp = grids.dp     # Future durable goods grid
     e = grids.ex       # Exchange rate grid
+    zz = grids.zz       # Idiosyncratic Income grid
 
     # Model parameters
     beta    = pea[1]        # Discount factor
@@ -20,64 +21,32 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
 
     rr = (1 / beta) - 1 
     # Initialize utility array
-    util = zeros( sz.ne, sz.na, sz.nd, sz.npa, sz.npd)
-    penalty_count = 0  # Counter for penalties
+    util = zeros(sz.nz, sz.ne, sz.na, sz.nd, sz.npa,sz.npd)
 
     Threads.@threads for iid in 1:sz.npd
         Threads.@threads for iia in 1:sz.npa
             Threads.@threads for id in 1:sz.nd
                 Threads.@threads for ia in 1:sz.na
                     Threads.@threads for ie in 1:sz.ne
-                        # Calculate consumption and durable goods stock
-                        c = w * h * (1-tau) + e[ie] * a[ia] * (1 + rr) + e[ie] * pd * (1 - f) * (1 - delta) * d[id] -  e[ie] *  ap[iia] - e[ie] * pd * dp[iid] - w * h * ft
+                        Threads.@threads for iz in 1:sz.nz
+                            # Calculate consumption and durable goods stock
+                            y = w * h * (1-tau)* zz[iz]
+                            c = y * (1-ft) + e[ie] * a[ia] * (1 + rr) + e[ie] * pd * (1 - f) * (1 - delta) * d[id] -  e[ie] *  ap[iia] - e[ie] * pd * dp[iid] 
 
-                        # Check feasibility of consumption and durable goods stock
-                        if c > 0 && dp[iid] > 0
-                            # Calculate utility
-                            util[ie, ia, id, iia, iid] = (((c^nu) * (dp[iid]^(1 - nu)))^(1 - gamma)) / (1 - gamma)
-                        else
-                            # Apply penalty for infeasible choices
-                            util[ie, ia, id, iia, iid] = -1e10
-                            penalty_count += 1  # Increment counter for penalties
+                            # Check feasibility of consumption and durable goods stock
+                            if c > 0 && dp[iid] > 0
+                                # Calculate utility
+                                util[iz, ie, ia, id, iia, iid] = (((c^nu) * (ddp^(1 - nu)))^(1 - gamma)) / (1 - gamma)
+                            else
+                                util[iz, ie, ia, id, iia, iid] = -1e10
 
+                            end
                         end
-
                     end
                 end
             end
         end
     end
-
-    penalty_share = penalty_count / (sz.ne * sz.na * sz.nd * sz.npa * sz.npd)
-   # println("Number of penalized states ADJUST: ", penalty_count)
-   # println("Share of penalized states ADJUST: ", penalty_share)
-
-#     filename = "Output/Policy/U_Adjust.txt"
-#     io = open(filename, "w")
-    
-#   # Iterate over util array and print values to the file
-#   Threads.@threads for id in 1:sz.nd
-#         Threads.@threads for ia in 1:sz.na
-#             Threads.@threads for ie in 1:sz.ne
-#                 Threads.@threads for iia in 1:sz.npa
-#                     Threads.@threads for iid in 1:sz.npd
-#                         # Print utility value with formatting to the file
-#                         @printf(io, "%16.8f", util[ie, ia, id, iia, iid])
-#                         if iid < sz.npd
-#                             @printf(io, " ")  # Space between iid values
-#                         end
-#                     end
-#                     @printf(io, "\n")  # New line for each iia within a ie block
-#                 end
-#                 @printf(io, "\n")  # New line for each ia within a id block
-#             end
-#             @printf(io, "\n")  # New line for each id within a block
-#         end
-#     end
-
-#     # Close the file
-#     close(io)
-
 
 
     return util

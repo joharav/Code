@@ -23,7 +23,7 @@ function decision_rules(answ)
     adjust_indicator_policy = answ.adjustment_indicator  # 1 if adjusting, 0 otherwise
 
     for id in 1:sz.nd
-        d_change[:, :, id] .= d_pol[:, :, id] .- d[id]
+        d_change[:, :, :, id] .= d_pol[:, :, :, id] .- d[id]
     end
 
     d_sign = sign.(d_change)
@@ -39,7 +39,7 @@ function decision_rules(answ)
 
 
     for id in 1:sz.nd
-        heatmap(a, ex, adjust_indicator_policy[:, :, id], 
+        heatmap(a, ex, adjust_indicator_policy[:, :, :, id], 
             ylabel="Exchange Rate",
             xlabel="Initial Assets",
             title="Decision Rule: Adjustment Regions, fixed d",
@@ -49,7 +49,7 @@ function decision_rules(answ)
     end 
 
     for ia in 1:sz.na
-        heatmap(d, ex, adjust_indicator_policy[:, ia, :], 
+        heatmap(d, ex, adjust_indicator_policy[:, :, ia, :], 
             ylabel="Exchange Rate",
             xlabel="Initial Durables",
             title="Decision Rule: Adjustment Regions, fixed a",
@@ -69,7 +69,7 @@ function decision_rules(answ)
     cmap = cgrad([:blue, :white])
 
     for id in 1:sz.nd
-        heatmap(a, ex, d_change_adjust[:, :, id], 
+        heatmap(a, ex, d_change_adjust[:, :, :, id], 
             ylabel="Exchange Rate",
             xlabel="Initial Assets",
             title="Decision Rule: Adjustment Regions, fixed d",
@@ -80,7 +80,7 @@ function decision_rules(answ)
     
 
     for ia in 1:sz.na
-        heatmap(d, ex, d_change_adjust[:, ia, :], 
+        heatmap(d, ex, d_change_adjust[:, :, ia, :], 
             ylabel="Exchange Rate",
             xlabel="Initial Durables",
             title="Decision Rule: Adjustment Regions, fixed a",
@@ -93,7 +93,7 @@ function decision_rules(answ)
     levels = [-1, 0]
 
     for id in 1:sz.nd
-        heatmap(a, ex, d_sign_adjust[:, :, id],
+        heatmap(a, ex, d_sign_adjust[:, :, :, id],
             ylabel = "Exchange Rate",
             xlabel = "Initial Assets",
             title = "Decision Rule: Durable Sign Change, fixed d",
@@ -108,7 +108,7 @@ function decision_rules(answ)
     levels = [-1, 0, 1]
 
     for ia in 1:sz.na
-        heatmap(d, ex, d_sign_adjust[:, ia, :],
+        heatmap(d, ex, d_sign_adjust[:, :, ia, :],
             ylabel = "Exchange Rate",
             xlabel = "Initial Durables",
             title = "Decision Rule: Durable Sign Change, fixed a",

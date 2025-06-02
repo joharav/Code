@@ -17,6 +17,7 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
     c                   = simdata.c[sz.burnin-2:sz.nYears, :]
     d_adjust            = simdata.d_adjust[sz.burnin-2:sz.nYears, :]
     adjust_indicator    = simdata.adjust_indicator[sz.burnin-2:sz.nYears, :]
+    zz                  = simdata.zz[sz.burnin-2:sz.nYears, :]
 
     # Calculate the gaps
     adjustment_indicator = vec(adjust_indicator)
@@ -38,7 +39,7 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
     var_d1 = var(vec(d_state))
 
     # Calculate ratios
-    ratio_d_income = (vec(pd.* ex .* d) ./ vec(w .+ ex .* a_state .* (1 + rr) ))
+    ratio_d_income = (vec(pd.* ex .* d) ./ vec(w .* zz .+ ex .* a_state .* (1 + rr) ))
     ratio_d_wealth = (vec(pd.*ex .* d) ./ vec(ex .* a_state .* (1 + rr) .+ pd*ex .* d_state))
 
     # Calculate the ratio

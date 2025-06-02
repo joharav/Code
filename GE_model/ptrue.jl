@@ -13,8 +13,8 @@ function ptrue(enn::Int64)
     pea[11] = 0.83;                              # ft      = fixed cost on wage rate
     pea[12] = 0.25;                              # tau      = tax rate
     pea[13] = 1/3;                               # h        = hours worked
-    #pea[14] = 0.95;                              # rho_y    = AR(1) persistence for idiosyncratic income
-    #pea[15] = 0.1;                               # sigma_y  = Volatility of idiosyncratic income shock
+    pea[14] = 0.95;                              # rho_z    = AR(1) persistence for idiosyncratic income
+    pea[15] = 0.1;                               # sigma_z  = Volatility of idiosyncratic income shock
 
     return pea::Vector{Float64};
 end    

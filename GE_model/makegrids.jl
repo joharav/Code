@@ -8,12 +8,12 @@ function makegrids(ppp::Vector{Float64})
     # Exchange Rate
     if sz.ne==1
         eg=[1.0]
-        trans = [1.0]
+        trans_e = [1.0]
     else
         nume = sz.ne
         numstd_e = sz.nstd_e
         mew = 3.0
-        eg_raw, trans = tauchen(mew, sigma_e, rho_e, nume, numstd_e)
+        eg_raw, trans_e = tauchen(mew, sigma_e, rho_e, nume, numstd_e)
 
         # Get the index of the middle point
         mid_idx = Int(ceil(nume / 2))
@@ -28,6 +28,26 @@ function makegrids(ppp::Vector{Float64})
         
     end
     
+    if sz.nz == 3 
+        trans_z = [0.5 0.4 0.1; 0.3 0.5 0.2 ; 0.1 0.5 0.4];
+        zg = zeros(3);
+        zg[1] = 0.90;
+        zg[2] = 1.0;
+        zg[3] = 1.10;
+    else
+
+        numz = sz.nz
+        numstd_z = sz.nstd_z
+        mew = 0.0
+        zg, trans_z = tauchen(mew, sigma_z, rho_z, numz, numstd_z)
+        zg=exp.(zg)
+
+    end
+        #Kronecker 
+        trans = kron(trans_z, trans_e)
+
+
+
     ### Non-Adjust Case: Asset and Durable Grids
 
     # Asset Grid (Current Asset Holdings)
@@ -66,8 +86,8 @@ function makegrids(ppp::Vector{Float64})
 
 
 
-    outtuple = (t=trans::Array{Float64},a=ag::Vector{Float64},ap=apg::Vector{Float64},d=dg::Vector{Float64},dp = dpg::Vector{Float64}, ex = eg::Vector{Float64});
+    outtuple = (t=trans::Array{Float64},a=ag::Vector{Float64},ap=apg::Vector{Float64},d=dg::Vector{Float64},dp = dpg::Vector{Float64}, ex = eg::Vector{Float64}, z = zg::Vector{Float64});
    
-    return outtuple::NamedTuple{(:t,:a,:ap,:d,:dp,:ex)};
+    return outtuple::NamedTuple{(:t,:a,:ap,:d,:dp,:ex,:z)};
 end
 

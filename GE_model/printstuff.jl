@@ -14,11 +14,14 @@ function printstuff(answ::NamedTuple)
     Threads.@threads for id in 1:sz.nd
         Threads.@threads for ia in 1:sz.na
             Threads.@threads for ie in 1:sz.ne
-                @printf(io, "%16.8f", vnew[ie, ia, id])
-                if ie < sz.ne
-                    @printf(io, " ")  # Space between e values
+                Threads.@threads for iz in 1:sz.nz
+                    @printf(io, "%16.8f", vnew[iz, ie, ia, id])
+                    if ie < sz.ne
+                        @printf(io, " ")  # Space between e values
+                    end
+                    @printf(io, "\n")  # New line for each e within a w block
                 end
-                @printf(io, "\n")  # New line for each e within a w block
+                @printf(io, "\n")  # New line for each w within an a block
             end
             @printf(io, "\n")  # New line for each a within a d block
         end
@@ -34,17 +37,20 @@ function printstuff(answ::NamedTuple)
     Threads.@threads for id in 1:sz.nd
         Threads.@threads for ia in 1:sz.na
             Threads.@threads for ie in 1:sz.ne
-                @printf(io, "%16.8f", apol[ie, ia, id])
-                if ie < sz.ne
-                    @printf(io, " ")  # Space between e values
+                Threads.@threads for iz in 1:sz.nz
+                    @printf(io, "%16.8f", apol[iz, ie, ia, id])
+                    if ie < sz.ne
+                        @printf(io, " ")  # Space between e values
+                    end
+                    @printf(io, "\n")  # New line for each e within a w block
                 end
-                @printf(io, "\n")  # New line for each e within a w block
+                @printf(io, "\n")  # New line for each w within an a block
             end
-            @printf(io, "\n")  # New line for each w within an a block
+            @printf(io, "\n")  # New line for each a within a d block
         end
         @printf(io, "\n")  # Extra newline to separate blocks of d for readability
     end
-    
+        
     close(io)
 
 
@@ -54,17 +60,20 @@ function printstuff(answ::NamedTuple)
     Threads.@threads for id in 1:sz.nd
         Threads.@threads for ia in 1:sz.na
             Threads.@threads for ie in 1:sz.ne
-                @printf(io, "%16.8f", dpol[ie, ia, id])
-                if ie < sz.ne
-                    @printf(io, " ")  # Space between p values
+                Threads.@threads for iz in 1:sz.nz
+                    @printf(io, "%16.8f", dpol[iz, ie, ia, id])
+                    if ie < sz.ne
+                        @printf(io, " ")  # Space between e values
+                    end
+                    @printf(io, "\n")  # New line for each e within a w block
                 end
-                @printf(io, "\n")  # New line for each e within a w block
+                @printf(io, "\n")  # New line for each w within an a block
             end
-            @printf(io, "\n")  # New line for each w within an a block
+            @printf(io, "\n")  # New line for each a within a d block
         end
         @printf(io, "\n")  # Extra newline to separate blocks of d for readability
     end
-    
+        
     close(io)
 
     filename = "Output/Policy/c.txt"
@@ -73,21 +82,25 @@ function printstuff(answ::NamedTuple)
     Threads.@threads for id in 1:sz.nd
         Threads.@threads for ia in 1:sz.na
             Threads.@threads for ie in 1:sz.ne
-                @printf(io, "%16.8f", cpol[ie, ia, id])
-                if ie < sz.ne
-                    @printf(io, " ")  # Space between p values
+                Threads.@threads for iz in 1:sz.nz
+                    @printf(io, "%16.8f", cpol[iz, ie, ia, id])
+                    if ie < sz.ne
+                        @printf(io, " ")  # Space between e values
+                    end
+                    @printf(io, "\n")  # New line for each e within a w block
                 end
-                @printf(io, "\n")  # New line for each e within a w block
+                @printf(io, "\n")  # New line for each w within an a block
             end
-            @printf(io, "\n")  # New line for each w within an a block
+            @printf(io, "\n")  # New line for each a within a d block
         end
         @printf(io, "\n")  # Extra newline to separate blocks of d for readability
     end
     
+    
     close(io)
 
 
-
+    zg = grids.zz;
     eg = grids.ex;
     ag = grids.a;
     apg = grids.ap;
@@ -123,9 +136,14 @@ function printstuff(answ::NamedTuple)
         @printf(io,"%16.8f \n",eg[jj])  
     end
     @printf(io," \n")
+    @printf(io," idiosyncratic income grid\n")
+    Threads.@threads for jj in 1:sz.nz
+        @printf(io,"%16.8f \n",zg[jj])  
+    end
+    @printf(io," \n")
     @printf(io," transition matrix\n")
-    Threads.@threads for jj in 1:sz.ne
-        Threads.@threads for ii in 1:sz.ne
+    Threads.@threads for jj in 1:sz.ne*sz.nz
+        Threads.@threads for ii in 1:sz.ne*sz.nz
             @printf(io,"%16.8f",trans[ii,jj]) 
         end
         @printf(io,"\n") 

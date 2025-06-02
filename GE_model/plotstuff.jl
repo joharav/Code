@@ -1,17 +1,17 @@
 using Plots
 default(fontfamily = "Computer Modern")  # Looks like LaTeX
 
-function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{Int64, 3},  cpol::Array{Float64, 3}, g::NamedTuple)
+function plotstuff(vee::Array{Float64, 4}, apol::Array{Int64, 4}, dpol::Array{Int64, 4},  cpol::Array{Float64, 4}, g::NamedTuple)
 
     a = g.a  # Assets
     d = g.d  # Durables
 
     # Iterate over price and exchange rate slices (fix: a, d ordering)
     for ie in 1:sz.ne
-        dvee_slice = vee[ie, :, :]  
-        dapol_slice = apol[ie, :, :]
-        ddpol_slice = dpol[ie, :, :]
-        dcpol_slice = cpol[ie, :, :]
+        dvee_slice = vee[:, ie, :, :]  
+        dapol_slice = apol[:, ie, :, :]
+        ddpol_slice = dpol[:, ie, :, :]
+        dcpol_slice = cpol[:, ie, :, :]
 
         plot1 = surface(a, d, dvee_slice, xlabel="Assets", ylabel="Durables", zlabel="Value Function",legend=false)
         savefig(plot1, "Output/Policy/vf_slice_e$(ie).png")
@@ -31,7 +31,7 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         for ie in 1:sz.ne
             # Extract the policy function for the current economic state
             # Assuming dpol[ie, :, :] gives the durable policy for all (a, d) at fixed e
-                plot!(a, dpol[ie, :, Int(floor(sz.nd/2))], label="e=$ie")
+                plot!(a, dpol[Int(floor(sz.nz/2)), ie, :, Int(floor(sz.nd/2))], label="e=$ie")
         end
 
         # Save the plot
@@ -44,7 +44,7 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         for ie in 1:sz.ne#(1, 3, 7)
             # Extract the policy function for the current economic state
             # Assuming dpol[ie, :, :] gives the durable policy for all (a, d) at fixed e
-                plot!(a, dpol[ie, :, Int(floor(sz.nd/3))], label="e=$ie")
+                plot!(a, dpol[Int(floor(sz.nz/2)), ie, :, Int(floor(sz.nd/3))], label="e=$ie")
         end
 
         # Save the plot
@@ -56,7 +56,7 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         for ie in 1:sz.ne#(1, 3, 7)
             # Extract the policy function for the current economic state
             # Assuming dpol[ie, :, :] gives the durable policy for all (a, d) at fixed e
-                plot!(a, dpol[ie, :, Int(floor(2/3*sz.nd))], label="e=$ie")
+                plot!(a, dpol[Int(floor(sz.nz/2)), ie, :, Int(floor(2/3*sz.nd))], label="e=$ie")
         end
 
         # Save the plot
@@ -70,7 +70,7 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         for ie in 1:sz.ne#(1, 3, 7)
         # Extract the policy function for the current economic state
         # Assuming dpol[ie, :, :] gives the durable policy for all (a, d) at fixed e
-            plot!(a, apol[ie, :, Int(floor(sz.nd/2))], label="e=$ie")
+            plot!(a, apol[Int(floor(sz.nz/2)), ie, :, Int(floor(sz.nd/2))], label="e=$ie")
         end
     
 
@@ -82,7 +82,7 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         for ie in 1:sz.ne#(1, 3, 7)
             # Extract the policy function for the current economic state
             # Assuming dpol[ie, :, :] gives the durable policy for all (a, d) at fixed e
-                plot!(a, apol[ie, :, Int(floor(sz.nd/3))], label="e=$ie")
+                plot!(a, apol[Int(floor(sz.nz/2)), ie, :, Int(floor(sz.nd/3))], label="e=$ie")
         end
 
         # Save the plot
@@ -94,7 +94,7 @@ function plotstuff(vee::Array{Float64, 3}, apol::Array{Int64, 3}, dpol::Array{In
         for ie in 1:sz.ne#(1, 3, 7)
             # Extract the policy function for the current economic state
             # Assuming apol[ie, :, :] gives the durable policy for all (a, d) at fixed e
-                plot!(a, apol[ie, :, Int(floor(2/3*sz.nd))], label="e=$ie")
+                plot!(a, apol[Int(floor(sz.nz/2)), ie, :, Int(floor(2/3*sz.nd))], label="e=$ie")
         end
 
         # Save the plot
@@ -118,7 +118,7 @@ for ie in 1:sz.ne
 
     for id in d_idx
         label_d = "d=$(round(d[id]; digits=2))"
-        plot!(a, apol[ie, :, id], label = label_d)
+        plot!(a, apol[Int(floor(sz.nz/2)), ie, :, id], label = label_d)
     end
 
     savefig(plotA, "Output/Policy/Apolicy_byD_fixedE$(ie).png")
@@ -134,7 +134,7 @@ for ie in 1:sz.ne
 
     for id in d_idx
         label_d = "d=$(round(d[id]; digits=2))"
-        plot!(a, dpol[ie, :, id], label = label_d)
+        plot!(a, dpol[Int(floor(sz.nz/2)), ie, :, id], label = label_d)
     end
 
     savefig(plotD, "Output/Policy/Dpolicy_byD_fixedE$(ie).png")
@@ -151,7 +151,7 @@ for ia in a_idx
         # Asset Policy over exchange rates
         plotA = plot(
             e_vals,
-            apol[:, ia, id],
+            apol[Int(floor(sz.nz/2)), :, ia, id],
             ylims = (0, 60),
             xlabel = "Exchange Rate",
             ylabel = "Asset Policy",
@@ -164,7 +164,7 @@ for ia in a_idx
         # Durable Policy over exchange rates
         plotD = plot(
             e_vals,
-            dpol[:, ia, id],
+            dpol[Int(floor(sz.nz/2)), :, ia, id],
             ylims = (0, 60),
             xlabel = "Exchange Rate",
             ylabel = "Durable Policy",

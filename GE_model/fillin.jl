@@ -2,7 +2,7 @@ function fillin(obj::Array{Float64}, g::NamedTuple)
 
   # Assuming obj is now a three-dimensional array,
   # and we're interpolating along the last two dimensions (k and p).
-  objlong = zeros(sz.ne, sz.npa, sz.npd)
+  objlong = zeros(sz.nz, sz.ne, sz.npa, sz.npd)
 
   Threads.@threads for ia in 1:sz.npa
     Threads.@threads for id in 1:sz.npd
@@ -18,8 +18,10 @@ function fillin(obj::Array{Float64}, g::NamedTuple)
 
         # Two-dimensional interpolation
           Threads.@threads for ie in 1:sz.ne
-                  objlong[ie, ia, id] = afrac * (dfrac * obj[ie, aup, dup] + (1 - dfrac) * obj[ie, aup, ddown]) +
-                  (1 - afrac) * (dfrac * obj[ie, adown, dup] + (1 - dfrac) * obj[ie, adown, ddown])
+            Threads.@threads for iz in 1:sz.nz
+              objlong[iz, ie, ia, id] = afrac * (dfrac * obj[iz, ie, aup, dup] + (1 - dfrac) * obj[iz, ie, aup, ddown]) +
+                    (1 - afrac) * (dfrac * obj[iz, ie, adown, dup] + (1 - dfrac) * obj[iz, ie, adown, ddown])
+            end
           end
     end
   end

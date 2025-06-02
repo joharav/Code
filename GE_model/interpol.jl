@@ -1,8 +1,9 @@
-function interpol(eold::Float64, aold::Float64, dold::Float64, g::NamedTuple, v::Array{Float64})
+function interpol(zold::Float64, eold::Float64, aold::Float64, dold::Float64, g::NamedTuple, v::Array{Float64})
     my_eps = 1.0e-6
     # Exact match for e, as before
     ide = findall(eold .== g.ex);  # easy because it is an exact match
-    
+    idz = findall(zold .== g.zz);  # easy because it is an exact match
+
     # Interpolation in a dimension
     idalo = findall((aold - my_eps) .<= g.a);
     idalo = max(idalo[1]-1, 1); # Ensure g.k is sorted in ascending order
@@ -30,16 +31,16 @@ function interpol(eold::Float64, aold::Float64, dold::Float64, g::NamedTuple, v:
     end
     
     # Interpolating in both k and p dimensions
-    v11 = v[ide, idalo, iddlo]
-    v12 = v[ide, idalo, iddhi]
-    v21 = v[ide, idahi, iddlo]
-    v22 = v[ide, idahi, iddhi]
-    
+    v11 = v[ide, idy, idalo, iddlo]
+    v12 = v[ide, idy, idalo, iddhi]
+    v21 = v[ide, idy, idahi, iddlo]
+    v22 = v[ide, idy, idahi, iddhi]
+   
     # Bilinear interpolation formula
     vprime = afrac * (dfrac * v22 + (1 - dfrac) * v12) +
              (1 - afrac) * (dfrac * v21 + (1 - dfrac) * v11)
-             
-             
-    
-    return vprime[1]::Float64
+            
+            
+   
+    return vprime
 end
