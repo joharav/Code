@@ -9,12 +9,14 @@ function ptrue(enn::Int64)
     pea[7] = 0.83;                               # f        = adj cost 0.3 gives you a 3% adj
     pea[8] = 1;                                  # w        = wage rate
     pea[9] = 0.49;                               # chi      = Required maintenance 
-    pea[10] = 5;                                 # pd      = price durable goods
-    pea[11] = 0.83;                              # ft      = fixed cost on wage rate
+    pea[10] = 5;                                 # pd       = price durable goods
+    pea[11] = 0.83;                              # ft       = fixed cost on wage rate
     pea[12] = 0.25;                              # tau      = tax rate
     pea[13] = 1/3;                               # h        = hours worked
     pea[14] = 0.95;                              # rho_z    = AR(1) persistence for idiosyncratic income
     pea[15] = 0.1;                               # sigma_z  = Volatility of idiosyncratic income shock
+    pea[16] = 0.5;                               # theta    = Dollar share
+    pea[17] = 0.5;                               # RStar    = Dollar return
 
     return pea::Vector{Float64};
 end    

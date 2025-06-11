@@ -10,7 +10,12 @@ function GE_errors(pea)
 
         # Update parameters, solve HH block
         pea_ge = copy(pea)
-        pea_ge[1] = 1 / R  # beta = 1 / R
+        theta = pea[14]           # Share of savings in dollars
+        R_star = pea[15]          # Foreign return
+        E_e = median(grids.ex)    # Expected exchange rate
+
+        R_eff = R * (1 - theta) + R_star * E_e * theta
+        pea_ge[1] = 1 / R_eff  # beta = 1 / R
         pea_ge[8] = WW      # wage
         pd= pea_ge[10]  # price of durable goods
 

@@ -6,7 +6,10 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
     beta  = pea[1]
     w     = pea[8]
     pd    = pea[10]
-    rr = 1/beta -1
+    theta = pea[16]
+    R_star= pea[17]
+    R     = 1/beta
+    R_eff = (1 - theta) * R + theta * R_star
 
     # Extract variables from simulation data
     a                   = simdata.a[sz.burnin-2:sz.nYears, :]
@@ -39,8 +42,8 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
     var_d1 = var(vec(d_state))
 
     # Calculate ratios
-    ratio_d_income = (vec(pd.* ex .* d) ./ vec(w .* zz .+ ex .* a_state .* (1 + rr) ))
-    ratio_d_wealth = (vec(pd.*ex .* d) ./ vec(ex .* a_state .* (1 + rr) .+ pd*ex .* d_state))
+    ratio_d_income = (vec(pd.* ex .* d) ./ vec(w .* zz .+ a_state .* R_eff ))
+    ratio_d_wealth = (vec(pd.*ex .* d) ./ vec(a_state .* R_eff .+ pd*ex .* d_state))
 
     # Calculate the ratio
     ratio_d_consumption = (vec(pd.* ex .* d) ./ vec(c))

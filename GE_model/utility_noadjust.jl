@@ -17,8 +17,10 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
     pd          = pea[10]       # Price of durables 
     tau         = pea[12]       # tax rate
     h           = pea[13]       # hours worked
+    theta       = pea[16]       # Dollar share
+    R_star      = pea[17]       # Dollar return
+    R = (1 / beta)
 
-    rr = (1 / beta) - 1 
 
     # Initialize utility array
     util = zeros(sz.nz, sz.ne, sz.na, sz.nd, sz.npa,sz.npd)
@@ -33,7 +35,7 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
                         Threads.@threads for iz in 1:sz.nz
                             # Calculate consumption and durable goods stock
                             y = w * h * (1-tau)* zz[iz]
-                            a_income = a[ia] * ((1 - theta) * (1 + r) + theta * (1 + r_star) * e[ie])
+                            a_income = a[ia] * ((1 - theta) * R + theta * R_star * e[ie])
                             a_cost   = ap[iia] * ((1 - theta) + theta * e[ie])
                             c = y + a_income - e[ie] * pd * delta * chi * d[id] - a_cost
                             ddp = (1 - delta) * d[id]

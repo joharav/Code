@@ -8,7 +8,9 @@ function makepol_c(apol::Array{Float64}, dpol::Array{Float64}, grid::NamedTuple,
     ft          = pea[11]       # fixed cost on wage rate
     tau         = pea[12]       # tax rate
     h           = pea[13]       # hours worked
-    rr          = (1 / beta) - 1         # Discount rate
+    theta       = pea[16]       # Dollar share
+    R_star      = pea[17]       # Dollar return
+    R = (1 / beta)
 
     a = grid.a       # Asset grid
     d = grid.d       # Durable goods grid
@@ -23,7 +25,7 @@ function makepol_c(apol::Array{Float64}, dpol::Array{Float64}, grid::NamedTuple,
             Threads.@threads for ie in 1:sz.ne;
                 Threads.@threads for iz in 1:sz.nz;
                     y = w * h * (1 - tau) * zz[iz]
-                    a_income = a[ia] * ((1 - theta) * (1 + r) + theta * (1 + r_star) * e[ie])
+                    a_income = a[ia] * ((1 - theta) * R + theta * R_star * e[ie])
                     a_cost   = ap[iia] * ((1 - theta) + theta * e[ie])
 
 
