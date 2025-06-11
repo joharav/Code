@@ -22,10 +22,15 @@ function makepol_c(apol::Array{Float64}, dpol::Array{Float64}, grid::NamedTuple,
         Threads.@threads for ia in 1:sz.na;
             Threads.@threads for ie in 1:sz.ne;
                 Threads.@threads for iz in 1:sz.nz;
+                    y = w * h * (1 - tau) * zz[iz]
+                    a_income = a[ia] * ((1 - theta) * (1 + r) + theta * (1 + r_star) * e[ie])
+                    a_cost   = ap[iia] * ((1 - theta) + theta * e[ie])
+
+
                     if ind==0
-                        cpol[iz,ie,ia,id] = w * h * zz[iz] * (1-tau) + e[ie] * a[ia] * (1 .+  rr) - e[ie] * pd * delta * chi * d[id] -  e[ie] *  apol[iz,ie,ia,id]
+                        cpol[iz,ie,ia,id] = y + a_income - e[ie] * pd * delta * chi * d[id] -  a_cost
                     else
-                        cpol[iz,ie,ia,id] = w * h * zz[iz] * (1-tau) * (1-ft) + e[ie] * a[ia] * (1 .+  rr) + e[ie] * pd * (1 - f) * (1 - delta) * d[id] -   e[ie] *  apol[iz,ie,ia,id] - e[ie] * pd * dpol[iz,ie,ia,id] 
+                        cpol[iz,ie,ia,id] = y * (1-ft) + a_income + e[ie] * pd * (1 - f) * (1 - delta) * d[id] -   a_cost - e[ie] * pd * dpol[iz,ie,ia,id] 
                     end;
                     cpol[iz,ie,ia,id] = max(cpol[iz,ie,ia,id], 0.0001)  # Ensure c is at least 0.1
                 end

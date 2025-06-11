@@ -5,28 +5,25 @@ function makegrids(ppp::Vector{Float64})
     chi = ppp[5]
 
 
-    # Exchange Rate
-    if sz.ne==1
-        eg=[1.0]
+    # Exchange Rate (as depreciation shocks)
+    if sz.ne == 1
+        eg = [1.0]
         trans_e = [1.0]
     else
         nume = sz.ne
         numstd_e = sz.nstd_e
-        mew = 3.0
-        eg_raw, trans_e = tauchen(mew, sigma_e, rho_e, nume, numstd_e)
+        mew = 0.0  # mean log depreciation = 0 → implies median e = 1
+        eg_log, trans_e = tauchen(mew, sigma_e, rho_e, nume, numstd_e)
 
-        # Get the index of the middle point
+        # eg_log now contains log-depreciation rates: log(e_t)
+        # Convert to levels: gross depreciation rate
+        eg = exp.(eg_log)
+
+        # Ensure middle point is exactly 1 (normalize)
         mid_idx = Int(ceil(nume / 2))
-        mid_val = eg_raw[mid_idx]
-        
-        # Rescale to target range (0.01, 2) and force eg[mid_idx] = 1
-        # Step 1: linear scaling to [0.01, 2]
-        eg_rescaled = 0.01 .+ (1.99) .* (eg_raw .- minimum(eg_raw)) ./ (maximum(eg_raw) - minimum(eg_raw))
-        
-        # Step 2: normalize so that eg[mid_idx] = 1
-        eg = eg_rescaled ./ eg_rescaled[mid_idx]
-        
+        eg ./= eg[mid_idx]
     end
+    
     
     if sz.nz == 3 
         trans_z = [0.5 0.4 0.1; 0.3 0.5 0.2 ; 0.1 0.5 0.4];

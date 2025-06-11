@@ -33,7 +33,9 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
                         Threads.@threads for iz in 1:sz.nz
                             # Calculate consumption and durable goods stock
                             y = w * h * (1-tau)* zz[iz]
-                            c = y + e[ie] * a[ia] * (1 + rr) - e[ie] * pd * delta * chi * d[id] - e[ie] * ap[iia]
+                            a_income = a[ia] * ((1 - theta) * (1 + r) + theta * (1 + r_star) * e[ie])
+                            a_cost   = ap[iia] * ((1 - theta) + theta * e[ie])
+                            c = y + a_income - e[ie] * pd * delta * chi * d[id] - a_cost
                             ddp = (1 - delta) * d[id]
                             # Check feasibility of consumption and durable goods stock
                             if c > 0 && ddp > 0

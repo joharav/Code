@@ -8,8 +8,8 @@ function plot_aggregates(simdata)
     ex              = simdata.ex[sz.burnin-2:sz.nYears, :]
 
     # Sum over all firms/households for each time period
-    aggregate_assets = mean(assets, dims=2)  # Sum along the columns for each time step
-    aggregate_durable_stock = mean(durable_stock, dims=2)
+    aggregate_assets = sum(assets, dims=2)  # Sum along the columns for each time step
+    aggregate_durable_stock = sum(durable_stock, dims=2)
     exchange_rate = mean(ex, dims=2)
 
     # Prepare time axis (assuming one data point per time period)

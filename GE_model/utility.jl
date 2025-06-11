@@ -31,7 +31,13 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
                         Threads.@threads for iz in 1:sz.nz
                             # Calculate consumption and durable goods stock
                             y = w * h * (1-tau)* zz[iz]
-                            c = y * (1-ft) + e[ie] * a[ia] * (1 + rr) + e[ie] * pd * (1 - f) * (1 - delta) * d[id] -  e[ie] *  ap[iia] - e[ie] * pd * dp[iid] 
+                            a_income = a[ia] * ((1 - theta) * (1 + r) + theta * (1 + r_star) * e[ie])
+                            a_cost   = ap[iia] * ((1 - theta) + theta * e[ie])
+                            
+                            durable_return = e[ie] * pd * (1 - f) * (1 - delta) * d[id]
+                            durable_cost   = e[ie] * pd * dp[iid]
+                            
+                            c = y * (1 - ft) + a_income + durable_return - a_cost - durable_cost
 
                             # Check feasibility of consumption and durable goods stock
                             if c > 0 && dp[iid] > 0
