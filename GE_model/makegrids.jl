@@ -3,6 +3,8 @@ function makegrids(ppp::Vector{Float64})
     rho_e = ppp[3]
     sigma_e = ppp[4]
     chi = ppp[5]
+    sigma_z = ppp[15]
+    rho_z = ppp[14]
 
 
     # Exchange Rate (as depreciation shocks)
@@ -83,8 +85,8 @@ function makegrids(ppp::Vector{Float64})
 
 
 
-    outtuple = (t=trans::Array{Float64},a=ag::Vector{Float64},ap=apg::Vector{Float64},d=dg::Vector{Float64},dp = dpg::Vector{Float64}, ex = eg::Vector{Float64}, z = zg::Vector{Float64});
+    outtuple = (t=trans::Array{Float64},a=ag::Vector{Float64},ap=apg::Vector{Float64},d=dg::Vector{Float64},dp = dpg::Vector{Float64}, ex = eg::Vector{Float64}, zz = zg::Vector{Float64});
    
-    return outtuple::NamedTuple{(:t,:a,:ap,:d,:dp,:ex,:z)};
+    return outtuple::NamedTuple{(:t,:a,:ap,:d,:dp,:ex,:zz)};
 end
 

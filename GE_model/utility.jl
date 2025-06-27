@@ -44,7 +44,7 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
                             # Check feasibility of consumption and durable goods stock
                             if c > 0 && dp[iid] > 0
                                 # Calculate utility
-                                util[iz, ie, ia, id, iia, iid] = (((c^nu) * (ddp^(1 - nu)))^(1 - gamma)) / (1 - gamma)
+                                util[iz, ie, ia, id, iia, iid] = (((c^nu) * (dp[iid]^(1 - nu)))^(1 - gamma)) / (1 - gamma)
                             else
                                 util[iz, ie, ia, id, iia, iid] = -1e10
 

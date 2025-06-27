@@ -14,7 +14,7 @@ function simmodel(answ::NamedTuple)
     alld        = zeros(sz.nYears, sz.nFirms)
     alld_adjust = zeros(sz.nYears, sz.nFirms)
     allc        = zeros(sz.nYears, sz.nFirms)
-    allz = zeros(sz.nYears, sz.nFirms)
+    allz        = zeros(sz.nYears, sz.nFirms)
 
     # Set up the transition matrix
     phatcdf = cumsum(tmat, dims=2)
@@ -117,6 +117,6 @@ function simmodel(answ::NamedTuple)
         end
     end
     
-    outtuple = (v=allv::Array{Float64}, d=alld::Array{Float64}, a=alla::Array{Float64}, ex=alle::Array{Float64},d_adjust=alld_adjust::Array{Float64},adjust_indicator=adjust_indicator::Array{Float64}, c=allc::Array{Float64}, z=allz::Array{Float64})
-    return outtuple::NamedTuple{(:v, :d, :a, :ex, :d_adjust, :adjust_indicator, :c, :z)}
+    outtuple = (v=allv::Array{Float64}, d=alld::Array{Float64}, a=alla::Array{Float64}, ex=alle::Array{Float64},d_adjust=alld_adjust::Array{Float64},adjust_indicator=adjust_indicator::Array{Float64}, c=allc::Array{Float64}, zz=allz::Array{Float64})
+    return outtuple::NamedTuple{(:v, :d, :a, :ex, :d_adjust, :adjust_indicator, :c, :zz)}
 end

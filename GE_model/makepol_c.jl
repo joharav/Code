@@ -26,7 +26,7 @@ function makepol_c(apol::Array{Float64}, dpol::Array{Float64}, grid::NamedTuple,
                 Threads.@threads for iz in 1:sz.nz;
                     y = w * h * (1 - tau) * zz[iz]
                     a_income = a[ia] * ((1 - theta) * R + theta * R_star * e[ie])
-                    a_cost   = ap[iia] * ((1 - theta) + theta * e[ie])
+                    a_cost   = apol[iz,ie,ia,id] * ((1 - theta) + theta * e[ie])
 
 
                     if ind==0

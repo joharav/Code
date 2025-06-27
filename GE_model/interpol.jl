@@ -2,7 +2,7 @@ function interpol(zold::Float64, eold::Float64, aold::Float64, dold::Float64, g:
     my_eps = 1.0e-6
     # Exact match for e, as before
     ide = findall(eold .== g.ex);  # easy because it is an exact match
-    idz = findall(zold .== g.zz);  # easy because it is an exact match
+    idy = findall(zold .== g.zz);  # easy because it is an exact match
 
     # Interpolation in a dimension
     idalo = findall((aold - my_eps) .<= g.a);
