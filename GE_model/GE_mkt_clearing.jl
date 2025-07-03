@@ -1,23 +1,29 @@
 function GE_errors(pea)
-    R_low = 1.0
-    R_high = 1.0 / sz.beta
+    beta= pea[1]  # Discount factor
+    delta = pea[2]  # Depreciation rate
+    alpha = pea[18]  # Capital share
+    grids = makegrids(pea)
+    R_low = 0.5   # Lower bound for interest rate
+    R_high = 5
 
-    for iter in 1:max_iter
+    for iter in 1:sz.maxiter
         R = 0.5 * (R_low + R_high)
-        K_demand = (sz.alpha / (R -1 + sz.delta))^(1 / (1 - sz.alpha))  # Cobb-Douglas demand
-        WW = (1-sz.alpha)*K_demand^sz.alpha
+        K_demand = (alpha / (R -1 + delta))^(1 / (1 - alpha))  # Cobb-Douglas demand
+        WW = (1-alpha)*K_demand^alpha
 
+        E_e = median(grids.ex)    # Expected exchange rate
 
         # Update parameters, solve HH block
         pea_ge = copy(pea)
-        theta = pea[14]           # Share of savings in dollars
-        R_star = pea[15]          # Foreign return
-        E_e = median(grids.ex)    # Expected exchange rate
+        theta = pea[16]           # Share of savings in dollars
+        R_star = pea[17]          # Foreign return
+        R_eff = R * (1 - theta) + R_star * theta
 
-        R_eff = R * (1 - theta) + R_star * E_e * theta
         pea_ge[1] = 1 / R_eff  # beta = 1 / R
         pea_ge[8] = WW      # wage
         pd= pea_ge[10]  # price of durable goods
+
+        println("GE Iteration $iter: R = $R, K_demand = $K_demand, W = $WW, R_eff = $R_eff")
 
         # Solve household problem
         answ = valfun(pea_ge)
@@ -44,19 +50,40 @@ function GE_errors(pea)
 
         # ----- Market 3: Labor market -----
 
-        Lf = K_demand^sz.alpha
+        Lf = K_demand^alpha
         Ld = (E_e * pd * X) / WW
         L_total = Lf + Ld
         
-        # Calculate error in K market
-        if abs(error_K) < tol
-            return R, K_demand, WW, simdata
+       # Convergence check
+    if abs(error_K) < sz.toler
+        return (
+            R = R,
+            K = K_demand,
+            W = W,
+            R_eff = R_eff,
+            E_e = E_e,
+            simdata = simdata,
+            A_supply = A_supply,
+            X = X,
+            Lf = Lf,
+            Ld = Ld,
+            L_total = L_total,
+            converged = true
+        )
         end
 
+        # Update bisection bounds
+        if error_K < 0
+            R_low = R
+        else
+            R_high = R
+        end
+    end
+
+    println("Bisection failed. Final stats:")
+    println("Firm labor = $Lf, Durable labor = $Ld, Total = $L_total")
+    println("R = $R, K = $K_demand, Wage = $W")
+
+    return (converged = false)
 
     end
-    println("Firm labor = $(Lf), Durable labor = $(Ld), Total labor demand = $(L_total), Return = $(R), K_demand = $(K_demand), Wage = $(WW)")
-
-    error("Bisection failed to converge after $max_iter iterations")
-
-end

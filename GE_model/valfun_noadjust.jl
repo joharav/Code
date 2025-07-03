@@ -103,7 +103,7 @@ function valfun_noadjust(pea::Vector{Float64})
 
         if gap < sz.toler || errcode > 0
             if errcode > 0
-                vnew = 0.0
+                vnew .= 0.0
                 gidx.a .= 0
                 gidx.d .= 0
                 pol.a .= 0.0
