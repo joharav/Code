@@ -19,7 +19,12 @@ param_labels = Dict(
     "pd" => "\$p_d\$",
     "ft" => "\$\\phi\$",
     "tau" => "\$\\tau\$",
-    "h" => "h"
+    "h" => "h",
+    "rho_z"    => "\$\\rho_z\$",
+    "sigma_z"  => "\$\\sigma_z\$",
+    "theta"    => "\$\\theta\$",
+    "RStar"    => "\$\\R^ast\$",
+    "alpha"    => "\$\\alpha\$"
 )
 
 # Map raw moment names to prettier labels
@@ -47,7 +52,7 @@ commence = time()
 
 # Define moments of interest
 momname = ["mu_d", "var_d", "mu_a", "var_a", "mu_c", "var_c", "mu_d_income", "mu_d_wealth", "mu_d_c", "mu_gap", "var_gap", "I_d", "adjustment_ratio"]
-pname = ["beta", "delta", "rho_e", "sigma_e", "nu", "gamma", "f", "w", "chi", "pd", "ft", "tau", "h"]
+pname = ["beta", "delta", "rho_e", "sigma_e", "nu", "gamma", "f", "w", "chi", "pd", "ft", "tau", "h", "rho_z", "sigma_z", "theta", "RStar", "alpha"]
 
 # Get the true parameter values
 pea = ptrue(sz.nop)
@@ -62,19 +67,26 @@ varying_params = [4]#7   #3, 4, 6, 7, 9, 11
 
 # Define parameter ranges (min, max)
 maxmin = [
-    0.80  0.95;  # beta (Discount factor)
-    0.05  0.40;  # delta (Depreciation rate)
-    0.3   0.9;   # rho_e (Persistence of exchange rate shock)
-    0.0   1.00;  # sigma_e (Volatility of exchange rate shock)
-    0.40  0.90;  # nu (Share parameter for nondurable consumption)
-    0.50  2.00;  # gamma (Risk aversion)
-    0.6  0.9;  # f (Adjustment fixed cost)
-    0.50  5.00;  # w (Wage)
-    0.1   0.9;   # chi (Required maintenance)
-    2     8;     # pd (Price of durables)
-    0.10  0.95;  # ft (Fixed cost on wage rate)
-    0.10  0.60;  # tau (Tax rate)
+    0.80  0.99;   # beta
+    0.05  0.40;   # delta
+    0.3   0.9;    # rho_e
+    0.0   1.00;   # sigma_e
+    0.40  0.90;   # nu
+    0.50  2.00;   # gamma
+    0.6   0.95;   # f
+    0.50  5.00;   # w
+    0.1   0.9;    # chi
+    2.0   8.0;    # pd
+    0.10  0.95;   # ft
+    0.10  0.60;   # tau
+    0.2   0.8;    # h
+    0.85  0.99;   # rho_z
+    0.01  0.5;    # sigma_z
+    0.0   1.0;    # theta
+    1.0   1.1;    # RStar
+    0.2   0.6     # alpha
 ]
+
 
 # Storage for parameter values and selected moments
 allparams = zeros(nvary, nparam)  

@@ -63,7 +63,7 @@ function momentgen(p::Vector{Float64})
     # ============ WELFARE COMPARISON ==============================
     if settings.welfare
         println("Computing welfare comparison...")
-        compute_welfare(simdata)
+        run_welfare_analysis()
     end
 
     # ============ MIT SHOCK (OPTIONAL) ============================

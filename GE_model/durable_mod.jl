@@ -56,6 +56,7 @@ module settings;
     const irfsshock     = false;     
     const specif_two    = false;
     const specif_three  = false;
-    const GE            = true;
+    const GE            = false;
     const welfare       = true;
+    const mitshock      = false; # MIT shock dynamics
 end

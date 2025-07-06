@@ -10,6 +10,16 @@ function compute_cev(v_pre, v_post, ppp::Vector{Float64})
     return cev * 100
 end
 
+# Function to compute dispersion measures
+function compute_dispersion(x::Vector{Float64})
+    std_dev = std(x)
+    iqr     = percentile(x, 75) - percentile(x, 25)
+    p90_10  = percentile(x, 90) - percentile(x, 10)
+    
+    outuple = (std_dev, iqr, p90_10)
+    return outuple
+end
+
 function welfare_comparison(pe_base::Vector{Float64}, theta_vals::Vector{Float64})
     cevs = Float64[]
     labels = String[]

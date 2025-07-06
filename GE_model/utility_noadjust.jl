@@ -24,10 +24,9 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
 
     # Initialize utility array
     util = zeros(sz.nz, sz.ne, sz.na, sz.nd, sz.npa,sz.npd)
-    ddp= (1 - delta * (1 - chi)) .* d  # Apply non-adjustment    
-    iid = [argmin(abs.(dp .- ddp[id])) for id in 1:sz.nd]
+    ddp_vec = (1 - delta * (1 - chi)) .* d
+    iid = [argmin(abs.(dp .- ddp_vec[id])) for id in 1:sz.nd]
 
-    Threads.@threads for iid in 1:sz.npd
         Threads.@threads for iia in 1:sz.npa
             Threads.@threads for id in 1:sz.nd
                 Threads.@threads for ia in 1:sz.na
@@ -38,13 +37,13 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
                             a_income = a[ia] * ((1 - theta) * R + theta * R_star * e[ie])
                             a_cost   = ap[iia] * ((1 - theta) + theta * e[ie])
                             c = y + a_income - e[ie] * pd * delta * chi * d[id] - a_cost
-                            ddp = (1 - delta) * d[id]
+                            dnext = ddp_vec[id]  # This is a scalar
                             # Check feasibility of consumption and durable goods stock
-                            if c > 0 && ddp > 0
+                            if c > 0 && dnext > 0
                                 # Calculate utility
-                                util[iz, ie, ia, id, iia, iid] = (((c^nu) * (ddp^(1 - nu)))^(1 - gamma)) / (1 - gamma)
+                                util[iz, ie, ia, id, iia, iid[id]] = (((c^nu) * (dnext^(1 - nu)))^(1 - gamma)) / (1 - gamma)
                             else
-                                util[iz, ie, ia, id, iia, iid] = -1e10
+                                util[iz, ie, ia, id, iia, iid[id]] = -1e10
 
                             end
                         end
@@ -52,7 +51,7 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
                 end
             end
         end
-    end
+    
    
 return util 
 

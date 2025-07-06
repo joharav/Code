@@ -113,7 +113,12 @@ function valfun_noadjust(pea::Vector{Float64})
             else
                 # Create the policy functions
                 pol.a = makepol(gidx.a, grids.ap)
-                pol.d = makepol_d_na(grids.d)
+                 # Build durable policy
+                iid_full = fill(0, sz.nz, sz.ne, sz.na, sz.nd)
+                for id in 1:sz.nd, ia in 1:sz.na, ie in 1:sz.ne, iz in 1:sz.nz
+                    iid_full[iz, ie, ia, id] = iid[id]
+                end
+                pol.d = makepol(iid_full, grids.dp)
                 pol.c = makepol_c(pol.a, pol.d, grids, 0) 
 
                 break

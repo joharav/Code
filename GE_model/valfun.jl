@@ -3,11 +3,14 @@ function valfun(pea::Vector{Float64})
   noadjust_result = valfun_noadjust(pea)
   adjust_result = valfun_adjust(pea)
 
+  println("Mean V adjust: ", mean(adjust_result.v))
+  println("Mean V noadj: ", mean(noadjust_result.v))
+
   # Overall value function
   v = max.(adjust_result.v, noadjust_result.v)  # Broadcasting over arrays
 
   # # Create an indicator matrix (1 if adjusted value is greater, 0 otherwise)
-  indicator_matrix = adjust_result.v .> noadjust_result.v
+  indicator_matrix = adjust_result.v .> (noadjust_result.v .+ 1e-4)
   adjustment_indicator = vec(indicator_matrix)  # Flattening the matrix to a vector
   num_adjustments = sum(adjustment_indicator.==1)
   total_states = length(adjustment_indicator)
