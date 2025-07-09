@@ -8,6 +8,12 @@ function valfun(pea::Vector{Float64})
 
   # # Create an indicator matrix (1 if adjusted value is greater, 0 otherwise)
   indicator_matrix = adjust_result.v .> noadjust_result.v
+  adjust_flag = Float64.(adjust_result.v .> noadjust_result.v)
+
+  #print how many firms are adjusted
+  if settings.verbose
+      println("Number of firms with adjusted value function: ", 100*sum(indicator_matrix)/length(indicator_matrix))
+  end
 
   # # Conditional assignments based on the indicator_matrix
   gidx_a = ifelse.(indicator_matrix, adjust_result.gidx.a, noadjust_result.gidx.a)
@@ -24,7 +30,7 @@ function valfun(pea::Vector{Float64})
   e = adjust_result.e
 
   # Constructing the output tuple
-  outtuple = (v = v, gidx = gidx, pol = pol, g = g, e = e, adjust_result=adjust_result, noadjust_result=noadjust_result) 
+  outtuple = (v = v, gidx = gidx, pol = pol, g = g, e = e, adjust_result=adjust_result, noadjust_result=noadjust_result, adjust_flag = adjust_flag) 
 
   # Optional debug or visualization
   if settings.verbose && adjust_result.e == 0 && noadjust_result.e == 0

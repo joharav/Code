@@ -1,10 +1,10 @@
 module sz;
-    const nd        = 21;            #number of points in the durable state grid
-    const na        = 21;            #number of points in the asset state grid
+    const nd        = 11;            #number of points in the durable state grid
+    const na        = 11;            #number of points in the asset state grid
     const ne        = 3;            #number of points in the exchange rate grid
     const ny        = 3;            #number of points in the idiosyncratic income grid
-    const npd       = 51;            #number of points in the durable policy grid
-    const npa       = 51;            #number of points in the asset policy grid
+    const npd       = 23;            #number of points in the durable policy grid
+    const npa       = 23;            #number of points in the asset policy grid
     const pad       = 11;            #number of points to search around the previous point
     const nYears    = 10100;         #number of years to simulate
     const burnin    = 250;           #number of initial years to toss

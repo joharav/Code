@@ -7,13 +7,13 @@ function simmodel(answ::NamedTuple)
     d_adjust = answ.adjust_result.pol.d
     
     # Initialize the outputs
-    allv = zeros(sz.nYears, sz.nFirms)
-    alla = zeros(sz.nYears, sz.nFirms)
-    alle = zeros(sz.nYears, sz.nFirms)
-    ally = zeros(sz.nYears, sz.nFirms)
-    alld = zeros(sz.nYears, sz.nFirms)
-    alld_adjust = zeros(sz.nYears, sz.nFirms)
-    allc = zeros(sz.nYears, sz.nFirms)
+    allv            = zeros(sz.nYears, sz.nFirms)
+    alla            = zeros(sz.nYears, sz.nFirms)
+    alle            = zeros(sz.nYears, sz.nFirms)
+    ally            = zeros(sz.nYears, sz.nFirms)
+    alld            = zeros(sz.nYears, sz.nFirms)
+    alld_adjust     = zeros(sz.nYears, sz.nFirms)
+    allc            = zeros(sz.nYears, sz.nFirms)
 
     # Precompute cdf for transition matrices
     phatcdf = cumsum(tmat, dims=2)
@@ -92,9 +92,19 @@ function simmodel(answ::NamedTuple)
             yold = grids.y[all_picky[iti, ifi]]
             
             # Simulate using interpolated policy
-            aprime = interpol(eold, yold, aold, dold, grids, pol.a)
-            dprime = interpol(eold, yold, aold, dold, grids, pol.d)
-            d_adjustprime = interpol(eold, yold, aold, dold, grids, d_adjust)
+            # Interpolate adjustment flag
+            adjust_flag = interpol(eold, yold, aold, dold, grids, answ.adjust_flag)
+
+            # Depending on the flag, use the correct policy (adjusted or non-adjusted)
+            if adjust_flag ≥ 0.5
+                aprime = interpol(eold, yold, aold, dold, grids, answ.adjust_result.pol.a)
+                dprime = interpol(eold, yold, aold, dold, grids, answ.adjust_result.pol.d)
+                d_adjustprime = dprime  # Since agent adjusts here
+            else
+                aprime = interpol(eold, yold, aold, dold, grids, answ.noadjust_result.pol.a)
+                dprime = interpol(eold, yold, aold, dold, grids, answ.noadjust_result.pol.d)
+                d_adjustprime = dold  # No adjustment
+            end
             cprime = interpol(eold, yold, aold, dold, grids, pol.c)
             vprime = interpol(eold, yold, aold, dold, grids, v)
             
@@ -127,7 +137,7 @@ function simmodel(answ::NamedTuple)
     adjust_indicator=zeros(size(alld))
     for i in 1:sz.nYears, j in 1:sz.nFirms
         if alld_adjust[i, j] == alld[i, j]
-            adjust_indicator[i, j] = 1
+            adjust_indicator[i, j] = abs(dprime[1] - dold) > 1e-4 ? 1 : 0
         end
     end
     

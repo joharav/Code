@@ -52,13 +52,13 @@ function makegrids(ppp::Vector{Float64})
 
     # Asset Grid (Current Asset Holdings)
     a_min = 0.0
-    a_max = 50
+    a_max = 80
     ag = collect(range(a_min, stop=a_max, length=sz.na))
     apg = collect(range(a_min, stop=a_max, length=sz.npa))
 
     # Durable Grid (State)
     dmin = 0.0
-    dmax = 60.0
+    dmax = 90.0
     if sz.nd == 1
         dg = [0.0]
     else
