@@ -1,129 +1,90 @@
 function simmodel(answ::NamedTuple)
-    # Extract necessary objects and grids
-    v = answ.v
-    pol = answ.pol
-    grids = answ.g
-    tmat = grids.t
-    d_adjust = answ.adjust_result.pol.d
-    
-    # Initialize the outputs
-    allv            = zeros(sz.nYears, sz.nFirms)
-    alla            = zeros(sz.nYears, sz.nFirms)
-    alle            = zeros(sz.nYears, sz.nFirms)
-    ally            = zeros(sz.nYears, sz.nFirms)
-    alld            = zeros(sz.nYears, sz.nFirms)
-    alld_adjust     = zeros(sz.nYears, sz.nFirms)
-    allc            = zeros(sz.nYears, sz.nFirms)
+    # Extract inputs
+    v           = answ.v
+    pol         = answ.pol
+    grids       = answ.g
+    tmat        = grids.t
+    d_adjust    = answ.adjust_result.pol.d
 
-    # Precompute cdf for transition matrices
+    # Grids
+    exg = grids.ex
+    yg  = grids.y  # NEW
+
+    # Initialize outputs
+    allv        = zeros(sz.nYears, sz.nFirms)
+    alla        = zeros(sz.nYears, sz.nFirms)
+    alle        = zeros(sz.nYears, sz.nFirms)
+    ally        = zeros(sz.nYears, sz.nFirms)  # NEW
+    alld        = zeros(sz.nYears, sz.nFirms)
+    alld_adjust = zeros(sz.nYears, sz.nFirms)
+    allc        = zeros(sz.nYears, sz.nFirms)
+
+    # CDF for simulation
     phatcdf = cumsum(tmat, dims=2)
-    
-    # Generate aggregate shocks `e` for each year
-    # Assume a draw for each year using a random uniform number
-    e_unique = rand(1:sz.ne, sz.nYears+1)
+    cdf_wgt = Matrix(tmat')^100
+    cdf_wgt = cumsum(cdf_wgt[:, Int(floor(sz.ne * 0.5)) + 1])  # assumes ex & y jointly represented
 
-    # Preallocate arrays for picke and picky
-    all_picke = zeros(Int,sz.nYears+1, sz.nFirms)
-    all_picky = zeros(Int, sz.nYears+1, sz.nFirms)
-
-      # Fill in all_picke with the aggregate shock indices
-      for ifi in 1:sz.nFirms
-        for iti in 1:sz.nYears+1
-            # Assign the same aggregate index to all firms for each year
-            all_picke[iti, ifi] = e_unique[iti]
-        end
-    end
-    
-    # For each firm, determine the initial idiosyncratic shock index randomly
+    # Shock indices
+    ls = zeros(sz.nYears + 1, sz.nFirms)  # location indices
     for ifi in 1:sz.nFirms
-        # Initial condition for each firm
-        y_draw = globals.draws[1, ifi] .- cumsum(grids.y)
-        all_picky[1, ifi] = findfirst(y_draw .< 0.0)
+        gap = globals.draws[1, ifi] .- cdf_wgt
+        gap = gap .< 0.0
+        ls[1, ifi] = findfirst(gap)
     end
-    
-    for ifi in 1:sz.nFirms
-        for iti in 1:sz.nYears+1
-            # Assign the same aggregate shock for each firm
-            all_picke[iti, ifi] = e_unique[iti]
-            
-            # Update for next time period
-            if iti <= sz.nYears
-                y_draw = globals.draws[iti+1, ifi] .- phatcdf[Int(all_picky[iti,ifi]), :]
-                y_draw = y_draw .< 0.0
-                combined_index = findfirst(y_draw)
 
-                # Convert the combined index to a specific `y` state index
-                if !isnothing(combined_index)
-                    all_picky[iti+1, ifi] = mod(combined_index - 1, sz.ny) + 1
-                else
-                    # Handle case where no valid state found (optional, e.g., set to 1, or handle with better logic)
-                    all_picky[iti+1, ifi] = 1
-                end
-
-
-            end
-        end
-    end
-    
-    # This is the actual simulation 
+    # Initial positions
     global astart = globals.draws[1, :]
     global dstart = globals.draws[2, :]
-
-
-    # Perform simulation
-    for ifi in 1:sz.nFirms
-        # Initialize start positions based on the initial draw
+    
+    Threads.@threads for ifi in 1:sz.nFirms
         picka = min(Int(floor(sz.na * astart[ifi])) + 1, sz.na)
         pickd = min(Int(floor(sz.nd * dstart[ifi])) + 1, sz.nd)
-    
-        # Using picke and picky from precomputed values
-        picke = all_picke[1, ifi]
-        picky = all_picky[1, ifi]
-    
-        vold = v[picke, picky, picka, pickd]
+        pickey = Int(ls[1, ifi])  # combined index for ex and y
+
+        # Decompose if ex and y are jointly indexed:
+        picke = div(pickey - 1, sz.ny) + 1
+        picky = mod(pickey - 1, sz.ny) + 1
+
+        vold =    v[picke, picky, picka, pickd]
         aold = pol.a[picke, picky, picka, pickd]
         dold = pol.d[picke, picky, picka, pickd]
-        d_adjustold = d_adjust[picke, picky, picka, pickd]
         cold = pol.c[picke, picky, picka, pickd]
-        
-        for iti in 1:sz.nYears
-            # Get aggregate and idiosyncratic shocks
-            eold = grids.ex[all_picke[iti, ifi]]
-            yold = grids.y[all_picky[iti, ifi]]
-            
-            # Simulate using interpolated policy
-            # Interpolate adjustment flag
-            adjust_flag = interpol(eold, yold, aold, dold, grids, answ.adjust_flag)
+        d_adjustold = d_adjust[picke, picky, picka, pickd]
 
-            # Depending on the flag, use the correct policy (adjusted or non-adjusted)
-            if adjust_flag ≥ 0.5
-                aprime = interpol(eold, yold, aold, dold, grids, answ.adjust_result.pol.a)
-                dprime = interpol(eold, yold, aold, dold, grids, answ.adjust_result.pol.d)
-                d_adjustprime = dprime  # Since agent adjusts here
-            else
-                aprime = interpol(eold, yold, aold, dold, grids, answ.noadjust_result.pol.a)
-                dprime = interpol(eold, yold, aold, dold, grids, answ.noadjust_result.pol.d)
-                d_adjustprime = dold  # No adjustment
-            end
-            cprime = interpol(eold, yold, aold, dold, grids, pol.c)
-            vprime = interpol(eold, yold, aold, dold, grids, v)
-            
-            # Get next period shock indices
-            picke = all_picke[iti + 1, ifi]
-            picky = all_picky[iti + 1, ifi]
-            
-            eprime = grids.ex[picke]
-            yprime = grids.y[picky]
-            
-            # Store results
-            allv[iti, ifi] = vprime[1]
-            alla[iti, ifi] = aprime[1]
-            alle[iti, ifi] = eprime
-            ally[iti, ifi] = yprime
-            alld[iti, ifi] = dprime[1]
-            alld_adjust[iti, ifi] = d_adjustprime[1]
-            allc[iti, ifi] = cprime[1]
-            
+        for iti in 1:sz.nYears
+            eold = exg[picke]
+            yold = yg[picky]
+
+            # Interpolation in 4D: (e, y, a, d)
+            vprime        = interpol(eold, yold, aold, dold, grids, v)
+            aprime        = interpol(eold, yold, aold, dold, grids, pol.a)
+            dprime        = interpol(eold, yold, aold, dold, grids, pol.d)
+            d_adjustprime = interpol(eold, yold, aold, dold, grids, d_adjust)
+            cprime        = interpol(eold, yold, aold, dold, grids, pol.c)
+
+            # Update shock index
+            gap = globals.draws[iti + 1, ifi] .- phatcdf[Int(ls[iti, ifi]), :]
+            gap = gap .< 0.0
+            ls[iti + 1, ifi] = findfirst(gap)
+
+            # Decompose again
+            pickey_next = Int(ls[iti + 1, ifi])
+            picke = div(pickey_next - 1, sz.ny) + 1
+            picky = mod(pickey_next - 1, sz.ny) + 1
+
+            eprime = exg[picke]
+            yprime = yg[picky]
+
+            # Store
+            allv[iti, ifi]           = vprime[1]
+            alla[iti, ifi]           = aprime[1]
+            alle[iti, ifi]           = eprime
+            ally[iti, ifi]           = yprime
+            alld[iti, ifi]           = dprime[1]
+            alld_adjust[iti, ifi]    = d_adjustprime[1]
+            allc[iti, ifi]           = cprime[1]
+
+            # Update states
             vold = vprime[1]
             aold = aprime[1]
             dold = dprime[1]
@@ -131,16 +92,23 @@ function simmodel(answ::NamedTuple)
             cold = cprime[1]
         end
     end
-    
+
     # Adjustment indicator
-    #check adjustment ratios
-    adjust_indicator=zeros(size(alld))
+    adjust_indicator = zeros(size(alld))
     for i in 1:sz.nYears, j in 1:sz.nFirms
         if alld_adjust[i, j] == alld[i, j]
-            adjust_indicator[i, j] = abs(dprime[1] - dold) > 1e-4 ? 1 : 0
+            adjust_indicator[i, j] = 1
         end
     end
-    
-    return (v=allv, d=alld, a=alla, ex=alle, d_adjust=alld_adjust,
-            adjust_indicator=adjust_indicator, c=allc, y=ally, ls=all_picke, picke=all_picke, picky=all_picky)
+
+    return (
+        v = allv,
+        d = alld,
+        a = alla,
+        ex = alle,
+        y = ally,
+        d_adjust = alld_adjust,
+        adjust_indicator = adjust_indicator,
+        c = allc
+    )
 end

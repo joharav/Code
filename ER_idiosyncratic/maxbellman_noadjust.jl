@@ -17,6 +17,14 @@ function maxbellman_noadjust(queuelong::Array{Float64},util::Array{Float64},iid:
                                 vstar = bellman
                                 astar = iia
                             end
+                            if isnan(vstar)
+                                println("NaN found in non-adjust Bellman!")
+                            end
+                            if bellman < -1e10
+                                println("Suspiciously low Bellman: ", bellman, " at ie=", ie, " iy=", iy, " ia=", ia, " id=", id)
+                            end
+                            
+
                     end
                     gidx.a[ie,iy,ia,id] = astar
                     vnew[ie,iy,ia,id] = vstar

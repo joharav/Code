@@ -5,16 +5,19 @@ function makegrids(ppp::Vector{Float64})
     chi = ppp[5]
     rho_y = ppp[14]
     sigma_y = ppp[15]
+    pd = ppp[10]
+    w = ppp[8]
+    tau = ppp[12]
+    h = ppp[13]
 
 
     # Exchange Rate
-    if sz.ne == 3 
+    if sz.ne == 2 
         # Exchange Rate
-        trans_e = [0.5 0.4 0.1; 0.3 0.5 0.2 ; 0.1 0.5 0.4];
-        eg = zeros(3);
-        eg[1] = 0.5;
-        eg[2] = 1.0;
-        eg[3] = 2.0;
+        trans_e = [0.90 0.1; 0.85 0.15];
+        eg = zeros(2);
+        eg[1] = 1.0;
+        eg[2] = 2.0;
     else
         nume = sz.ne
         numstd_e = sz.nstd_e
@@ -30,12 +33,11 @@ function makegrids(ppp::Vector{Float64})
     
     # Idiosyncratic income
 
-    if sz.ny == 3 
-        trans_y = [0.5 0.4 0.1; 0.3 0.5 0.2 ; 0.1 0.5 0.4];
-        yg = zeros(3);
+    if sz.ny == 2 
+        trans_y = [0.9 0.1; 0.8 0.2];
+        yg = zeros(2);
         yg[1] = 0.90;
-        yg[2] = 1.0;
-        yg[3] = 1.10;
+        yg[2] = 1.1;
     else
 
         numy = sz.ny
@@ -50,39 +52,32 @@ function makegrids(ppp::Vector{Float64})
 
     ### Non-Adjust Case: Asset and Durable Grids
 
-    # Asset Grid (Current Asset Holdings)
-    a_min = 0.0
-    a_max = 80
-    ag = collect(range(a_min, stop=a_max, length=sz.na))
-    apg = collect(range(a_min, stop=a_max, length=sz.npa))
+    income_max = w * h * (1 - tau) * maximum(yg)
 
-    # Durable Grid (State)
-    dmin = 0.0
-    dmax = 90.0
-    if sz.nd == 1
-        dg = [0.0]
-    else
-        dg = collect(range(dmin, stop=dmax, length=sz.nd))  # Durable states
+    
+   # Asset Grid
+   a_max = max(10.0 * income_max, 5000.0)  # increased from 800
+   ag = collect(range(0.0, stop=a_max, length=sz.na))
+   apg = collect(range(0.0, stop=a_max, length=sz.npa))
+
+    # Durable Grid
+    dmax = max(40.0, 6 * income_max / pd)
+    dg = collect(range(0.0, stop=dmax, length=sz.nd))
+
+    # Durable Policy Grid (combine adjust and non-adjust)
+    dpg_nonadjust = (1 .- delta .* (1 .- chi)) .* dg
+    dpg_adjust = collect(range(0.0, stop=dmax, length=sz.nd))
+
+    dpg = sort(unique(vcat(dpg_nonadjust, dpg_adjust)))
+    extra_needed = sz.npd - length(dpg)
+    if extra_needed > 0
+        extra = collect(range(minimum(dpg)+0.01, stop=maximum(dpg)-0.01, length=extra_needed))
+        dpg = sort(unique(vcat(dpg, extra)))
     end
 
-    # Policy Grid (Decision Durable Grid)
-    if sz.npd < 2 * sz.nd
-    error("npd must be at least 2 * nd to include both adjusted and non-adjusted values.")
-    end
-
-    dpg_nonadjust = (1 .- delta .* (1 .- chi)) .* dg  # Apply non-adjustment
-    dpg_adjust = collect(range(dmin, stop=dmax, length=sz.nd))  # New durable choices
-
-    dpg = vcat(dpg_nonadjust, dpg_adjust)  # Combine both
-    dpg = sort(unique(dpg))  # Remove duplicates and ensure order
-
-    # Define additional grid points to reach npd = 51
-    extra_points_needed = sz.npd - length(dpg)
-
-    if extra_points_needed > 0
-    extra_points = collect(range(minimum(dpg)+0.01, stop=maximum(dpg)-0.01, length=extra_points_needed))
-    dpg = sort(unique(vcat(dpg, extra_points)))  # Merge and sort
-    end
+    println("Income max: ", income_max)
+    println("a_max: ", a_max)
+    println("d_max: ", dmax)
 
 
 
@@ -90,4 +85,5 @@ function makegrids(ppp::Vector{Float64})
    
     return outtuple::NamedTuple{(:t,:a,:ap,:d,:dp,:ex,:y)};
 end
+
 

@@ -1,28 +1,12 @@
 function utility(grids::NamedTuple, pea::Vector{Float64})
-    # Extract grids
-    a = grids.a       # Asset grid
-    d = grids.d       # Durable goods grid
-    ap = grids.ap     # Future asset grid
-    dp = grids.dp     # Future durable goods grid
-    e = grids.ex      # Exchange rate grid
-    y = grids.y       # Income grid
+    a, d, ap, dp, e, y = grids.a, grids.d, grids.ap, grids.dp, grids.ex, grids.y
 
-    # Model parameters
-    beta    = pea[1]        # Discount factor
-    delta   = pea[2]        # Depreciation rate for durables
-    nu      = pea[5]        # Share parameter for nondurables
-    gamma   = pea[6]        # Risk aversion
-    f       = pea[7]        # Adjustment cost
-    w       = pea[8]        # Wage rate
-    pd      = pea[10]       # durable price
-    ft      = pea[11]       # fixed cost on wage rate
-    tau     = pea[12]       # tax rate
-    h       = pea[13]       # hours worked
+    beta, delta, nu, gamma = pea[1], pea[2], pea[5], pea[6]
+    f, w, pd, ft, tau, h    = pea[7], pea[8], pea[10], pea[11], pea[12], pea[13]
+    rr = (1 / beta) - 1
 
-    rr = (1 / beta) - 1 
-    # Initialize utility array
-    util = zeros( sz.ne, sz.ny, sz.na, sz.nd, sz.npa, sz.npd)
-    penalty_count = 0  # Counter for penalties
+    util = zeros(sz.ne, sz.ny, sz.na, sz.nd, sz.npa, sz.npd)
+    penalty_count = 0
 
     Threads.@threads for iid in 1:sz.npd
         Threads.@threads for iia in 1:sz.npa
@@ -30,20 +14,18 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
                 Threads.@threads for ia in 1:sz.na
                     Threads.@threads for iy in 1:sz.ny
                         Threads.@threads for ie in 1:sz.ne
-                            # Calculate consumption and durable goods stock
-                            c =y[iy]* w * h * (1-tau) + e[ie] * a[ia] * (1 + rr) + e[ie] * pd * (1 - f) * (1 - delta) * d[id] - e[ie] *  ap[iia] - e[ie] * pd * dp[iid] -  y[iy]*w * h * ft
+                            income = y[iy] * w * h * (1 - tau) + e[ie] * a[ia] * (1 + rr)
+                            sale = e[ie] * pd * (1 - f) * (1 - delta) * d[id]
+                            cost = e[ie] * pd * dp[iid]
+                            timecost = y[iy] * w * h * ft
+                            c = income + sale - cost - e[ie] * ap[iia] - timecost
 
-                            # Check feasibility of consumption and durable goods stock
                             if c > 0 && dp[iid] > 0
-                                # Calculate utility
-                                util[ie, iy, ia, id, iia, iid] = (((c^nu) * (dp[iid]^(1 - nu)))^(1 - gamma)) / (1 - gamma)
+                                util[ie, iy, ia, id, iia, iid] = ((c^nu * dp[iid]^(1 - nu))^(1 - gamma)) / (1 - gamma)
                             else
-                                # Apply penalty for infeasible choices
                                 util[ie, iy, ia, id, iia, iid] = -1e10
-                                penalty_count += 1  # Increment counter for penalties
-
+                                penalty_count += 1
                             end
-
                         end
                     end
                 end
@@ -54,7 +36,5 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
     penalty_share = penalty_count / (sz.ne * sz.ny * sz.na * sz.nd * sz.npa * sz.npd)
     println("Number of penalized states ADJUST: ", penalty_count)
     println("Share of penalized states ADJUST: ", penalty_share)
-
-
     return util
 end
