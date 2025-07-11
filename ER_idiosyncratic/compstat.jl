@@ -8,8 +8,8 @@ using Main.sz,  Main.settings, Main.globals, Main.dtp;
 commence = time()
 
 # Define moments of interest
-momname = ["mu_d", "var_d", "mu_a", "var_a", "mu_c", "var_c", "mu_d_income", "mu_d_wealth", "mu_d_c", "mu_gap", "var_gap", "I_d", "adjustment_ratio"]
-pname = ["beta", "delta", "rho_e", "sigma_e", "nu", "gamma", "f", "w", "chi", "pd", "ft", "tau", "h","rho_y","sigma_y"]
+momname = ["mu_d", "var_d", "mu_a", "var_a", "mu_c", "var_c", "mu_d_income", "mu_d_wealth", "mu_d_c", "mu_gap", "var_gap", "I_d", "adjustment_ratio","IQR_d_income", "IQR_d_wealth", "IQR_d_c"]
+pname = ["beta", "delta", "rho_e", "sigma_e", "nu", "gamma", "f", "w", "chi", "pd", "ft", "tau", "h","rho_y","sigma_y","theta"]
 
 # Get the true parameter values
 pea = ptrue(sz.nop)
@@ -20,7 +20,7 @@ nparam = sz.nop
 nnmom   = length(momname)  # Number of selected moments
 
 # Define parameters to vary
-varying_params = [6]   #, 7, 9, 11, 14, 15
+varying_params = [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16]   #, 7, 9, 11, 14, 15
 
 # Define parameter ranges (min, max)
 maxmin = [
@@ -30,7 +30,7 @@ maxmin = [
     0.1   0.90;  # sigma_e (Volatility of exchange rate shock)
     0.40  0.90;  # nu (Share parameter for nondurable consumption)
     0.50  2.00;  # gamma (Risk aversion)
-    0.50  0.9;  # f (Adjustment fixed cost)
+    0.20  0.9;  # f (Adjustment fixed cost)
     0.50  5.00;  # w (Wage)
     0.1   0.9;   # chi (Required maintenance)
     2     8;     # pd (Price of durables)
@@ -39,7 +39,7 @@ maxmin = [
     0.1   0.5    # h (Hours worked)
     0.1   0.95;  # rho_y (AR(1) persistence for idiosyncratic income)
     0.05  0.8    # sigma_y (Volatility of idiosyncratic income shock)
-
+    0.0   1.0     # theta (New parameter for specification 2)
 ]
 
 # Storage for parameter values and selected moments

@@ -97,6 +97,9 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
     outmoms[11] = var_gap
     outmoms[12] = I_d
     outmoms[13] = adjustment_ratio
+    outmoms[14] = IQR_d_income
+    outmoms[15] = IQR_d_wealth
+    outmoms[16] = IQR_d_c
 
     if settings.compstat==false
 
@@ -144,6 +147,6 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
 
     end
 
-        return outmoms::Vector{Float64}, x_values, f_x, h_x
+    return outmoms::Vector{Float64}, x_values, f_x, h_x, IQR_d_income, IQR_d_wealth, IQR_d_c
 
 end

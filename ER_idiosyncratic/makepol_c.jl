@@ -8,6 +8,7 @@ function makepol_c(apol::Array{Float64}, dpol::Array{Float64}, grid::NamedTuple,
     ft    = pea[11]
     tau   = pea[12]
     h     = pea[13]
+    theta = pea[16]
     rr    = (1 / beta) - 1
 
     a = grid.a
@@ -21,17 +22,20 @@ function makepol_c(apol::Array{Float64}, dpol::Array{Float64}, grid::NamedTuple,
         Threads.@threads for ia in 1:sz.na
             Threads.@threads for iy in 1:sz.ny
                 Threads.@threads for ie in 1:sz.ne
-                    income = w * h * (1 - tau) * y[iy] + e[ie] * a[ia] * (1 + rr)
+                    a_effective = theta * e[ie] * a[ia] + (1 - theta) * a[ia]
+                    a_eff_prime = theta * e[ie] * apol[ie, iy, ia, id] + (1 - theta) * apol[ie, iy, ia, id]
+
+                    income = w * h * (1 - tau) * y[iy] + a_effective * (1 + rr)
 
                     if ind == 0
                         # Non-adjust: keep durable, no purchase/sale/ft
-                        c = income - e[ie] * apol[ie, iy, ia, id]
+                        c = income - a_eff_prime
                     else
                         # Adjust: sell old, buy new, pay fixed time cost
                         sale_value = e[ie] * pd * (1 - f) * (1 - delta) * d[id]
                         durable_purchase = e[ie] * pd * dpol[ie, iy, ia, id]
                         time_cost = w * h * ft * y[iy]
-                        c = income + sale_value - durable_purchase - e[ie] * apol[ie, iy, ia, id] - time_cost
+                        c = income + sale_value - durable_purchase - a_eff_prime - time_cost
                     end
 
                     cpol[ie, iy, ia, id] = max(c, 0.1)

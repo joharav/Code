@@ -40,11 +40,13 @@ include("aggregate_series.jl")
 include("d_adjust_time_size.jl") 
 include("decision_rules.jl") 
 include("plotgaps_shock.jl")
+include("plot_ergodic.jl")
 
 # ============Making moments ===============================
 include("momentgen.jl"); #wrapper
 include("makemoments.jl");
 include("adj_gaps_sim.jl")
 include("welfare.jl")
-
+include("welfare_dispersion.jl")
+include("ergodic.jl")
 

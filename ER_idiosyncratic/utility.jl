@@ -4,7 +4,7 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
     beta, delta, nu, gamma = pea[1], pea[2], pea[5], pea[6]
     f, w, pd, ft, tau, h    = pea[7], pea[8], pea[10], pea[11], pea[12], pea[13]
     rr = (1 / beta) - 1
-
+    theta = pea[16]
     util = zeros(sz.ne, sz.ny, sz.na, sz.nd, sz.npa, sz.npd)
     penalty_count = 0
 
@@ -14,11 +14,13 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
                 Threads.@threads for ia in 1:sz.na
                     Threads.@threads for iy in 1:sz.ny
                         Threads.@threads for ie in 1:sz.ne
-                            income = y[iy] * w * h * (1 - tau) + e[ie] * a[ia] * (1 + rr)
+                            a_effective = theta * e[ie] * a[ia] + (1 - theta) * a[ia]
+                            a_eff_prime = theta * e[ie] * ap[iia] + (1 - theta) * ap[iia]
+                            income = y[iy] * w * h * (1 - tau) + a_effective * (1 + rr)
                             sale = e[ie] * pd * (1 - f) * (1 - delta) * d[id]
                             cost = e[ie] * pd * dp[iid]
                             timecost = y[iy] * w * h * ft
-                            c = income + sale - cost - e[ie] * ap[iia] - timecost
+                            c = income + sale - cost - a_eff_prime - timecost
 
                             if c > 0 && dp[iid] > 0
                                 util[ie, iy, ia, id, iia, iid] = ((c^nu * dp[iid]^(1 - nu))^(1 - gamma)) / (1 - gamma)

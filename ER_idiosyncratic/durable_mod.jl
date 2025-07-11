@@ -1,22 +1,22 @@
 module sz;
     const nd        = 11;            #number of points in the durable state grid21
     const na        = 11;            #number of points in the asset state grid21
-    const ne        = 3;            #number of points in the exchange rate grid4
-    const ny        = 3;            #number of points in the idiosyncratic income grid4
+    const ne        = 4;            #number of points in the exchange rate grid4
+    const ny        = 4;            #number of points in the idiosyncratic income grid4
     const npd       = 23;            #number of points in the durable policy grid51
     const npa       = 23;            #number of points in the asset policy grid51
     const pad       = 11;            #number of points to search around the previous point
     const nYears    = 10100;         #number of years to simulate
     const burnin    = 250;           #number of initial years to toss
     const nFirms    = 1000;           #number of firms to simulate
-    const nmom      = 13;             #number of moments to calculate
+    const nmom      = 16;             #number of moments to calculate
     const maxiter   = 5000;          #maximum number of VFI iterations
     const maxditer  = 1000;          #maximum number of iterations for the stationary distribution
     const distol    = 0.0001;      #tolerance for the stationary distribution
     const toler     = 0.0001;      #VFI tolerance
     const earlyiter = 2;             # Number of times to do the full grid search before you do local searches. 
     const maxpolit  = 5 ;            # Number of times the policy function converges before I believe it.
-    const nop       = 15;             #maximum number of parameters
+    const nop       = 16;             #maximum number of parameters
     const noestp    = 2;             #number of parameters you actual estimate 
     const nstd_e    = 3.0;           #number of standard deviations for Tauchen exchange rate, 1.2 for dollar
     const nstd_y    = 1.0;           #number of standard deviations for Tauchen exchange rate, 1.2 for dollar
@@ -73,4 +73,5 @@ module settings;
     const verbose       = true; 
     const irfsshock     = false;     
     const specif_two    = false;
+    const welfare       = true;
 end

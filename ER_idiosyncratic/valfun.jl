@@ -20,12 +20,9 @@ function valfun(pea::Vector{Float64})
   println("Share where adjust gives lower value: ", sum(val_diff .< 0) / length(val_diff))
 
 
-
   # # Create an indicator matrix (1 if adjusted value is greater, 0 otherwise)
   indicator_matrix = adjust_result.v .> noadjust_result.v
   adjust_flag = Float64.(adjust_result.v .> noadjust_result.v)
-
- 
 
   #print how many firms are adjusted
   if settings.verbose
