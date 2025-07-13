@@ -17,3 +17,12 @@ function compute_dispersion(x::Vector{Float64})
     outuple = (std_dev, iqr, p90_10)
     return outuple
 end
+function compute_cev_array(v_alt::Array{Float64,4}, v_base::Vector{Float64}, pe::Vector{Float64})
+    γ = pe[6]
+    if γ == 1.0
+        cev = exp.(v_alt .- reshape(v_base, 1, 1, 1, :)) .- 1
+    else
+        cev = ((v_alt ./ reshape(v_base, 1, 1, 1, :)) .^ (1 / (1 - γ))) .- 1
+    end
+    return cev
+end

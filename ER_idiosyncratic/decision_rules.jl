@@ -1,48 +1,118 @@
 using Plots
-function decision_rules(answ)
+default(fontfamily = "Computer Modern")
 
-    # Example of how to call the function
+function decision_rules(answ)
     output_dir = "Output/Aggregates"
-    if !isdir(output_dir) 
+    if !isdir(output_dir)
         mkpath(output_dir)
     end
 
-    # Define grid of state variables
-    ex      = answ.g.ex
-    a       = answ.g.a
-    d       = answ.g.d
+    # Grids
+    ex = answ.g.ex
+    a = answ.g.a
+    d = answ.g.d
 
-    # Extract policy functions
-    d_pol           = answ.pol.d  # Optimal durable choice
-    d_adjust_pol    = answ.adjust_result.pol.d  # Adjusted durable choice
+    # Policies
+    d_pol = answ.pol.d
+    d_adjust_pol = answ.adjust_result.pol.d
+    adjust_indicator_policy = answ.adjustment_indicator
 
-    # Identify adjustment decision
-    adjust_indicator_policy = d_pol .!= d_adjust_pol  # 1 if adjusting, 0 otherwise
-
-    for iy in 1:sz.ny 
-        for id in 1:sz.nd
-            heatmap(a, ex, adjust_indicator_policy[:, iy, :, id], 
-                ylabel="Exchange Rate",
-                xlabel="Assets",
-                title="Decision Rule: Adjustment Regions",
-                color=:blues
-            )
-            savefig(joinpath(output_dir, "Decision_Rules_d$id$iy.png"))
-        end 
+    # Compute d_change and its sign
+    d_change = similar(d_pol)
+    for id in 1:sz.nd
+        d_change[:, :, :, id] .= d_pol[:, :, :, id] .- d[id]
     end
-    
-    mean_adjust = dropdims(mean(adjust_indicator_policy, dims=4), dims=4)
-    mean_adjust_avg = dropdims(mean(mean_adjust, dims=2), dims=2)  # Reduce `iy` dimension
 
-    heatmap(a, ex, mean_adjust_avg', 
-    ylabel="Exchange Rate",
-    xlabel="Assets",
-    color=:blues
+    d_sign = sign.(d_change)
+
+    # Keep only adjusted values
+    d_sign_adjust = fill(0, size(d_change))
+    d_sign_adjust[adjust_indicator_policy] .= d_sign[adjust_indicator_policy]
+
+    d_change_adjust = fill(0.0, size(d_change))
+    d_change_adjust[adjust_indicator_policy] .= d_change[adjust_indicator_policy]
+
+    # Fixed d: loop over id, fix iz = 1
+    iy = Int(floor(sz.ny / 2))  # Use the middle productivity state
+    for id in 1:sz.nd
+        heatmap(a, ex, adjust_indicator_policy[:, iy, :, id],
+            ylabel="Exchange Rate",
+            xlabel="Initial Assets",
+            title="Decision Rule: Adjustment Regions, fixed d[$id]",
+            color=:blues
+        )
+        savefig(joinpath(output_dir, "FixedD_Decision_Rules_d$id.png"))
+    end
+
+    # Fixed a: loop over ia, fix iz = 1
+    for ia in 1:sz.na
+        heatmap(d, ex, adjust_indicator_policy[:, iy, ia, :],
+            ylabel="Exchange Rate",
+            xlabel="Initial Durables",
+            title="Decision Rule: Adjustment Regions, fixed a[$ia]",
+            color=:blues
+        )
+        savefig(joinpath(output_dir, "FixedA_Decision_Rules_a$ia.png"))
+    end
+
+    # Mean over z and assets
+    mean_adjust = dropdims(mean(adjust_indicator_policy, dims=1), dims=1)
+    heatmap(a, ex, mean_adjust[:, :, sz.nd ÷ 2],  # pick middle durable value
+        ylabel="Exchange Rate",
+        xlabel="Assets",
+        title="Decision Rule: Mean Adjustment",
+        color=:blues
     )
     savefig(joinpath(output_dir, "Decision_Rules_average.png"))
 
-   # savefig("Output/Decision_Rule_Heatmap.png")
-   # scatter!(simdata.ex, simdata.a, 
-   # marker=:circle, color=:red, alpha=0.3, label="Households (Simulated)"
-   # )
+    cmap = cgrad([:blue, :white])
+
+    # Plot size of adjustment (only for adjusted)
+    for id in 1:sz.nd
+        heatmap(a, ex, d_change_adjust[:, iy, :, id],
+            ylabel="Exchange Rate",
+            xlabel="Initial Assets",
+            title="Decision Rule: Adjustment Size, fixed d[$id]",
+            color=cmap
+        )
+        savefig(joinpath(output_dir, "Size_Decision_Rules_d$id.png"))
+    end
+
+    for ia in 1:sz.na
+        heatmap(d, ex, d_change_adjust[:, iy, ia, :],
+            ylabel="Exchange Rate",
+            xlabel="Initial Durables",
+            title="Decision Rule: Adjustment Size, fixed a[$ia]",
+            color=cmap
+        )
+        savefig(joinpath(output_dir, "Size_Decision_Rules_a$ia.png"))
+    end
+
+    # Plot sign of change
+    palette = [:white, :skyblue, :blue]
+    levels = [-1, 0, 1]
+
+    for id in 1:sz.nd
+        heatmap(a, ex, d_sign_adjust[:, iy, :, id],
+            ylabel="Exchange Rate",
+            xlabel="Initial Assets",
+            title="Decision Rule: Durable Sign Change, fixed d[$id]",
+            color=palette,
+            discrete_values=levels,
+            colorbar_ticks=[(l, string(l)) for l in levels]
+        )
+        savefig(joinpath(output_dir, "Sign_Decision_Rules_d$id.png"))
+    end
+
+    for ia in 1:sz.na
+        heatmap(d, ex, d_sign_adjust[:, iy, ia, :],
+            ylabel="Exchange Rate",
+            xlabel="Initial Durables",
+            title="Decision Rule: Durable Sign Change, fixed a[$ia]",
+            color=palette,
+            discrete_values=levels,
+            colorbar_ticks=[(l, string(l)) for l in levels]
+        )
+        savefig(joinpath(output_dir, "Sign_Decision_Rules_a$ia.png"))
+    end
 end

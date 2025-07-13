@@ -24,12 +24,12 @@ function makepol_c(apol::Array{Float64}, dpol::Array{Float64}, grid::NamedTuple,
                 Threads.@threads for ie in 1:sz.ne
                     a_effective = theta * e[ie] * a[ia] + (1 - theta) * a[ia]
                     a_eff_prime = theta * e[ie] * apol[ie, iy, ia, id] + (1 - theta) * apol[ie, iy, ia, id]
-
+                    maintenance =  e[ie] * pd * delta * chi * d[id]
                     income = w * h * (1 - tau) * y[iy] + a_effective * (1 + rr)
 
                     if ind == 0
                         # Non-adjust: keep durable, no purchase/sale/ft
-                        c = income - a_eff_prime
+                        c = income - a_eff_prime - maintenance
                     else
                         # Adjust: sell old, buy new, pay fixed time cost
                         sale_value = e[ie] * pd * (1 - f) * (1 - delta) * d[id]

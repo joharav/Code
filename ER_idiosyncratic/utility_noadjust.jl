@@ -17,9 +17,10 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
                     Threads.@threads for ie in 1:sz.ne
                         a_effective = theta * e[ie] * a[ia] + (1 - theta) * a[ia]
                         a_eff_prime = theta * e[ie] * ap[iia] + (1 - theta) * ap[iia]
-
+                        income = y[iy] * w * h * (1 - tau) + a_effective * (1 + rr)
+                        maintenance =  e[ie] * pd * delta * chi * d[id]
                         d_next_val = d_next[id]
-                        c = y[iy] * w * h * (1 - tau) + a_effective * (1 + rr) - a_eff_prime
+                        c = income- a_eff_prime - maintenance
 
                         if c > 0 && d_next_val > 0
                             util[ie, iy, ia, id, iia, iid_map[id]] = ((c^nu * d_next_val^(1 - nu))^(1 - gamma)) / (1 - gamma)

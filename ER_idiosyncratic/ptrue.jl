@@ -8,7 +8,7 @@ function ptrue(enn::Int64)
     pea[6] = 2.00;                               # gamma    = Risk aversion parameter 
     pea[7] = 0.3;                               # f        = adj cost 0.3 gives you a 3% adj
     pea[8] = 1;                                  # w        = wage rate
-    pea[9] = 0.6;                                # chi      = Required maintenance 0.4
+    pea[9] = 0.755;                                # chi      = Required maintenance 0.4
     pea[10] = 5;                                 # pd      = price durable goods
     pea[11] = 0.9;                              # ft      = fixed cost on wage rate
     pea[12] = 0.0;                              # tau      = tax rate

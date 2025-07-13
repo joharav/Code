@@ -50,3 +50,46 @@ function plot_joint_heatmap(dist::Array{Float64,4}, g::NamedTuple)
         savefig("Output/Ergodic/joint_a_d_e$(ie)_y$(iy).png")
     end
 end
+
+function plot_adjustment_by_income(adjustment_indicator::BitArray{4}, dist::Array{Float64,4})
+    ne, ny, nd, na = size(dist)
+    adj_by_income = zeros(ny)
+
+    for iy in 1:ny
+        numerator = sum(dist[:, iy, :, :][adjustment_indicator[:, iy, :, :]])
+        denominator = sum(dist[:, iy, :, :])
+        adj_by_income[iy] = numerator / denominator
+    end
+
+    plot(1:ny, adj_by_income, marker=:circle, xlabel="Income state", ylabel="Adjustment Rate",
+        title="Adjustment Rate by Income Level", legend=false)
+    savefig("Output/Ergodic/adjustment_by_income.png")
+end
+
+
+function plot_total_marginals(dist::Array{Float64,4}, g::NamedTuple)
+    a, d = g.a, g.d
+
+    marg_a = sum(dist, dims=(1, 2, 3))[:]
+    marg_a ./= sum(marg_a)
+
+    marg_d = sum(dist, dims=(1, 2, 4))[:]
+    marg_d ./= sum(marg_d)
+
+    plot(a, marg_a, xlabel="Assets", ylabel="Density", title="Aggregate Asset Distribution", legend=false)
+    savefig("Output/Ergodic/total_asset_dist.png")
+
+    plot(d, marg_d, xlabel="Durables", ylabel="Density", title="Aggregate Durable Distribution", legend=false)
+    savefig("Output/Ergodic/total_durable_dist.png")
+end
+
+function plot_cev_distribution(cev::Array{Float64,4}, dist::Array{Float64,4})
+    cev_vec = cev[:]
+    weights = dist[:]
+    weights ./= sum(weights)
+
+    # Weighted histogram
+    histogram(cev_vec, weights=weights, bins=50, xlabel="CEV", ylabel="Density",
+        title="Welfare Gains (CEV) from Currency Regime", legend=false)
+    savefig("Output/Ergodic/cev_distribution.png")
+end

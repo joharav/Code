@@ -55,10 +55,40 @@ function compute_ergodic(ans::NamedTuple; tol=sz.distol, max_iter=sz.maxditer)
         dist, dist_new = dist_new, dist
     end
 
-    dist= dist ./ sum(dist)
+    dist = dist ./ sum(dist)
 
     dist4d = reshape(dist, (na, nd, ny, ne))
-    dist4d = permutedims(dist4d, (4, 3, 2, 1))
-    return dist4d::Array{Float64, 4}  # Shape: [ie, iy, id, ia]
+    dist4d = permutedims(dist4d, (4, 3, 2, 1))  # [ie, iy, id, ia]
+
+    # === Check for endpoint mass on assets ===
+    a_left_wt  = sum(dist4d[:, :, :, 1])      # a_min
+    a_right_wt = sum(dist4d[:, :, :, end])    # a_max
+
+    # === Check for endpoint mass on durables ===
+    d_left_wt  = sum(dist4d[:, :, 1, :])      # d_min
+    d_right_wt = sum(dist4d[:, :, end, :])    # d_max
+
+    total_edge_wt = a_left_wt + a_right_wt + d_left_wt + d_right_wt
+    total_edge_a = a_left_wt + a_right_wt 
+    total_edge_d = d_left_wt + d_right_wt
+
+    if total_edge_wt > 0.001 ||  total_edge_a > 0.001 || total_edge_d > 0.001# or your preferred threshold
+        println("%%%%%%%% WARNING %%%%%%%%%%")
+        println("High ergodic mass on grid edges:")
+        println("Assets → Left = $(round(a_left_wt, digits=4)), Right = $(round(a_right_wt, digits=4)), Total = $(round(total_edge_a, digits=4))")
+        println("Durables → Left = $(round(d_left_wt, digits=4)), Right = $(round(d_right_wt, digits=4)), Total = $(round(total_edge_d, digits=4))")
+        println("→ Suggest expanding grids (assets or durables).")
+        println("%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+
+       
+    else
+        println("→ Grid coverage looks adequate.")
+        println("%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+
+    end
+
+
+    return dist4d::Array{Float64, 4}
+
     
 end

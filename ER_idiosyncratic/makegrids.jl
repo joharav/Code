@@ -61,7 +61,7 @@ function makegrids(ppp::Vector{Float64})
    apg = collect(range(0.0, stop=a_max, length=sz.npa))
 
     # Durable Grid
-    dmax = max(40.0, 6 * income_max / pd)
+    dmax = max(400.0, 6 * income_max / pd)
     dg = collect(range(0.0, stop=dmax, length=sz.nd))
 
     # Durable Policy Grid (combine adjust and non-adjust)
