@@ -26,18 +26,18 @@ function batch_welfare_and_dispersion(pe_base::Vector{Float64}, theta_vals::Vect
     push!(cevs, 0.0)  # baseline
 
     simdata0 = simmodel(result0)
-    moms0, _, _, _, IQR_d_val, p90_10_d_wealth_val, p90_10_d_c_val, p90_10_d_val = makemoments(simdata0, pe_baseline)
+    moms0, _, _, _, IQR_d_val, p90_10_d_val = makemoments(simdata0, pe_baseline)
 
-    push!(iqr_d_wealth, moms0[15])
-    push!(iqr_d_c, moms0[16])
+    push!(iqr_d_wealth, moms0[13])
+    push!(iqr_d_c, moms0[14])
     push!(iqr_d, IQR_d_val)
-    push!(p90_10_d_wealth, p90_10_d_wealth_val)
-    push!(p90_10_d_c, p90_10_d_c_val)
+    push!(p90_10_d_wealth, moms[15])
+    push!(p90_10_d_c, moms[16])
     push!(p90_10_d, p90_10_d_val)
     push!(avg_durables, moms0[1])
-    push!(adj_rates, moms0[13])
-    push!(mu_d_wealth, moms0[8])
-    push!(mu_d_c, moms0[9])
+    push!(adj_rates, moms0[12])
+    push!(mu_d_wealth, moms0[7])
+    push!(mu_d_c, moms0[8])
     push!(labels, "θ = 0.0")
 
     dist0 = compute_ergodic(result0)
@@ -68,18 +68,18 @@ function batch_welfare_and_dispersion(pe_base::Vector{Float64}, theta_vals::Vect
         push!(cevs, cev)
 
         simdata = simmodel(result)
-        moms, _, _, _, IQR_d_val, p90_10_d_wealt_val, p90_10_d_c_val, p90_10_d_val = makemoments(simdata, pe_test)
+        moms, _, _, _, IQR_d_val, p90_10_d_val = makemoments(simdata, pe_test)
 
-        push!(iqr_d_wealth, moms[15])
-        push!(iqr_d_c, moms[16])
+        push!(iqr_d_wealth, moms[13])
+        push!(iqr_d_c, moms[14])
         push!(iqr_d, IQR_d_val)
-        push!(p90_10_d_wealth, p90_10_d_wealth_val)
-        push!(p90_10_d_c, p90_10_d_c_val)
+        push!(p90_10_d_wealth, moms[15])
+        push!(p90_10_d_c, moms[16])
         push!(p90_10_d, p90_10_d_val)
         push!(avg_durables, moms[1])
-        push!(adj_rates, moms[13])
-        push!(mu_d_wealth, moms[8])
-        push!(mu_d_c, moms[9])
+        push!(adj_rates, moms[12])
+        push!(mu_d_wealth, moms[7])
+        push!(mu_d_c, moms[8])
         push!(labels, "θ = $(round(thet, digits=2))")
 
         dist = compute_ergodic(result)
@@ -205,4 +205,35 @@ function run_batch()
     p90_10_d_wealth, p90_10_d_c, p90_10_d, 
     mu_d_wealth, mu_d_c, 
     adj_rates, avg_durables, "Output/Ergodic/welfare_table.tex")
+end
+
+function run_all_batches()
+    pe = ptrue(sz.nop)  # base parameter vector
+    nu_vals = [0.5, 0.7, 0.88]  # risk aversion values to try
+
+    for nu in nu_vals
+        println("\n=== Running batch for nu = $nu ===")
+        pe_new = copy(pe)
+        pe_new[5] = nu  # assuming gamma is at index 2 — adjust if needed
+
+        # Define θ values to loop over
+        theta_vals = collect(0.25:0.25:1.0)
+
+        labels, cevs, iqr_d_wealth, iqr_d_c, adj_rates, avg_durables, cev_map,
+            iqr_d, p90_10_d_wealth, p90_10_d_c, p90_10_d, mu_d_wealth, mu_d_c =
+            batch_welfare_and_dispersion(pe_new, theta_vals)
+
+        # Save LaTeX table
+        nu_label = "nu$(round(nu, digits=1))"
+        save_latex_welfare_table(labels, cevs, 
+            iqr_d_wealth, iqr_d_c, iqr_d, 
+            p90_10_d_wealth, p90_10_d_c, p90_10_d, 
+            mu_d_wealth, mu_d_c, 
+            adj_rates, avg_durables, 
+            "Output/Ergodic/welfare_table_$(nu_label).tex")
+
+        # Plot CEV distributions (all θs)
+        plot_cev_distributions_all(cev_map)
+        savefig("Output/Ergodic/cev_distribution_all_$(nu_label).png")
+    end
 end

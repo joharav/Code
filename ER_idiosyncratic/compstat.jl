@@ -1,4 +1,4 @@
-using Random, Distributions, LinearAlgebra, Plots, Statistics, Printf, StatsBase, KernelDensity, JLD2
+using Random, Distributions, LinearAlgebra, Plots, Statistics, Printf, StatsBase, KernelDensity, JLD2, Polynomials
 
 include("durable_mod.jl")
 include("collectfunctions.jl")
@@ -8,19 +8,36 @@ using Main.sz,  Main.settings, Main.globals, Main.dtp;
 commence = time()
 
 # Define moments of interest
-momname = ["mu_d", "var_d", "mu_a", "var_a", "mu_c", "var_c", "mu_d_income", "mu_d_wealth", "mu_d_c", "mu_gap", "var_gap", "I_d", "adjustment_ratio","IQR_d_income", "IQR_d_wealth", "IQR_d_c"]
+momname = [
+    "mu_d",           # 1
+    "var_d",          # 2
+    "mu_a",           # 3
+    "var_a",          # 4
+    "mu_c",           # 5
+    "var_c",          # 6
+    "mu_d_wealth",    # 7
+    "mu_d_c",         # 8
+    "mu_gap",         # 9
+    "var_gap",        # 10
+    "cev",            # 11  <-- new addition
+    "adjustment_ratio", # 12
+    "IQR_d_wealth",   # 13
+    "IQR_d_c",        # 14
+    "p90_10_d_wealth",# 15
+    "p90_10_d_c"      # 16
+]
 pname = ["beta", "delta", "rho_e", "sigma_e", "nu", "gamma", "f", "w", "chi", "pd", "ft", "tau", "h","rho_y","sigma_y","theta"]
 
 # Get the true parameter values
 pea = ptrue(sz.nop)
 
 # Number of variations per parameter
-nvary  = 8  
+nvary  = 10 
 nparam = sz.nop  
 nnmom   = length(momname)  # Number of selected moments
 
 # Define parameters to vary
-varying_params = [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16]   #, 7, 9, 11, 14, 15
+varying_params = [3,4, 5, 6,7,9,10,11,15]   #, 7, 9, 11, 14, 15
 
 # Define parameter ranges (min, max)
 maxmin = [

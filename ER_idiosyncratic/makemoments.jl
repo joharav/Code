@@ -1,4 +1,5 @@
-function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = false)
+function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = false,
+    cev::Float64 = 0.0)
     # Initialize the output moments vector
     outmoms = zeros(sz.nmom)
     
@@ -84,6 +85,13 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
     p90_10_d                =disp_d[3]
 
 
+    #CEV 
+    # Compute welfare against a benchmark (e.g., θ = 0 baseline)
+    # You may need to define v_base outside if comparing to fixed base
+
+
+
+
 
     # Populate outmoms
     outmoms[1]  = mu_d
@@ -92,16 +100,16 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
     outmoms[4]  = var_a
     outmoms[5]  = mu_c
     outmoms[6]  = var_c
-    outmoms[7]  = mu_d_income
-    outmoms[8]  = mu_d_wealth
-    outmoms[9]  = mu_d_c
-    outmoms[10] = mu_gap
-    outmoms[11] = var_gap
-    outmoms[12] = I_d
-    outmoms[13] = adjustment_ratio
-    outmoms[14] = IQR_d_income
-    outmoms[15] = IQR_d_wealth
-    outmoms[16] = IQR_d_c
+    outmoms[7]  = mu_d_wealth
+    outmoms[8]  = mu_d_c
+    outmoms[9]  = mu_gap
+    outmoms[10] = var_gap
+    outmoms[11] = cev
+    outmoms[12] = adjustment_ratio
+    outmoms[13] = IQR_d_wealth
+    outmoms[14] = IQR_d_c
+    outmoms[15] = p90_10_d_wealth
+    outmoms[16] = p90_10_d_c
 
     if settings.compstat==false
 
@@ -150,6 +158,6 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
 
     end
 
-    return outmoms::Vector{Float64}, x_values, f_x, h_x, IQR_d, p90_10_d_wealth,p90_10_d_c, p90_10_d
+    return outmoms::Vector{Float64}, x_values, f_x, h_x, IQR_d, p90_10_d
 
 end

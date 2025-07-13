@@ -8,7 +8,15 @@ function momentgen(p::Vector{Float64})
     if answ.e == 0
         simdata = simmodel(answ)
         ergodic_dist = compute_ergodic(answ)
-        moms, x_values, f_x, h_x, _, _, _,_ = makemoments(simdata, p; shock=false)
+        pe_baseline = copy(p)
+        pe_baseline[16] = 0.0
+        result0 = valfun(pe_baseline)
+        v_base = vec(mean(result0.v, dims=(1,2,3)))
+        v_current = vec(mean(answ.v, dims=(1,2,3)))
+        cev = compute_cev(v_base, v_current, p)
+
+        # ============ MOMENTS ===================================
+        moms, x_values, f_x, h_x, _, _ = makemoments(simdata, p; shock=false,cev=cev)
         if settings.compstat==false
             decision_rules(answ)
         end        
@@ -17,7 +25,7 @@ function momentgen(p::Vector{Float64})
             simdata_irf = simmodel_girf(answ, Int(sz.nYears/2))
             
             # Get moments for simulation with shock
-            moms_shock, x_values_shock, f_x_shock, h_x_shock,  _, _, _, _ = makemoments(simdata_irf, p; shock=true)
+            moms_shock, x_values_shock, f_x_shock, h_x_shock,  _, _ = makemoments(simdata_irf, p; shock=true,cev=0)
             
             # Create GIRF plots
             girf = girf_plots(simdata_irf, simdata)
@@ -30,6 +38,7 @@ function momentgen(p::Vector{Float64})
         if settings.welfare
             println("Computing welfare comparison...")
             run_batch()
+            run_all_batches()
         end
 
 
