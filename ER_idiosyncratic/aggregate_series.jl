@@ -28,9 +28,18 @@ function plot_aggregates(simdata)
     p2 = plot(time_periods, aggregate_durable_stock, label="Aggregate Durable Stock", xlabel="Time", ylabel="Mean Durable Stock", title="Aggregate Durable Stock Over Time", color=:green, legend=false)
     savefig(p2, joinpath(output_dir, "Aggregate_Durable_Stock.png"))
 
-    # Plot aggregate durable stock
+    # Plot aggregate ER
     p3 = plot(time_periods, exchange_rate, label="Exchange Rate", xlabel="Time", ylabel="Exchange Rate", title="Exchange Rate Over Time", color=:green, legend=false)
     savefig(p3, joinpath(output_dir, "Exchange_Rate.png"))
+
+    # Assets - Histogram
+    histogram(assets, bins=30, xlabel="Time", ylabel="Assets",legend=false)
+    savefig(joinpath(output_dir, "Assets_distr.png"))
+
+    # Durables - Histogram
+    histogram(durable_stock, bins=30, xlabel="Time", ylabel="Durable stock",legend=false)
+    savefig(joinpath(output_dir, "Durables_distr.png"))
+
 end
 
 # Example call to create the plots, given `simdata` as your simulation output.

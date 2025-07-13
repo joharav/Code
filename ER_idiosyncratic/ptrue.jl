@@ -6,11 +6,11 @@ function ptrue(enn::Int64)
     pea[4] = 0.25;                               # sigma_e  = exchange rate innovation standard deviation
     pea[5] = 0.5;                               # nu       = Share parameter for nondurable consumption 
     pea[6] = 2.00;                               # gamma    = Risk aversion parameter 
-    pea[7] = 0.3;                               # f        = adj cost 0.3 gives you a 3% adj
+    pea[7] = 0.4;                               # f        = adj cost 0.3 gives you a 3% adj
     pea[8] = 1;                                  # w        = wage rate
     pea[9] = 0.755;                                # chi      = Required maintenance 0.4
     pea[10] = 5;                                 # pd      = price durable goods
-    pea[11] = 0.9;                              # ft      = fixed cost on wage rate
+    pea[11] = 0.4;                              # ft      = fixed cost on wage rate
     pea[12] = 0.0;                              # tau      = tax rate
     pea[13] = 1;                               # h        = hours worked
     pea[14] = 0.9;                              # rho_y    = AR(1) persistence for idiosyncratic income

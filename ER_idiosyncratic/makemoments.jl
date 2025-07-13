@@ -6,6 +6,7 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
     beta  = pea[1]
     w     = pea[8]
     pd    = pea[10]
+    theta = pea[16]
     rr = 1/beta -1
 
 # Extract variables from simulation data
@@ -18,7 +19,8 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
     d_adjust            = simdata.d_adjust[sz.burnin-2:sz.nYears, :]
     adjust_indicator    = simdata.adjust_indicator[sz.burnin-2:sz.nYears, :]
     y                   = simdata.y[sz.burnin-2:sz.nYears, :]
-  
+    a_effective = theta * ex .*a_state + (1 - theta) .* a_state
+
 
     # Calculate the gaps
     adjustment_indicator = vec(adjust_indicator)
@@ -39,8 +41,8 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
     var_d1 = var(vec(d_state))
 
     # Calculate ratios
-    ratio_d_income = (vec(pd.* ex .* d) ./ vec(w .+ ex .* a_state .* (1 + rr).*y ))
-    ratio_d_wealth = (vec(pd.*ex .* d) ./ vec(ex .* a_state .* (1 + rr).*y .+ pd*ex .* d_state))
+    ratio_d_income = (vec(pd .* ex .* d) ./ vec(w .* y .+ a_effective .* (1 + rr)))
+    ratio_d_wealth = (vec(pd .* ex .* d) ./ vec(a_effective .* (1 + rr) .+ pd .* ex .* d_state))
 
     # Calculate the ratio
     ratio_d_consumption = (vec(pd.* ex .* d) ./ vec(c))
@@ -109,6 +111,7 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
         plotdensities(x_values_d_consumption, f_d_consumption, "d_c"; shock=shock)
         plot_aggregates(simdata)
         d_adjust_time_size(simdata)
+        plot_simulated_d_and_a_by_state(simdata)
     end
     println("Adjustment Ratio: $adjustment_ratio\n")    
 
@@ -147,6 +150,6 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool = fa
 
     end
 
-    return outmoms::Vector{Float64}, x_values, f_x, h_x, IQR_d_income, IQR_d_wealth, IQR_d_c
+    return outmoms::Vector{Float64}, x_values, f_x, h_x, IQR_d, p90_10_d_wealth,p90_10_d_c, p90_10_d
 
 end
