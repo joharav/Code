@@ -80,13 +80,13 @@ function plot_total_marginals(dist::Array{Float64,4}, g::NamedTuple, savepath::S
 end
 
 
-function plot_cev_distribution(cev::Array{Float64,4}, dist::Array{Float64,4})
+function plot_cev_distribution(cev::Array{Float64,4}, dist::Array{Float64,4}, theta::Float64)
     cev_vec = cev[:]
     weights = dist[:]
     weights ./= sum(weights)
 
-    # Weighted histogram
-    histogram(cev_vec, weights=weights, bins=50, xlabel="CEV", ylabel="Density",
-        title="Welfare Gains (CEV) from Currency Regime", legend=false)
-    savefig("Output/Ergodic/cev_distribution.png")
+    histogram(cev_vec, weights=weights, bins=50,
+        xlabel="Welfare Gains", ylabel="Density",
+        title="Welfare Gains (CEV) — θ = $(round(theta, digits=2))", legend=false)
+    savefig("Output/Ergodic/cev_distribution_theta$(round(Int, theta)).png")
 end

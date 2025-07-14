@@ -73,5 +73,5 @@ module settings;
     const verbose       = false; 
     const irfsshock     = false;     
     const specif_two    = false;
-    const welfare       = false;
+    const welfare       = true;
 end

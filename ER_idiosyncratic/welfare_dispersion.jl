@@ -203,7 +203,7 @@ function run_batch()
     # Plot each CEV distribution separately
     for θ in sort(collect(keys(cev_map)))
         cev_array, dist = cev_map[θ]
-        plot_cev_distribution(cev_array, dist)
+        plot_cev_distribution(cev_array, dist,θ)
         savefig("Output/Ergodic/cev_distribution_theta$(round(θ,digits=2)).png")
     end
 
