@@ -25,7 +25,7 @@ function momentgen(p::Vector{Float64})
             simdata_irf = simmodel_girf(answ, Int(sz.nYears/2))
             
             # Get moments for simulation with shock
-            moms_shock, x_values_shock, f_x_shock, h_x_shock,  _, _ = makemoments(simdata_irf, p; shock=true,cev=0)
+            moms_shock, x_values_shock, f_x_shock, h_x_shock,  _, _ = makemoments(simdata_irf, p; shock=true,cev=0.0)
             
             # Create GIRF plots
             girf = girf_plots(simdata_irf, simdata)
@@ -38,7 +38,7 @@ function momentgen(p::Vector{Float64})
         if settings.welfare
             println("Computing welfare comparison...")
             run_batch()
-            run_all_batches()
+           # run_all_batches()
         end
 
 

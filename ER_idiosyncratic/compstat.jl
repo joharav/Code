@@ -32,12 +32,12 @@ pname = ["beta", "delta", "rho_e", "sigma_e", "nu", "gamma", "f", "w", "chi", "p
 pea = ptrue(sz.nop)
 
 # Number of variations per parameter
-nvary  = 10 
+nvary  = 8 
 nparam = sz.nop  
 nnmom   = length(momname)  # Number of selected moments
 
 # Define parameters to vary
-varying_params = [3,4, 5, 6,7,9,10,11,15]   #, 7, 9, 11, 14, 15
+varying_params = [9]   #, 7, 9, 11, 14, 15
 
 # Define parameter ranges (min, max)
 maxmin = [
@@ -115,7 +115,18 @@ for iparam in varying_params
         filename = "Output/Comparative/smoothed_moment_$(pname[iparam])_$(momname[imom]).png"
         savefig(plot_comp_smooth,filename)
 
+        # Generate smoothed fit without scatter
+        plot_only_smooth = plot(
+            x_smooth,
+            y_smooth,
+            linewidth = 2,
+            label = false,
+            xlabel = param_labels[pname[iparam]],
+            ylabel = mom_labels[momname[imom]],
+            title = "Effect of $(param_labels[pname[iparam]]) on $(mom_labels[momname[imom]])"
+            )
 
+            savefig(plot_only_smooth, "Output/Comparative/clean_moment_$(pname[iparam])_$(momname[imom]).png")
 
 
     end

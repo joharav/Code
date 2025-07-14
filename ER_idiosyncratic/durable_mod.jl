@@ -70,8 +70,8 @@ end;
 
 module settings; 
     const compstat      = false; 
-    const verbose       = true; 
-    const irfsshock     = true;     
+    const verbose       = false; 
+    const irfsshock     = false;     
     const specif_two    = false;
-    const welfare       = true;
+    const welfare       = false;
 end

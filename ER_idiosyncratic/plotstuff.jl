@@ -52,8 +52,8 @@ function plotstuff(vee::Array{Float64, 4}, apol::Array{Int64, 4}, dpol::Array{In
      # -- 4. Fixed exchange rate: Vary d to show a' and d' vs a --
      d_idx = [round(Int, sz.nd ÷ 2)+1, sz.nd]  # median and high d
      for ie in 1:sz.ne
-         plotA = plot(xlabel="Assets", ylabel="Asset Policy", title="Asset Policy by d, e=$(ie)", legend=:outerbottom)
-         plotD = plot(xlabel="Assets", ylabel="Durable Policy", title="Durable Policy by d, e=$(ie)", legend=:outerbottom)
+         plotA = plot(xlabel="Initial Assets", ylabel="Asset Policy", title="Asset Policy by durable level", legend=:outerbottom)
+         plotD = plot(xlabel="Initial Assets", ylabel="Durable Policy", title="Durable Policy by durable level", legend=:outerbottom)
          for id in d_idx
              plot!(plotA, a, apol[ie, iy, :, id], label="d=$(round(d[id], digits=2))")
              plot!(plotD, a, dpol[ie, iy, :, id], label="d=$(round(d[id], digits=2))")
