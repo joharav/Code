@@ -28,6 +28,50 @@ momname = [
 ]
 pname = ["beta", "delta", "rho_e", "sigma_e", "nu", "gamma", "f", "w", "chi", "pd", "ft", "tau", "h","rho_y","sigma_y","theta"]
 
+default(fontfamily = "Computer Modern", titlefont = font(10), guidefont = font(9))  # Already done!
+
+param_labels = Dict(
+    "beta" => "\$\\beta\$",
+    "delta" => "\$\\delta\$",
+    "rho_e" => "\$\\rho_e\$",
+    "sigma_e" => "\$\\sigma_e\$",
+    "nu" => "\$\\nu\$",
+    "gamma" => "\$\\gamma\$",
+    "f" => "\$F^d\$",
+    "w" => "w",
+    "chi" => "\$\\chi\$",
+    "pd" => "\$p_d\$",
+    "ft" => "\$\\phi\$",
+    "tau" => "\$\\tau\$",
+    "h" => "h",
+    "rho_y" => "\$\\rho_y\$",
+    "sigma_y" => "\$\\sigma_y\$",
+    "theta" => "\$\\theta\$"
+
+)
+
+# Map raw moment names to prettier labels
+mom_labels = Dict(
+    "mu_d" => "Mean Durable rate",
+    "var_d" => "Var Durable",
+    "mu_a" => "Mean Assets rate",
+    "var_a" => "Var Assets",
+    "mu_c" => "Mean Consumption",
+    "var_c" => "Var Consumption",
+    "mu_d_wealth" => "Durables-Wealth Ratio",
+    "mu_d_c" => "Durables-Cons. Ratio",
+    "mu_gap" => "Mean Gap",
+    "var_gap" => "Var Gap",
+    "cev" => "Welfare change",
+    "adjustment_ratio" => "Adj. Ratio",
+    "IQR_d_wealth" => "Interquartile ratio durable-wealth",
+    "IQR_d_c" => "Interquartile ratio durable-consumption",
+    "p90_10_d_wealth" => "90-10 ratio durable-wealth",
+    "p90_10_d_c" => "90-10 ratio durable-consumption"
+
+)
+
+
 # Get the true parameter values
 pea = ptrue(sz.nop)
 
@@ -37,14 +81,14 @@ nparam = sz.nop
 nnmom   = length(momname)  # Number of selected moments
 
 # Define parameters to vary
-varying_params = [9]   #, 7, 9, 11, 14, 15
+varying_params = [7]   #, 7, 9, 11, 14, 15
 
 # Define parameter ranges (min, max)
 maxmin = [
     0.80  0.95;  # beta (Discount factor)
     0.05  0.40;  # delta (Depreciation rate)
     0.3   0.9;   # rho_e (Persistence of exchange rate shock)
-    0.1   0.90;  # sigma_e (Volatility of exchange rate shock)
+    0.2   0.60;  # sigma_e (Volatility of exchange rate shock)
     0.40  0.90;  # nu (Share parameter for nondurable consumption)
     0.50  2.00;  # gamma (Risk aversion)
     0.20  0.9;  # f (Adjustment fixed cost)
@@ -96,7 +140,6 @@ for iparam in varying_params
 
         filename = "Output/Comparative/moment_$(pname[iparam])_$(momname[imom]).png"
         savefig(plot_comp, filename)
-
         x_data = allparams[:, iparam]  # Parameter values
         y_data = allmoms[:, iparam, imom]  # Moment values
 
@@ -117,17 +160,16 @@ for iparam in varying_params
 
         # Generate smoothed fit without scatter
         plot_only_smooth = plot(
-            x_smooth,
-            y_smooth,
-            linewidth = 2,
-            label = false,
-            xlabel = param_labels[pname[iparam]],
-            ylabel = mom_labels[momname[imom]],
-            title = "Effect of $(param_labels[pname[iparam]]) on $(mom_labels[momname[imom]])"
-            )
+        x_smooth,
+        y_smooth,
+        linewidth = 2,
+        label = false,
+        xlabel = param_labels[pname[iparam]],
+        ylabel = mom_labels[momname[imom]],
+        title = "Effect of $(param_labels[pname[iparam]]) on $(mom_labels[momname[imom]])"
+        )
 
-            savefig(plot_only_smooth, "Output/Comparative/clean_moment_$(pname[iparam])_$(momname[imom]).png")
-
+        savefig(plot_only_smooth, "Output/Comparative/clean_moment_$(pname[iparam])_$(momname[imom]).png")
 
     end
 end

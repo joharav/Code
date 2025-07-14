@@ -11,6 +11,8 @@ function batch_welfare_and_dispersion(pe_base::Vector{Float64}, theta_vals::Vect
     p90_10_d = Float64[]
     mu_d_wealth = Float64[]
     mu_d_c = Float64[]
+    mu_a = Float64[]  # Mean assets
+    mu_gap = Float64[]  # Mean durables
     labels = String[]
 
     cev_map = Dict{Float64, Tuple{Array{Float64,4}, Array{Float64,4}}}()
@@ -38,6 +40,8 @@ function batch_welfare_and_dispersion(pe_base::Vector{Float64}, theta_vals::Vect
     push!(adj_rates, moms0[12])
     push!(mu_d_wealth, moms0[7])
     push!(mu_d_c, moms0[8])
+    push!(mu_a, moms0[3])  # Mean assets
+    push!(mu_gap, moms0[9])  # Mean durables
     push!(labels, "θ = 0.0")
 
     dist0 = compute_ergodic(result0)
@@ -80,6 +84,8 @@ function batch_welfare_and_dispersion(pe_base::Vector{Float64}, theta_vals::Vect
         push!(adj_rates, moms[12])
         push!(mu_d_wealth, moms[7])
         push!(mu_d_c, moms[8])
+        push!(mu_a, moms[3])  # Mean assets
+        push!(mu_gap, moms[9])  # Mean durables
         push!(labels, "θ = $(round(thet, digits=2))")
 
         dist = compute_ergodic(result)
@@ -95,7 +101,7 @@ function batch_welfare_and_dispersion(pe_base::Vector{Float64}, theta_vals::Vect
 
     return (
         labels, cevs, iqr_d_wealth, iqr_d_c, adj_rates, avg_durables, cev_map,
-        iqr_d, p90_10_d_wealth, p90_10_d_c, p90_10_d, mu_d_wealth, mu_d_c
+        iqr_d, p90_10_d_wealth, p90_10_d_c, p90_10_d, mu_d_wealth, mu_d_c, mu_a, mu_gap
     )
 end
 
@@ -136,7 +142,7 @@ function save_latex_welfare_table(
     iqr_d_wealth, iqr_d_c, iqr_d, 
     p90_10_d_wealth, p90_10_d_c, p90_10_d, 
     mu_d_wealth, mu_d_c, 
-    adj_rates, avg_durables, 
+    adj_rates, avg_durables, mu_a, mu_gap,
     filepath::String
 )
     open(filepath, "w") do io
@@ -164,6 +170,8 @@ function save_latex_welfare_table(
         print_row("Avg. [d, c]", mu_d_c)
         print_row("Adj. Rate (\\%)", adj_rates; percentage=true)
         print_row("Change Durables", avg_durables)
+        print_row("Change Assets", mu_a)
+        print_row("Mean Gap", mu_gap)
 
         println(io, "\\bottomrule")
         println(io, "\\end{tabular}")
@@ -182,7 +190,7 @@ function run_batch()
     thetas = 0.25:0.25:1.0
 
     labels, cevs, iqr_d_wealth, iqr_d_c, adj_rates, avg_durables, cev_map,
-        iqr_d, p90_10_d_wealth, p90_10_d_c, p90_10_d, mu_d_wealth, mu_d_c = batch_welfare_and_dispersion(pe, collect(thetas))
+        iqr_d, p90_10_d_wealth, p90_10_d_c, p90_10_d, mu_d_wealth, mu_d_c, mu_a, mu_gap = batch_welfare_and_dispersion(pe, collect(thetas))
 
     println("\n--- Welfare Gains (vs θ = 0 Baseline) ---")
     for (l, c) in zip(labels, cevs)
@@ -204,36 +212,5 @@ function run_batch()
     iqr_d_wealth, iqr_d_c, iqr_d, 
     p90_10_d_wealth, p90_10_d_c, p90_10_d, 
     mu_d_wealth, mu_d_c, 
-    adj_rates, avg_durables, "Output/Ergodic/welfare_table.tex")
-end
-
-function run_all_batches()
-    pe = ptrue(sz.nop)  # base parameter vector
-    nu_vals = [0.5, 0.7, 0.88]  # risk aversion values to try
-
-    for nu in nu_vals
-        println("\n=== Running batch for nu = $nu ===")
-        pe_new = copy(pe)
-        pe_new[5] = nu  # assuming gamma is at index 2 — adjust if needed
-
-        # Define θ values to loop over
-        theta_vals = collect(0.25:0.25:1.0)
-
-        labels, cevs, iqr_d_wealth, iqr_d_c, adj_rates, avg_durables, cev_map,
-            iqr_d, p90_10_d_wealth, p90_10_d_c, p90_10_d, mu_d_wealth, mu_d_c =
-            batch_welfare_and_dispersion(pe_new, theta_vals)
-
-        # Save LaTeX table
-        nu_label = "nu$(round(nu, digits=1))"
-        save_latex_welfare_table(labels, cevs, 
-            iqr_d_wealth, iqr_d_c, iqr_d, 
-            p90_10_d_wealth, p90_10_d_c, p90_10_d, 
-            mu_d_wealth, mu_d_c, 
-            adj_rates, avg_durables, 
-            "Output/Ergodic/welfare_table_$(nu_label).tex")
-
-        # Plot CEV distributions (all θs)
-        plot_cev_distributions_all(cev_map)
-        savefig("Output/Ergodic/cev_distribution_all_$(nu_label).png")
-    end
+    adj_rates, avg_durables, mu_a, mu_gap, "Output/Ergodic/welfare_table.tex")
 end
