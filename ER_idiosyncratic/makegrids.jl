@@ -24,7 +24,7 @@ function makegrids(ppp::Vector{Float64})
         mew = 3.0
         eg, trans_e = tauchen(mew, sigma_e, rho_e, nume, numstd_e)
             # Rescale to (0,2]
-        eg = 0.01 .+ (1.99) .* (eg .- minimum(eg)) ./ (maximum(eg) - minimum(eg))
+     #   eg = 0.01 .+ (1.99) .* (eg .- minimum(eg)) ./ (maximum(eg) - minimum(eg))
     end
 
 

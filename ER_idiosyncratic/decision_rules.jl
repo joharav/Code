@@ -55,15 +55,6 @@ function decision_rules(answ)
         savefig(joinpath(output_dir, "FixedA_Decision_Rules_a$ia.png"))
     end
 
-    # Mean over z and assets
-    mean_adjust = dropdims(mean(adjust_indicator_policy, dims=1), dims=1)
-    heatmap(a, ex, mean_adjust[:, :, sz.nd ÷ 2],  # pick middle durable value
-        ylabel="Exchange Rate",
-        xlabel="Assets",
-        title="Decision Rule: Mean Adjustment",
-        color=:blues
-    )
-    savefig(joinpath(output_dir, "Decision_Rules_average.png"))
 
     cmap = cgrad([:blue, :white])
 

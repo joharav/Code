@@ -1,7 +1,7 @@
 module sz;
     const nd        = 11;            #number of points in the durable state grid21
     const na        = 11;            #number of points in the asset state grid21
-    const ne        = 4;            #number of points in the exchange rate grid4
+    const ne        = 11;            #number of points in the exchange rate grid4
     const ny        = 4;            #number of points in the idiosyncratic income grid4
     const npd       = 23;            #number of points in the durable policy grid51
     const npa       = 23;            #number of points in the asset policy grid51
@@ -73,5 +73,5 @@ module settings;
     const verbose       = false; 
     const irfsshock     = false;     
     const specif_two    = false;
-    const welfare       = true;
+    const welfare       = false;
 end
