@@ -41,6 +41,7 @@ include("d_adjust_time_size.jl")
 include("decision_rules.jl") 
 include("plotgaps_shock.jl")
 include("plot_ergodic.jl")
+#include("empirical_dist.jl") # Not used in the current setup
 
 # ============Making moments ===============================
 include("momentgen.jl"); #wrapper
@@ -49,4 +50,7 @@ include("adj_gaps_sim.jl")
 include("welfare.jl")
 include("welfare_dispersion.jl")
 include("ergodic.jl")
+include("welfare_cases.jl")
+
+
 

@@ -1,13 +1,13 @@
 using StatsBase
-function valfun(pea::Vector{Float64})
+function valfun(pea::Vector{Float64}; λ::Float64 = 0.0)
   # Adjusted value function
-  noadjust_result = valfun_noadjust(pea)
+  noadjust_result = valfun_noadjust(pea; λ=λ)
   println("Non-adjust: mean(v) = ", mean(noadjust_result.v))
   println("Non-adjust: min(v) = ", minimum(noadjust_result.v))
   println("Non-adjust: max(v) = ", maximum(noadjust_result.v))
   
 
-  adjust_result = valfun_adjust(pea)
+  adjust_result = valfun_adjust(pea; λ=λ)
   println("Adjust: mean(v) = ", mean(adjust_result.v))
   println("Adjust: min(v) = ", minimum(adjust_result.v))
   println("Adjust: max(v) = ", maximum(adjust_result.v))

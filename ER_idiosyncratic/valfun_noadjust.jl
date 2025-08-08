@@ -1,4 +1,4 @@
-function valfun_noadjust(pea::Vector{Float64})
+function valfun_noadjust(pea::Vector{Float64}; λ::Float64 = 0.0)
     beta        = pea[1]        # Discount factor
     delta       = pea[2]        # Depreciation rate
     chi         = pea[9]        # Non-adjustment cost
@@ -20,7 +20,7 @@ function valfun_noadjust(pea::Vector{Float64})
     dp = grids.dp
     ddp= (1 - delta * (1 - chi)) .* d  # Apply non-adjustment    
     iid = [argmin(abs.(dp .- ddp[id])) for id in 1:sz.nd]
-    ut= utility_noadjust(grids, pea)
+    ut= utility_noadjust(grids, pea; λ = λ)
     tmat = grids.t
     errcode = 0
 

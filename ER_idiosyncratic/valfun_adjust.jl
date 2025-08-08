@@ -1,4 +1,4 @@
-function valfun_adjust(pea::Vector{Float64})
+function valfun_adjust(pea::Vector{Float64}; λ::Float64 = 0.0)
     beta    = pea[1]        # Discount factor
 
     # Initialize arrays
@@ -14,7 +14,7 @@ function valfun_adjust(pea::Vector{Float64})
     
     # Make the grids and the profit flow
     grids = makegrids(pea)
-    ut = utility(grids, pea)
+    ut = utility(grids, pea; λ = λ)
     tmat = grids.t
     errcode = 0
 

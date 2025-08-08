@@ -1,4 +1,4 @@
-function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
+function utility_noadjust(grids::NamedTuple, pea::Vector{Float64}; λ::Float64 = 0.0)
     a, d, ap, dp, e, y = grids.a, grids.d, grids.ap, grids.dp, grids.ex, grids.y
     beta, delta, nu, gamma, w, chi, pd, tau, h = pea[1], pea[2], pea[5], pea[6], pea[8], pea[9], pea[10], pea[12], pea[13]
     rr = (1 / beta) - 1
@@ -22,8 +22,9 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
                         d_next_val = d_next[id]
                         c = income- a_eff_prime - maintenance
 
-                        if c > 0 && d_next_val > 0
-                            util[ie, iy, ia, id, iia, iid_map[id]] = ((c^nu * d_next_val^(1 - nu))^(1 - gamma)) / (1 - gamma)
+                        if c > 0 && d_next_val > 0 && (1 + λ) > 0
+                            c_eff = c * (1 + λ)
+                            util[ie, iy, ia, id, iia, iid_map[id]] = ((c_eff^nu * d_next_val^(1 - nu))^(1 - gamma)) / (1 - gamma)
                         else
                             util[ie, iy, ia, id, iia, iid_map[id]] = -1e10
                             penalty_count += 1
