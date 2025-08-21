@@ -1,25 +1,3 @@
-using Roots, PrettyTables
-
-
-"""
-    solve_lambda_transfer(pe_other, μ_base, w_base)
-
-Solves for λ that makes welfare in the `pe_other` policy regime
-equal to `w_base`, using `μ_base` as the distribution.
-"""
-function solve_lambda_transfer(pe_other, μ_base, w_base)
-    function welfare_in_other_with_transfer(λ)
-        ans_new = valfun(pe_other; λ=λ)
-        return sum(ans_new.v .* μ_base)
-    end
-
-    λ_star = find_zero(λ -> welfare_in_other_with_transfer(λ) - w_base,
-                       (-0.85, 1.0), Bisection())
-    return λ_star
-end
-
-
-
 """
     welfare_full_summary(pe_A, pe_B)
 
@@ -31,7 +9,7 @@ Computes:
 """
 function welfare_full_summary(pe_A::Vector{Float64}, pe_B::Vector{Float64})
     γ = pe_A[6]
-
+    nu = pe_A[5]
     # Solve baseline (λ = 0)
     ansA = valfun(pe_A; λ=0.0)
     ansB = valfun(pe_B; λ=0.0)
@@ -47,6 +25,10 @@ function welfare_full_summary(pe_A::Vector{Float64}, pe_B::Vector{Float64})
     # CEV comparisons (aggregate)
     cev_BA = compute_cev(vec(ansA.v), vec(ansB.v), pe_A)
     cev_AB = compute_cev(vec(ansB.v), vec(ansA.v), pe_A)
+
+    # Compensating transfer (λ) to equalize welfare
+    λ = (wAA / wBB)^(1.0 / nu) - 1
+
 
    # Pretty Print
    println("\n📊 Full Welfare Summary (γ = $γ):\n")
@@ -64,15 +46,10 @@ println("\n→ Welfare Change from A to B: ", round((wBB - wAA) / abs(wAA) * 100
 
 # Correctly compares the change from baseline B to the counterfactual welfare in A
 println("→ Welfare Change from A to B (keep ergodic distr): ", round((wBA - wAA) / abs(wAA) * 100, digits=2), "%")
+println("Compensating transfer λ: ", λ)
 
     return (
         wAA = wAA, wBA = wBA, wBB = wBB, wAB = wAB,
-        cev_BA = cev_BA, cev_AB = cev_AB
+        cev_BA = cev_BA, cev_AB = cev_AB, λ=λ
     )
 end
-
-pea = ptrue(sz.nop)
-pe_A = pea  # Policy regime A
-pe_B = copy(pe_A)
-pe_B[16] = 0
-results = welfare_full_summary(pe_A, pe_B)

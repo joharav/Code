@@ -75,10 +75,11 @@ function makegrids(ppp::Vector{Float64})
         dpg = sort(unique(vcat(dpg, extra)))
     end
 
-    println("Income max: ", income_max)
-    println("a_max: ", a_max)
-    println("d_max: ", dmax)
-
+    if settings.verbose 
+        println("Income max: ", income_max)
+        println("a_max: ", a_max)
+        println("d_max: ", dmax)
+    end 
 
 
     outtuple = (t=trans::Array{Float64},a=ag::Vector{Float64},ap=apg::Vector{Float64},d=dg::Vector{Float64},dp = dpg::Vector{Float64}, ex = eg::Vector{Float64}, y = yg::Vector{Float64});

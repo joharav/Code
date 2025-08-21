@@ -34,8 +34,9 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64}; λ::Float64 =
             end
         end
     end
-
-    println("Number of penalized states NA: ", penalty_count)
-    println("Share of penalized states NA: ", penalty_count / length(util))
+    if settings.verbose
+        println("Number of penalized states NA: ", penalty_count)
+        println("Share of penalized states NA: ", penalty_count / length(util))
+    end
     return util
 end

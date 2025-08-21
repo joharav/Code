@@ -1,0 +1,12 @@
+Data vs. Simulated Moments (improved Q)
+
+d_income_ratio        data =     4.074845   sim =     0.187917
+d_wealth_ratio        data =     0.900217   sim =     0.180901
+adj_ratio             data =     0.189724   sim =     0.242076
+
+Parameters:
+nu                        0.483143
+F^d                       0.361187
+F^t                       0.046805
+
+GMM objective Q =   276.135670

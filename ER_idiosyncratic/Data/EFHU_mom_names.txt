@@ -1,0 +1,3 @@
+d_income_ratio
+d_wealth_ratio
+adj_ratio

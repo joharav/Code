@@ -37,7 +37,12 @@ function utility(grids::NamedTuple, pea::Vector{Float64}; λ::Float64 = 0.0)
     end
 
     penalty_share = penalty_count / (sz.ne * sz.ny * sz.na * sz.nd * sz.npa * sz.npd)
-    println("Number of penalized states ADJUST: ", penalty_count)
-    println("Share of penalized states ADJUST: ", penalty_share)
+    if settings.verbose
+        println("Number of penalized states ADJUST: ", penalty_count)
+        println("Share of penalized states ADJUST: ", penalty_share)
+    end
+
+
+
     return util
 end

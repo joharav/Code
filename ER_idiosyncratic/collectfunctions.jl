@@ -41,11 +41,16 @@ include("d_adjust_time_size.jl")
 include("decision_rules.jl") 
 include("plotgaps_shock.jl")
 include("plot_ergodic.jl")
+# ============ GMM and SMM =================================
+include("gmmfunctions_broad.jl")
+#include("inflnc_functions.jl")
+#include("inflnc.jl")
+include("simann.jl")
 #include("empirical_dist.jl") # Not used in the current setup
 
 # ============Making moments ===============================
 include("momentgen.jl"); #wrapper
-include("makemoments.jl");
+include("makemoments_smm.jl");
 include("adj_gaps_sim.jl")
 include("welfare.jl")
 include("welfare_dispersion.jl")

@@ -8,15 +8,10 @@ function momentgen(p::Vector{Float64})
     if answ.e == 0
         simdata = simmodel(answ)
         ergodic_dist = compute_ergodic(answ)
-        pe_baseline = copy(p)
-        pe_baseline[16] = 0.0
-        result0 = valfun(pe_baseline)
-        v_base = vec(mean(result0.v, dims=(1,2,3)))
-        v_current = vec(mean(answ.v, dims=(1,2,3)))
-        cev = compute_cev(v_base, v_current, p)
+
 
         # ============ MOMENTS ===================================
-        moms, x_values, f_x, h_x, _, _ = makemoments(simdata, p; shock=false,cev=cev)
+        moms, x_values, f_x, h_x, _, _ = makemoments(simdata, p; shock=false)
         if settings.compstat==false
             decision_rules(answ)
         end        
@@ -25,7 +20,7 @@ function momentgen(p::Vector{Float64})
             simdata_irf = simmodel_girf(answ, Int(sz.nYears/2))
             
             # Get moments for simulation with shock
-            moms_shock, x_values_shock, f_x_shock, h_x_shock,  _, _ = makemoments(simdata_irf, p; shock=true,cev=0.0)
+            moms_shock, x_values_shock, f_x_shock, h_x_shock,  _, _ = makemoments(simdata_irf, p; shock=true)
             
             # Create GIRF plots
             girf = girf_plots(simdata_irf, simdata)
@@ -36,9 +31,17 @@ function momentgen(p::Vector{Float64})
         end
         # ============ WELFARE COMPARISON ==============================
         if settings.welfare
-            println("Computing welfare comparison...")
-            run_batch()
-           # run_all_batches()
+            # pe_baseline = copy(p)
+            # pe_baseline[16] = 0.0
+            # result0 = valfun(pe_baseline)
+            # v_base = vec(mean(result0.v, dims=(1,2,3)))
+            # v_current = vec(mean(answ.v, dims=(1,2,3)))
+            # cev = compute_cev(v_base, v_current, p)
+            # println("Computing welfare comparison...")
+            # run_batch()
+            pe_B = copy(p)
+            pe_B[16] = 0
+            results = welfare_full_summary(p, pe_B)
         end
 
 

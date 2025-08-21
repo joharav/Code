@@ -2,23 +2,29 @@ using StatsBase
 function valfun(pea::Vector{Float64}; λ::Float64 = 0.0)
   # Adjusted value function
   noadjust_result = valfun_noadjust(pea; λ=λ)
-  println("Non-adjust: mean(v) = ", mean(noadjust_result.v))
-  println("Non-adjust: min(v) = ", minimum(noadjust_result.v))
-  println("Non-adjust: max(v) = ", maximum(noadjust_result.v))
+  if settings.verbose
+    println("Non-adjust: mean(v) = ", mean(noadjust_result.v))
+    println("Non-adjust: min(v) = ", minimum(noadjust_result.v))
+    println("Non-adjust: max(v) = ", maximum(noadjust_result.v))
+  end
+ 
   
 
   adjust_result = valfun_adjust(pea; λ=λ)
-  println("Adjust: mean(v) = ", mean(adjust_result.v))
-  println("Adjust: min(v) = ", minimum(adjust_result.v))
-  println("Adjust: max(v) = ", maximum(adjust_result.v))
-  
+  if settings.verbose
+    println("Adjust: mean(v) = ", mean(adjust_result.v))
+    println("Adjust: min(v) = ", minimum(adjust_result.v))
+    println("Adjust: max(v) = ", maximum(adjust_result.v))
+  end
   # Overall value function
   v = max.(adjust_result.v, noadjust_result.v)  # Broadcasting over arrays
 
   val_diff = adjust_result.v .- noadjust_result.v
-  println("Mean diff: ", mean(val_diff), " | Min: ", minimum(val_diff), " | Max: ", maximum(val_diff))
-  println("Share where adjust gives lower value: ", sum(val_diff .< 0) / length(val_diff))
 
+  if settings.verbose
+    println("Mean diff: ", mean(val_diff), " | Min: ", minimum(val_diff), " | Max: ", maximum(val_diff))
+    println("Share where adjust gives lower value: ", sum(val_diff .< 0) / length(val_diff))
+  end
 
   # # Create an indicator matrix (1 if adjusted value is greater, 0 otherwise)
   indicator_matrix = adjust_result.v .> noadjust_result.v
@@ -39,15 +45,18 @@ function valfun(pea::Vector{Float64}; λ::Float64 = 0.0)
   pol_c = ifelse.(indicator_matrix, adjust_result.pol.c, noadjust_result.pol.c)
 
   pol = dtp.Pol(pol_a, pol_d, pol_c)  # Reconstructing the Pol object
-
-  println("Mean c adjust: ", mean(adjust_result.pol.c))
-  println("Mean c noadjust: ", mean(noadjust_result.pol.c))
-  println("Max asset chosen: ", maximum(pol_a))
-  println("Max durable chosen: ", maximum(pol_d))
   g = adjust_result.g
   e = adjust_result.e
-  println("Asset grid max: ", maximum(g.ap))
-  println("Durable grid max: ", maximum(g.dp))
+
+  if settings.verbose
+    println("Mean v adjust: ", mean(adjust_result.v))
+    println("Mean v noadjust: ", mean(noadjust_result.v))
+    println("Mean a adjust: ", mean(adjust_result.pol.a))
+    println("Mean a noadjust: ", mean(noadjust_result.pol.a))
+    println("Mean d adjust: ", mean(adjust_result.pol.d))
+    println("Mean d noadjust: ", mean(noadjust_result.pol.d))
+  end
+
 
   # Constructing the output tuple
   outtuple = (v = v, gidx = gidx, pol = pol, g = g, e = e, adjust_result=adjust_result, noadjust_result=noadjust_result, adjust_flag = adjust_flag,adjustment_indicator=indicator_matrix) 
