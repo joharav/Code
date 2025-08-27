@@ -16,11 +16,11 @@ using Main.globals
 
 # ----------------- Flags -----------------
 restart = false          # restart from previous estimation
-doiterations = true      # run optimization or just compute stats
+doiterations = false      # run optimization or just compute stats
 
 # ----------------- Starting values and bounds -----------------
 x_start = zeros(sz.noestp)
-x_start[1] = 0.6   # nu
+x_start[1] = 0.8   # nu
 x_start[2] = 0.4   # f_d
 x_start[3] = 0.4   # f_t
 
@@ -63,3 +63,5 @@ end
 println("\n✅ Optimization finished")
 println("Optimal parameters: ", x_opt)
 println("Function value at optimum: ", f_opt)
+wahoo = smmstats(x_opt)
+print_smm_results(wahoo,x_opt)

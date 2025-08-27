@@ -41,6 +41,7 @@ mu_c  = mean(vec(c_change))
 var_c = var(vec(c_change))
 mu_d1 = mean(vec(d_state))
 var_d1 = var(vec(d_state))
+d_dispersion = var(log1p.(vec(d_state)))
 
 # Ratios for durable share
 ratio_d_income      = vec(pd .* ex .* d) ./ vec(w .* y .+ a_effective .* (1 + rr))
@@ -73,30 +74,18 @@ corr_d_c = cor(vec(d), vec(c))
 corr_d_a = cor(vec(d), vec(a))
 
 
-# # Populate outmoms
-# outmoms[1]  = mu_d
-# outmoms[2]  = var_d
-# outmoms[3]  = mu_a
-# outmoms[4]  = var_a
-# outmoms[5]  = mu_c
-# outmoms[6]  = var_c
-# outmoms[7]  = mu_d_income
-# outmoms[8]  = mu_d_wealth
-# outmoms[9]  = mu_d_c
-# outmoms[10] = mu_gap
-# outmoms[11] = var_gap
-# outmoms[12] = adjustment_ratio
-# outmoms[13] = IQR_d_income
-# outmoms[14] = IQR_d_wealth
-# outmoms[15] = IQR_d_c
-# outmoms[16] = p90_10_d_income
-# outmoms[17] = p90_10_d_wealth
-# outmoms[18] = p90_10_d_c
-# outmoms[19] = corr_d_c
-# outmoms[20] = corr_d_a
-# outmoms[21] = cev  # optional if you compute welfare
+#if settings.compstat==false
 
-outmoms = [mu_d_income, mu_d_wealth, adjustment_ratio]  # Select moments based on sz.pick
+ #   plotgaps(x_values, f_x, h_x, gap_vec; shock=shock)
+#    plotdensities(x_values_d_income, f_d_income, "f_income"; shock=shock)
+ #   plotdensities(x_values_d_wealth, f_d_wealth, "f_wealth"; shock=shock)
+  #  plotdensities(x_values_d_consumption, f_d_consumption, "d_c"; shock=shock)
+  #  plot_aggregates(simdata)
+   # d_adjust_time_size(simdata)
+   # plot_simulated_d_and_a_by_state(simdata)
+#end
+
+outmoms = [d_dispersion, mu_d_wealth, adjustment_ratio]  # Select moments based on sz.pick
 
 
 return outmoms, x_values, f_x, h_x, IQR_d, p90_10_d

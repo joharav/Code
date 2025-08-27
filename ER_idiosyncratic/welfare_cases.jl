@@ -8,8 +8,8 @@ Computes:
 - PrettyTables report and NamedTuple summary
 """
 function welfare_full_summary(pe_A::Vector{Float64}, pe_B::Vector{Float64})
-    γ = pe_A[6]
     nu = pe_A[5]
+    gamma = pe_A[6]
     # Solve baseline (λ = 0)
     ansA = valfun(pe_A; λ=0.0)
     ansB = valfun(pe_B; λ=0.0)
@@ -23,33 +23,40 @@ function welfare_full_summary(pe_A::Vector{Float64}, pe_B::Vector{Float64})
     wAB = sum(ansA.v .* μB)    # (5) Welfare in A under B's distribution
 
     # CEV comparisons (aggregate)
-    cev_BA = compute_cev(vec(ansA.v), vec(ansB.v), pe_A)
-    cev_AB = compute_cev(vec(ansB.v), vec(ansA.v), pe_A)
+  #  cev_BA = compute_cev(vec(ansA.v), vec(ansB.v), pe_A)
+   # cev_AB = compute_cev(vec(ansB.v), vec(ansA.v), pe_A)
 
-    # Compensating transfer (λ) to equalize welfare
-    λ = (wAA / wBB)^(1.0 / nu) - 1
+    # CEVs (composite-equivalent by default)
+    cev_BA = (wBB / wAA)^(1/(1 - gamma)) - 1
+    cev_AB = (wAA / wBB)^(1/(1 - gamma)) - 1
 
 
-   # Pretty Print
-   println("\n📊 Full Welfare Summary (γ = $γ):\n")
+    # Welfare changes keeping distributions fixed
+    keepDistAB = (wBA - wAA) / abs(wAA) * 100   # % change A → B, keep A's μ
+    keepDistBA = (wAB - wBB) / abs(wBB) * 100   # % change B → A, keep B's μ
+    acrossSS   = (wBB - wAA) / abs(wAA) * 100  # across steady states
 
-   # --- FIX: Removed commas to create a 3-column Matrix instead of a 1-column Vector of Tuples ---
-   data = [
-       "(1) Baseline A"          wAA   "";
-       "(2) Counterfactual B in A" wBA   "CEV = $(round(cev_BA, digits=2))%";
-       "(3) Baseline B"          wBB   "";
-       "(4) Counterfactual A in B" wAB   "CEV = $(round(cev_AB, digits=2))%"
-   ]
-   pretty_table(data, header=["Case", "Welfare", "CEV"])
-# Correctly compares the change from baseline A to baseline B
-println("\n→ Welfare Change from A to B: ", round((wBB - wAA) / abs(wAA) * 100, digits=2), "%")
+    # Compensating transfer (choose one; label in slides!)
+    λ_composite = (wAA / wBB)^(1/(1 - gamma)) - 1
+    # or, if you truly want c-only:
+    λ_c_only    = (wAA / wBB)^(1/(nu * (1 - gamma))) - 1
 
-# Correctly compares the change from baseline B to the counterfactual welfare in A
-println("→ Welfare Change from A to B (keep ergodic distr): ", round((wBA - wAA) / abs(wAA) * 100, digits=2), "%")
-println("Compensating transfer λ: ", λ)
 
-    return (
-        wAA = wAA, wBA = wBA, wBB = wBB, wAB = wAB,
-        cev_BA = cev_BA, cev_AB = cev_AB, λ=λ
-    )
+    println("\n📊 Full Welfare Summary:\n")
+    pretty_table([  "Baseline A (wAA)"               wAA    "";
+                    "B on A's dist (wBA)"            wBA    "CEV (composite) = $(round(cev_BA*100, digits=2))%";
+                    "Baseline B (wBB)"               wBB    "";
+                    "A on B's dist (wAB)"            wAB    "CEV (composite) = $(round(cev_AB*100, digits=2))%"],
+                 header=["Case","Welfare","Note"])
+
+    println("\nAcross steady states (A→B): $(round(acrossSS, digits=2))%")
+    println("A→B holding μ_A:            $(round(keepDistAB, digits=2))%")
+    println("B→A holding μ_B:            $(round(keepDistBA, digits=2))%")
+    println("Comp. transfer λ (composite): $(round(λ_composite*100, digits=2))%")
+    # println("Comp. transfer λ (c-only):    $(round(λ_c_only*100, digits=2))%")
+
+    return (wAA=wAA, wBA=wBA, wBB=wBB, wAB=wAB,
+            cev_BA=cev_BA, cev_AB=cev_AB,
+            λ_composite=λ_composite, λ_c_only=λ_c_only,
+            keepDistAB=keepDistAB, keepDistBA=keepDistBA, acrossSS=acrossSS)
 end

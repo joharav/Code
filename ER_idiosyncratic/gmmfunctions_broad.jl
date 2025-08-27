@@ -96,10 +96,16 @@ function grad(x0::Vector{Float64}, n::Int, k::Int)
 
     g_up = zeros(n,k)
     g_dw = zeros(n,k)
+    # for i in 1:k
+    #     g_up[:,i] = fcn(view(argup,i,:))
+    #     g_dw[:,i] = fcn(view(argdw,i,:))
+    # end
+
     for i in 1:k
-        g_up[:,i] = fcn(view(argup,i,:))
-        g_dw[:,i] = fcn(view(argdw,i,:))
+        g_up[:,i] = fcn(collect(view(argup,i,:)))
+        g_dw[:,i] = fcn(collect(view(argdw,i,:)))
     end
+    
 
     for i in 1:k
         g[:,i] = (g_up[:,i] .- g_dw[:,i]) ./ (2.0 * dh[i])
@@ -129,7 +135,9 @@ function smmstats(p::Vector{Float64}; n_sample::Int=10_000)
     G = grad(p, n, k)
 
     GWG  = G' * W * G
-    igwg = inv(GWG)
+#    igwg = inv(GWG)
+    igwg = pinv(GWG)
+
     vc   = igwg * (G' * W * Σ * W * G) * igwg
     vc  .*= (1.0 + 1.0/n_sample)
 

@@ -12,7 +12,7 @@ function momentgen(p::Vector{Float64})
 
         # ============ MOMENTS ===================================
         moms, x_values, f_x, h_x, _, _ = makemoments(simdata, p; shock=false)
-        if settings.compstat==false
+        if settings.compstat==false && settings.verbose==true
             decision_rules(answ)
         end        
         if settings.irfsshock
@@ -31,17 +31,60 @@ function momentgen(p::Vector{Float64})
         end
         # ============ WELFARE COMPARISON ==============================
         if settings.welfare
-            # pe_baseline = copy(p)
-            # pe_baseline[16] = 0.0
-            # result0 = valfun(pe_baseline)
-            # v_base = vec(mean(result0.v, dims=(1,2,3)))
-            # v_current = vec(mean(answ.v, dims=(1,2,3)))
-            # cev = compute_cev(v_base, v_current, p)
-            # println("Computing welfare comparison...")
-            # run_batch()
+            #Large Fixed Cost on Durables
             pe_B = copy(p)
-            pe_B[16] = 0
+            pe_B[7] = 1
+            pe_B[11] = 1
             results = welfare_full_summary(p, pe_B)
+
+
+            #Large Fixed Cost on Durables
+            pe_B2 = copy(p)
+            pe_B2[7] = 1
+            resultsB2 = welfare_full_summary(p, pe_B2)
+
+            #Large Fixed Cost on Durables
+            pe_B3 = copy(p)
+            pe_B3[11] = 1
+            resultsB3 = welfare_full_summary(p, pe_B3)
+
+            #Fixed ER
+            pe_C = copy(p)
+            pe_C[4] = 0
+            resultsC = welfare_full_summary(p, pe_C)
+
+            #High Volatility
+            pe_D = copy(p)
+            pe_D[4] = 2
+            resultsD = welfare_full_summary(p, pe_D)
+
+
+            # Collect all results
+            cases = ["Durable FCost 1", "Durable FCost 2", "Durable FCost 3", "Fixed ER", "High Volatility"]
+            cev_BA_vals = [results.cev_BA, resultsB2.cev_BA, resultsB3.cev_BA, resultsC.cev_BA, resultsD.cev_BA]
+            cev_AB_vals = [results.cev_AB, resultsB2.cev_AB, resultsB3.cev_AB, resultsC.cev_AB, resultsD.cev_AB]
+            lambda_vals = [results.λ_composite, resultsB2.λ_composite, resultsB3.λ_composite, resultsC.λ_composite, resultsD.λ_composite]
+            λ_c_only_vals = [results.λ_c_only, resultsB2.λ_c_only, resultsB3.λ_c_only, resultsC.λ_c_only, resultsD.λ_c_only]
+            keepDistAB_vals = [results.keepDistAB, resultsB2.keepDistAB, resultsB3.keepDistAB, resultsC.keepDistAB, resultsD.keepDistAB]
+            keepDistBA_vals = [results.keepDistBA, resultsB2.keepDistBA, resultsB3.keepDistBA, resultsC.keepDistBA, resultsD.keepDistBA]
+            acrossSS_vals = [results.acrossSS, resultsB2.acrossSS, resultsB3.acrossSS, resultsC.acrossSS, resultsD.acrossSS]
+            
+            # Create a DataFrame
+            df = DataFrame(
+                Case = cases,
+                CEV_BA = cev_BA_vals,
+                #CEV_AB = cev_AB_vals,
+                Lambda = lambda_vals,
+                #Lambda_c = λ_c_only_vals,    
+                WelfareChange_A_to_B_keep_dist = keepDistAB_vals,
+              #  WelfareChange_B_to_A_keep_dist = keepDistBA_vals,
+                WelfareChange_across_SS = acrossSS_vals
+            )
+            
+            # Export to CSV
+            CSV.write("Output/Welfare_Comparison.csv", df)
+            
+
         end
 
 

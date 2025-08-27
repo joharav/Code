@@ -1,4 +1,4 @@
-using Random, Distributions, LinearAlgebra, Plots, Statistics, Printf, StatsBase, KernelDensity, JLD2, PrettyTables;
+using Random, Distributions, LinearAlgebra, Plots, Statistics, Printf, StatsBase, KernelDensity, JLD2, PrettyTables, DataFrames, CSV;
 include("durable_mod.jl");
 include("collectfunctions.jl");
 

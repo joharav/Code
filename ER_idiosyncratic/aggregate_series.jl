@@ -2,9 +2,9 @@ using Plots
 
 function plot_aggregates(simdata)
     # Extract assets and durable stock information
-    assets          = simdata.a[sz.burnin-2:sz.nYears, :]  # Assuming 'a' represents asset levels, shape: (nYears, nFirms)
-    durable_stock   = simdata.d[sz.burnin-2:sz.nYears, :]  # Assuming 'd' represents durable stock, shape: (nYears, nFirms)
-    ex              = simdata.ex[sz.burnin-2:sz.nYears, :]
+    assets          = simdata.a[(sz.nYears-500+1):sz.nYears, :]  # Assuming 'a' represents asset levels, shape: (nYears, nFirms)
+    durable_stock   = simdata.d[(sz.nYears-500+1):sz.nYears, :]  # Assuming 'd' represents durable stock, shape: (nYears, nFirms)
+    ex              = simdata.ex[(sz.nYears-500+1):sz.nYears, :]
 
     # Sum over all firms/households for each time period
     aggregate_assets = mean(assets, dims=2)  # Sum along the columns for each time step
