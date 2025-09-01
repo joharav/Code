@@ -7,24 +7,31 @@ using Main.sz,  Main.settings, Main.globals, Main.dtp;
 
 commence = time()
 
-# Define moments of interest
+# # Define moments of interest
+# momname = [
+#     "mu_d",           # 1
+#     "var_d",          # 2
+#     "mu_a",           # 3
+#     "var_a",          # 4
+#     "mu_c",           # 5
+#     "var_c",          # 6
+#     "mu_d_wealth",    # 7
+#     "mu_d_c",         # 8
+#     "mu_gap",         # 9
+#     "var_gap",        # 10
+#     "cev",            # 11  <-- new addition
+#     "adjustment_ratio", # 12
+#     "IQR_d_wealth",   # 13
+#     "IQR_d_c",        # 14
+#     "p90_10_d_wealth",# 15
+#     "p90_10_d_c"      # 16
+# ]
+
+# Only the three you’re actually returning/using now:
 momname = [
-    "mu_d",           # 1
-    "var_d",          # 2
-    "mu_a",           # 3
-    "var_a",          # 4
-    "mu_c",           # 5
-    "var_c",          # 6
-    "mu_d_wealth",    # 7
-    "mu_d_c",         # 8
-    "mu_gap",         # 9
-    "var_gap",        # 10
-    "cev",            # 11  <-- new addition
-    "adjustment_ratio", # 12
-    "IQR_d_wealth",   # 13
-    "IQR_d_c",        # 14
-    "p90_10_d_wealth",# 15
-    "p90_10_d_c"      # 16
+    "d_dispersion",
+    "mu_d_wealth",
+    "adjustment_ratio"
 ]
 pname = ["beta", "delta", "rho_e", "sigma_e", "nu", "gamma", "f", "w", "chi", "pd", "ft", "tau", "h","rho_y","sigma_y","theta"]
 
@@ -51,26 +58,30 @@ param_labels = Dict(
 )
 
 # Map raw moment names to prettier labels
+# mom_labels = Dict(
+#     "mu_d" => "Mean Durable rate",
+#     "var_d" => "Var Durable",
+#     "mu_a" => "Mean Assets rate",
+#     "var_a" => "Var Assets",
+#     "mu_c" => "Mean Consumption",
+#     "var_c" => "Var Consumption",
+#     "mu_d_wealth" => "Durables-Wealth Ratio",
+#     "mu_d_c" => "Durables-Cons. Ratio",
+#     "mu_gap" => "Mean Gap",
+#     "var_gap" => "Var Gap",
+#     "cev" => "Welfare change",
+#     "adjustment_ratio" => "Adj. Ratio",
+#     "IQR_d_wealth" => "Interquartile ratio durable-wealth",
+#     "IQR_d_c" => "Interquartile ratio durable-consumption",
+#     "p90_10_d_wealth" => "90-10 ratio durable-wealth",
+#     "p90_10_d_c" => "90-10 ratio durable-consumption"
+
+# )
 mom_labels = Dict(
-    "mu_d" => "Mean Durable rate",
-    "var_d" => "Var Durable",
-    "mu_a" => "Mean Assets rate",
-    "var_a" => "Var Assets",
-    "mu_c" => "Mean Consumption",
-    "var_c" => "Var Consumption",
-    "mu_d_wealth" => "Durables-Wealth Ratio",
-    "mu_d_c" => "Durables-Cons. Ratio",
-    "mu_gap" => "Mean Gap",
-    "var_gap" => "Var Gap",
-    "cev" => "Welfare change",
+   "d_dispersion" => "Durable Dispersion",
     "adjustment_ratio" => "Adj. Ratio",
-    "IQR_d_wealth" => "Interquartile ratio durable-wealth",
-    "IQR_d_c" => "Interquartile ratio durable-consumption",
-    "p90_10_d_wealth" => "90-10 ratio durable-wealth",
-    "p90_10_d_c" => "90-10 ratio durable-consumption"
-
+    "mu_d_wealth" => "Durables-Wealth Ratio"
 )
-
 
 # Get the true parameter values
 pea = ptrue(sz.nop)
@@ -81,7 +92,7 @@ nparam = sz.nop
 nnmom   = length(momname)  # Number of selected moments
 
 # Define parameters to vary
-varying_params = [7]   #, 7, 9, 11, 14, 15
+varying_params = [7,4,5]   #, 7, 9, 11, 14, 15
 
 # Define parameter ranges (min, max)
 maxmin = [
@@ -89,9 +100,9 @@ maxmin = [
     0.05  0.40;  # delta (Depreciation rate)
     0.3   0.9;   # rho_e (Persistence of exchange rate shock)
     0.2   0.60;  # sigma_e (Volatility of exchange rate shock)
-    0.40  0.90;  # nu (Share parameter for nondurable consumption)
+    0.20  0.90;  # nu (Share parameter for nondurable consumption)
     0.50  2.00;  # gamma (Risk aversion)
-    0.20  0.9;  # f (Adjustment fixed cost)
+    0.05  0.8;  # f (Adjustment fixed cost)
     0.50  5.00;  # w (Wage)
     0.1   0.9;   # chi (Required maintenance)
     2     8;     # pd (Price of durables)
@@ -132,7 +143,7 @@ degree = 3  # Try degree 3 or 4 for better fit
 
 # Generate plots for each selected parameter and moment
 for iparam in varying_params
-    for imom in 1:sz.nmom
+    for imom in 1:nnmom
         ptitle = "Parameter: $(pname[iparam]), Moment: $(momname[imom])"
         plot_comp = Plots.plot(allparams[:, iparam], allmoms[:, iparam, imom], 
                                xlabel=pname[iparam], ylabel=momname[imom],

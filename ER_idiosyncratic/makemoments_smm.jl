@@ -74,16 +74,16 @@ corr_d_c = cor(vec(d), vec(c))
 corr_d_a = cor(vec(d), vec(a))
 
 
-#if settings.compstat==false
+if settings.verbose==true
 
- #   plotgaps(x_values, f_x, h_x, gap_vec; shock=shock)
+  #  plotgaps(x_values, f_x, h_x, gap_vec; shock=shock)
 #    plotdensities(x_values_d_income, f_d_income, "f_income"; shock=shock)
- #   plotdensities(x_values_d_wealth, f_d_wealth, "f_wealth"; shock=shock)
-  #  plotdensities(x_values_d_consumption, f_d_consumption, "d_c"; shock=shock)
-  #  plot_aggregates(simdata)
-   # d_adjust_time_size(simdata)
-   # plot_simulated_d_and_a_by_state(simdata)
-#end
+#    plotdensities(x_values_d_wealth, f_d_wealth, "f_wealth"; shock=shock)
+#    plotdensities(x_values_d_consumption, f_d_consumption, "d_c"; shock=shock)
+    plot_aggregates(simdata)
+  #  d_adjust_time_size(simdata)
+  #  plot_simulated_d_and_a_by_state(simdata)
+end
 
 outmoms = [d_dispersion, mu_d_wealth, adjustment_ratio]  # Select moments based on sz.pick
 

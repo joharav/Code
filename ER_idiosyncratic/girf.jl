@@ -6,12 +6,12 @@ function girf_plots(simul_shock::NamedTuple,simul_noshock::NamedTuple)
 
      T_shock=Int(sz.nYears/2)
      #Plot IRFs
-     plot1=plot(girf_c[T_shock-4:T_shock+24], title="Consumption response", xlabel="Quarters", ylabel="% Change from SS", legend=false)
+     plot1=plot(girf_c[T_shock:T_shock+8], title="Consumption response", xlabel="Quarters", ylabel="% Change from SS", legend=false)
      savefig(plot1, "Output/IRFs/IRF_c.png")
  
-     plot2=plot(girf_d[T_shock-4:T_shock+24], title="Durable holdings response", xlabel="Quarters", ylabel="% Change from SS", legend=false)
+     plot2=plot(girf_d[T_shock:T_shock+8], title="Durable holdings response", xlabel="Quarters", ylabel="% Change from SS", legend=false)
      savefig(plot2, "Output/IRFs/IRF_d.png")
-     plot3=plot(girf_a[T_shock-4:T_shock+24], title="Asset holdings response", xlabel="Quarters", ylabel="% Change from SS", legend=false)
+     plot3=plot(girf_a[T_shock:T_shock+8], title="Asset holdings response", xlabel="Quarters", ylabel="% Change from SS", legend=false)
      savefig(plot3, "Output/IRFs/IRF_a.png")
  
      outuple=( girf_c, girf_d, girf_a)
@@ -34,7 +34,7 @@ function compute_cirf(irf_results::Vector{Float64}, window_size::Int,x::String)
         cirf_vector[t] = sum(irf_results[start_period:end_period])
     end
 
-    pp1=plot(cirf_vector[T_shock-4:T_shock+24], title="Cumulative CIRF", xlabel="Quarters", ylabel="% Change from SS", legend=false)
+    pp1=plot(cirf_vector[T_shock:T_shock+8], title="Cumulative CIRF", xlabel="Quarters", ylabel="% Change from SS", legend=false)
     savefig(pp1, "Output/IRFs/CIRF_($param_str).png")
 
 
