@@ -34,10 +34,12 @@ function plot_aggregates(simdata)
 
     # Assets - Histogram
     histogram(assets, bins=30, xlabel="Time", ylabel="Assets",legend=false)
+    histogram(vec(assets), bins=50, xlabel="Assets", ylabel="Density", normalize=true)
     savefig(joinpath(output_dir, "Assets_distr.png"))
 
     # Durables - Histogram
     histogram(durable_stock, bins=30, xlabel="Time", ylabel="Durable stock",legend=false)
+    histogram(vec(durable_stock), bins=50, xlabel="Durable stock", ylabel="Density", normalize=true)
     savefig(joinpath(output_dir, "Durables_distr.png"))
 
 end

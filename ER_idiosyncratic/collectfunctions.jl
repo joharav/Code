@@ -41,6 +41,7 @@ include("d_adjust_time_size.jl")
 include("decision_rules.jl") 
 include("plotgaps_shock.jl")
 include("plot_ergodic.jl")
+include("plot_distribution_panels.jl")
 # ============ GMM and SMM =================================
 include("gmmfunctions_broad.jl")
 #include("inflnc_functions.jl")

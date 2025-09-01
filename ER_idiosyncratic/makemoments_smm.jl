@@ -73,7 +73,9 @@ p90_10_d          = disp_d[3]
 corr_d_c = cor(vec(d), vec(c))
 corr_d_a = cor(vec(d), vec(a))
 
-
+plot_aggregates(simdata)
+d_adjust_time_size(simdata)
+plot_simulated_d_and_a_by_state(simdata)
 if settings.verbose==true
 
   #  plotgaps(x_values, f_x, h_x, gap_vec; shock=shock)
