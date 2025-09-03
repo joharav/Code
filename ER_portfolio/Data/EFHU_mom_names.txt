@@ -1,0 +1,3 @@
+d_dispersion
+d_wealth_ratio
+adj_ratio

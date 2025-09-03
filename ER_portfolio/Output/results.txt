@@ -1,0 +1,16 @@
+Final SMM results (ν_ndurables, f_d, f_t)
+
+Parameter estimates and standard errors
+
+nu                        0.800000   (SE =   504.913599)
+F^d                       0.400000   (SE =     0.000000)
+F^t                       0.400000   (SE =     0.000000)
+
+Data vs. Simulated Moments and residuals
+
+d_dispersion                  data =     6.567810   sim =     0.108816   resid =     6.458994
+d_wealth_ratio                data =     0.897187   sim =     0.046504   resid =     0.850683
+adj_ratio                     data =     0.196825   sim =     1.000000   resid =    -0.803175
+
+Over-identification (J-test):   383.605066
+(df = 0)

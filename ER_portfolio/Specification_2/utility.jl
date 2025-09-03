@@ -1,0 +1,57 @@
+function utility(grids::NamedTuple, pea::Vector{Float64})
+    # Extract grids
+    a = grids.a       # Asset grid
+    d = grids.d       # Durable goods grid
+    ap = grids.ap     # Future asset grid
+    dp = grids.dp     # Future durable goods grid
+    e = grids.ex       # Exchange rate grid
+    y = grids.y       # Income grid
+
+    # Model parameters
+    beta    = pea[1]        # Discount factor
+    delta   = pea[2]        # Depreciation rate for durables
+    nu      = pea[5]        # Share parameter for nondurables
+    gamma   = pea[6]        # Risk aversion
+    f       = pea[7]        # Adjustment cost
+    w       = pea[8]        # Wage rate
+    pd      = pea[10]       # durable price
+    ft      = pea[11]       # fixed cost on wage rate
+    tau     = pea[12]       # tax rate
+    h       = pea[13]       # hours worked
+
+    rr = (1 / beta) - 1 
+    # Initialize utility array
+    util = zeros( sz.ne, sz.ny, sz.na, sz.nd, sz.npa, sz.npd)
+    penalty_count = 0  # Counter for penalties
+
+    Threads.@threads for iid in 1:sz.npd
+        Threads.@threads for iia in 1:sz.npa
+            Threads.@threads for id in 1:sz.nd
+                Threads.@threads for ia in 1:sz.na
+                    Threads.@threads for iy in 1:sz.ny
+                        Threads.@threads for ie in 1:sz.ne
+                            # Calculate consumption and durable goods stock
+                            c = w * h * (1-tau) * y[iy] +  a[ia] * (1 + rr) + e[ie] * pd * (1 - f) * (1 - delta) * d[id] -   ap[iia] - e[ie] * pd * dp[iid] - w * h * ft * y[iy]
+
+                            # Check feasibility of consumption and durable goods stock
+                            if c > 0 && dp[iid] > 0
+                                # Calculate utility
+                                util[ie, iy, ia, id, iia, iid] = (((c^nu) * (dp[iid]^(1 - nu)))^(1 - gamma)) / (1 - gamma)
+                            else
+                                # Apply penalty for infeasible choices
+                                util[ie, iy, ia, id, iia, iid] = -1e10
+                                penalty_count += 1  # Increment counter for penalties
+
+                            end
+
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+
+
+    return util
+end
