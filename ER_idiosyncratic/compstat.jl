@@ -92,7 +92,7 @@ nparam = sz.nop
 nnmom   = length(momname)  # Number of selected moments
 
 # Define parameters to vary
-varying_params = [7,4,5]   #, 7, 9, 11, 14, 15
+varying_params = [6]   #7,4,5, 7, 9, 11, 14, 15
 
 # Define parameter ranges (min, max)
 maxmin = [
@@ -101,7 +101,7 @@ maxmin = [
     0.3   0.9;   # rho_e (Persistence of exchange rate shock)
     0.2   0.60;  # sigma_e (Volatility of exchange rate shock)
     0.20  0.90;  # nu (Share parameter for nondurable consumption)
-    0.50  2.00;  # gamma (Risk aversion)
+    0.50  3.00;  # gamma (Risk aversion)
     0.05  0.8;  # f (Adjustment fixed cost)
     0.50  5.00;  # w (Wage)
     0.1   0.9;   # chi (Required maintenance)

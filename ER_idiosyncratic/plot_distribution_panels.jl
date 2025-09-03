@@ -56,7 +56,7 @@ function plot_distribution_panels(simdata::NamedTuple, pea::Vector{Float64}; out
     kd  = kde(rW_trim)
     med = median(rW_trim); iqr = quantile(rW_trim, 0.75)-quantile(rW_trim,0.25)
 
-    emp_median = 0.5  # <-- replace with your EFHU number
+    emp_median = 0.94  # <-- replace with your EFHU number
     emp_mean   = 0.89  # example
     
 
@@ -64,85 +64,77 @@ function plot_distribution_panels(simdata::NamedTuple, pea::Vector{Float64}; out
             xlabel="Durable value / total wealth (share)",
             ylabel="Density",
             title="Distribution of durable share of wealth")
-    vline!([med], lw=2, ls=:dash)
-    vline!([med], lw=2, ls=:dash, color=:blue, label="Model median")
-    vline!([emp_median], lw=2, ls=:dashdot, color=:red, label="Data median")
-    # small stats box
-    txt = @sprintf "median = %.3f\nIQR = %.3f" med iqr
-    annotate!((kd.x[end] - 0.1*(kd.x[end]-kd.x[1]),
-            maximum(kd.density)*0.85,
-            Plots.text(txt, 8, :left)))
     savefig(p1, joinpath(outdir,"durable_wealth_distribution.png"))
 
 
-    # --- 2) Adjustment gap density (uses your gap routine) ---
-    # Build investment 'gap' using your function (same call pattern as makemoments)
-    # We only need the returned gap vector and x-grid for plotting.
-    # --- 2) Adjustment gap density + hazard ---
-    gap_vec, f_x, x_vals, h_x, I_d, mu_gap, var_gap, adj_ratio =
-    adjustment_gaps_sim(d, d_adj, vec(adj_ind))
+    # # --- 2) Adjustment gap density (uses your gap routine) ---
+    # # Build investment 'gap' using your function (same call pattern as makemoments)
+    # # We only need the returned gap vector and x-grid for plotting.
+    # # --- 2) Adjustment gap density + hazard ---
+    # gap_vec, f_x, x_vals, h_x, I_d, mu_gap, var_gap, adj_ratio =
+    # adjustment_gaps_sim(d, d_adj, vec(adj_ind))
 
-    gmask = isfinite.(gap_vec)
-    g = gap_vec[gmask]
-    kg = kde(g)
+    # gmask = isfinite.(gap_vec)
+    # g = gap_vec[gmask]
+    # kg = kde(g)
 
-    # Bin gaps on the KDE support and compute empirical hazard per bin
-    nbins   = 40
-    edges   = range(minimum(kg.x), stop=maximum(kg.x), length=nbins+1)
-    centers = collect((edges[1:end-1] .+ edges[2:end]) ./ 2)
-    edgesv  = collect(edges)  # for searchsortedlast
+    # # Bin gaps on the KDE support and compute empirical hazard per bin
+    # nbins   = 40
+    # edges   = range(minimum(kg.x), stop=maximum(kg.x), length=nbins+1)
+    # centers = collect((edges[1:end-1] .+ edges[2:end]) ./ 2)
+    # edgesv  = collect(edges)  # for searchsortedlast
 
-    # map each observation to its bin index in 1:nbins
-    binid = map(x -> clamp(searchsortedlast(edgesv, x), 1, nbins), g)
+    # # map each observation to its bin index in 1:nbins
+    # binid = map(x -> clamp(searchsortedlast(edgesv, x), 1, nbins), g)
 
-    # align adjustment indicator to the same mask
-    adj_masked = vec(adj_ind)[gmask]
+    # # align adjustment indicator to the same mask
+    # adj_masked = vec(adj_ind)[gmask]
 
-    haz = Array{Float64}(undef, nbins)
-    for i in 1:nbins
-    sel = (binid .== i)
-    if any(sel)
-        haz[i] = mean(adj_masked[sel])
-    else
-        haz[i] = NaN
-    end
-    end
+    # haz = Array{Float64}(undef, nbins)
+    # for i in 1:nbins
+    # sel = (binid .== i)
+    # if any(sel)
+    #     haz[i] = mean(adj_masked[sel])
+    # else
+    #     haz[i] = NaN
+    # end
+    # end
 
-    # simple smoothing (moving average with window=2 on each side)
-    function movavg(x; k=2)
-    n = length(x); y = similar(x)
-    @inbounds for i in 1:n
-        lo = max(1, i-k); hi = min(n, i+k)
-        y[i] = mean(skipmissing(x[lo:hi]))
-    end
-    y
-    end
+    # # simple smoothing (moving average with window=2 on each side)
+    # function movavg(x; k=2)
+    # n = length(x); y = similar(x)
+    # @inbounds for i in 1:n
+    #     lo = max(1, i-k); hi = min(n, i+k)
+    #     y[i] = mean(skipmissing(x[lo:hi]))
+    # end
+    # y
+    # end
 
-    function smooth_hazard(gap_vec, adj_ind; nbins=100)
-        # Build DataFrame
-        df = DataFrame(gap = gap_vec, adjust = adj_ind)
+    # function smooth_hazard(gap_vec, adj_ind; nbins=100)
+    #     # Build DataFrame
+    #     df = DataFrame(gap = gap_vec, adjust = adj_ind)
     
-        # Logistic regression: Pr(adjust=1 | gap)
-        logit_model = glm(@formula(adjust ~ gap), df, Binomial(), LogitLink())
+    #     # Logistic regression: Pr(adjust=1 | gap)
+    #     logit_model = glm(@formula(adjust ~ gap), df, Binomial(), LogitLink())
     
-        # Prediction grid
-        xgrid = range(quantile(gap_vec, 0.01), stop=quantile(gap_vec, 0.99), length=nbins)
-        pred = predict(logit_model, DataFrame(gap=xgrid))
+    #     # Prediction grid
+    #     xgrid = range(quantile(gap_vec, 0.01), stop=quantile(gap_vec, 0.99), length=nbins)
+    #     pred = predict(logit_model, DataFrame(gap=xgrid))
     
-        return xgrid, pred
-    end
+    #     return xgrid, pred
+    # end
 
-    haz_s = movavg(haz; k=2)
+    # haz_s = movavg(haz; k=2)
 
-    xgrid, pred = smooth_hazard(g, adj_masked)
+    # xgrid, pred = smooth_hazard(g, adj_masked)
 
-    p2 = plot(kg.x, kg.density, lw=2, label="Density f(x)",
-            xlabel="Gap to target (durables, log difference)",
-            ylabel="Density", title="State dependence: adjustment probability")
-    twinx()
-    plot!(xgrid, pred, lw=2, ls=:dot, color=:red, label="Pr(adjust|gap)")
+    # p2 = plot(kg.x, kg.density, lw=2, label="Density f(x)",
+    #         xlabel="Gap to target (durables, log difference)",
+    #         ylabel="Density", title="State dependence: adjustment probability")
+    # twinx()
+    # plot!(xgrid, pred, lw=2, ls=:dot, color=:red, label="Pr(adjust|gap)")
 
-    savefig(p2, joinpath(outdir, "adjustment_gap_hazard.png"))
+    # savefig(p2, joinpath(outdir, "adjustment_gap_hazard.png"))
 
 
 
