@@ -32,54 +32,66 @@ function momentgen(p::Vector{Float64})
         end
         # ============ WELFARE COMPARISON ==============================
         if settings.welfare
+            #No Dollars
+            pe_nd = copy(p)
+            pe_nd[16] = 0.1
+            results_nd = welfare_full_summary(p, pe_nd)
+
+
+
             #Large Fixed Cost on Durables
             pe_B = copy(p)
             pe_B[7] = 1
             pe_B[11] = 1
+           # pe_B[16] = 0
             results = welfare_full_summary(p, pe_B)
 
-
-            #Large Fixed Cost on Durables
-            pe_B2 = copy(p)
-            pe_B2[7] = 1
-            resultsB2 = welfare_full_summary(p, pe_B2)
-
-            #Large Fixed Cost on Durables
-            pe_B3 = copy(p)
-            pe_B3[11] = 1
-            resultsB3 = welfare_full_summary(p, pe_B3)
+            #No Durables
+            pe_zero = copy(p)
+            pe_zero[2] = 0.9
+            results_zero = welfare_full_summary(p, pe_zero)
 
             #Fixed ER
             pe_C = copy(p)
             pe_C[4] = 0
+          #  pe_C[16] = 0
             resultsC = welfare_full_summary(p, pe_C)
 
             #High Volatility
             pe_D = copy(p)
-            pe_D[4] = 2
+            pe_D[4] = 1.8
+           # pe_D[16] = 0
             resultsD = welfare_full_summary(p, pe_D)
 
 
             # Collect all results
-            cases = ["Durable FCost 1", "Durable FCost 2", "Durable FCost 3", "Fixed ER", "High Volatility"]
-            cev_BA_vals = [results.cev_BA, resultsB2.cev_BA, resultsB3.cev_BA, resultsC.cev_BA, resultsD.cev_BA]
-            cev_AB_vals = [results.cev_AB, resultsB2.cev_AB, resultsB3.cev_AB, resultsC.cev_AB, resultsD.cev_AB]
-            lambda_vals = [results.λ_composite, resultsB2.λ_composite, resultsB3.λ_composite, resultsC.λ_composite, resultsD.λ_composite]
-            λ_c_only_vals = [results.λ_c_only, resultsB2.λ_c_only, resultsB3.λ_c_only, resultsC.λ_c_only, resultsD.λ_c_only]
-            keepDistAB_vals = [results.keepDistAB, resultsB2.keepDistAB, resultsB3.keepDistAB, resultsC.keepDistAB, resultsD.keepDistAB]
-            keepDistBA_vals = [results.keepDistBA, resultsB2.keepDistBA, resultsB3.keepDistBA, resultsC.keepDistBA, resultsD.keepDistBA]
-            acrossSS_vals = [results.acrossSS, resultsB2.acrossSS, resultsB3.acrossSS, resultsC.acrossSS, resultsD.acrossSS]
-            
+            cases = [
+                "No dollar savings",
+                "High adj. cost",
+                "No durables",
+                "Fixed ER",
+                "High ER volatility"
+            ]
+            cev_BA_vals = [results_nd.cev_BA, results.cev_BA, results_zero.cev_BA ,resultsC.cev_BA, resultsD.cev_BA]
+          #  lambda_vals = [results_nd.λ_composite, results.λ_composite, results_zero.λ_composite, resultsC.λ_composite, resultsD.λ_composite]
+           # keepDistAB_vals = [results_nd.keepDistAB, results.keepDistAB, results_zero.keepDistAB, resultsC.keepDistAB, resultsD.keepDistAB]
+            #acrossSS_vals = [results_nd.acrossSS, results.acrossSS, results_zero.acrossSS, resultsC.acrossSS, resultsD.acrossSS]
+            vol_c_vals = [results_nd.vol_c_with, results.vol_c_with, results_zero.vol_c_with, resultsC.vol_c_with, resultsD.vol_c_with]
+            vol_x_vals = [results_nd.vol_x_with, results.vol_x_with, results_zero.vol_x_with, resultsC.vol_x_with, resultsD.vol_x_with]
+           # vol_cno_vals = [results_nd.vol_c_no, results.vol_c_no, results_zero.vol_c_no, resultsC.vol_c_no, resultsD.vol_c_no]
+           # vol_xno_vals = [results_nd.vol_x_no, results.vol_x_no, results_zero.vol_x_no, resultsC.vol_x_no, resultsD.vol_x_no]
+                   
             # Create a DataFrame
             df = DataFrame(
                 Case = cases,
                 CEV_BA = cev_BA_vals,
-                #CEV_AB = cev_AB_vals,
-                Lambda = lambda_vals,
-                #Lambda_c = λ_c_only_vals,    
-                WelfareChange_A_to_B_keep_dist = keepDistAB_vals,
-              #  WelfareChange_B_to_A_keep_dist = keepDistBA_vals,
-                WelfareChange_across_SS = acrossSS_vals
+              #  Lambda = lambda_vals,
+               # WelfareChange_A_to_B_keep_dist = keepDistAB_vals,
+               # WelfareChange_across_SS = acrossSS_vals,
+                ConsumptionVolatility = vol_c_vals,
+                DurVolatility = vol_x_vals
+               # ConsumptionVolatility_no_dollars = vol_cno_vals,
+                #DurVolatility_no_dollars = vol_xno_vals
             )
             
             # Export to CSV

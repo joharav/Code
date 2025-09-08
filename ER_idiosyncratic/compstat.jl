@@ -29,14 +29,17 @@ commence = time()
 
 # Only the three you’re actually returning/using now:
 momname = [
-    "d_dispersion",
-    "mu_d_wealth",
-    "adjustment_ratio"
+    "adjustment_ratio", 
+    "mu_a"
 ]
 pname = ["beta", "delta", "rho_e", "sigma_e", "nu", "gamma", "f", "w", "chi", "pd", "ft", "tau", "h","rho_y","sigma_y","theta"]
 
-default(fontfamily = "Computer Modern", titlefont = font(10), guidefont = font(9))  # Already done!
-
+default(
+    fontfamily = "Computer Modern",
+    linewidth = 3, framestyle = :box, grid = :none,
+    titlefontsize = 20, guidefontsize = 18, tickfontsize = 13,
+    size=(1000,650)
+)
 param_labels = Dict(
     "beta" => "\$\\beta\$",
     "delta" => "\$\\delta\$",
@@ -78,9 +81,12 @@ param_labels = Dict(
 
 # )
 mom_labels = Dict(
-   "d_dispersion" => "Durable Dispersion",
-    "adjustment_ratio" => "Adj. Ratio",
-    "mu_d_wealth" => "Durables-Wealth Ratio"
+    "adjustment_ratio" => "Adj. frequency",
+    "mu_a" => "Average dollar assets"
+)
+sel_index = Dict(
+    "adjustment_ratio" => 3,
+    "mu_a"             => 4,
 )
 
 # Get the true parameter values
@@ -92,14 +98,14 @@ nparam = sz.nop
 nnmom   = length(momname)  # Number of selected moments
 
 # Define parameters to vary
-varying_params = [6]   #7,4,5, 7, 9, 11, 14, 15
+varying_params = [7, 4]   #7,4,5, 7, 9, 11, 14, 15
 
 # Define parameter ranges (min, max)
 maxmin = [
     0.80  0.95;  # beta (Discount factor)
     0.05  0.40;  # delta (Depreciation rate)
     0.3   0.9;   # rho_e (Persistence of exchange rate shock)
-    0.2   0.60;  # sigma_e (Volatility of exchange rate shock)
+    0.2   0.90;  # sigma_e (Volatility of exchange rate shock)
     0.20  0.90;  # nu (Share parameter for nondurable consumption)
     0.50  3.00;  # gamma (Risk aversion)
     0.05  0.8;  # f (Adjustment fixed cost)
@@ -132,14 +138,15 @@ for iparam in varying_params
 
         # Compute the moments
         moms = momentgen(ppp)
+        mvec = [moms[sel_index[name]] for name in momname]  # length 4
 
         # Store parameter values and selected moments
         allparams[ivary, iparam] = glop
-        allmoms[ivary, iparam, :] = moms'  # Select relevant moments
+        allmoms[ivary, iparam, :] = mvec  # Select relevant moments
 
     end
 end
-degree = 3  # Try degree 3 or 4 for better fit
+degree = 2  # Try degree 3 or 4 for better fit
 
 # Generate plots for each selected parameter and moment
 for iparam in varying_params
@@ -149,7 +156,7 @@ for iparam in varying_params
                                xlabel=pname[iparam], ylabel=momname[imom],
                                legend=false, label=" ")
 
-        filename = "Output/Comparative/moment_$(pname[iparam])_$(momname[imom]).png"
+        filename = "Output/Comparative/moment_$(pname[iparam])_$(momname[imom]).pdf"
         savefig(plot_comp, filename)
         x_data = allparams[:, iparam]  # Parameter values
         y_data = allmoms[:, iparam, imom]  # Moment values
@@ -166,7 +173,7 @@ for iparam in varying_params
         plot!(x_smooth, y_smooth, linewidth=2, label="Polynomial Fit (deg=$degree)", linestyle=:dash)
 
         # Save plot
-        filename = "Output/Comparative/smoothed_moment_$(pname[iparam])_$(momname[imom]).png"
+        filename = "Output/Comparative/smoothed_moment_$(pname[iparam])_$(momname[imom]).pdf"
         savefig(plot_comp_smooth,filename)
 
         # Generate smoothed fit without scatter
@@ -180,7 +187,7 @@ for iparam in varying_params
         title = "Effect of $(param_labels[pname[iparam]]) on $(mom_labels[momname[imom]])"
         )
 
-        savefig(plot_only_smooth, "Output/Comparative/clean_moment_$(pname[iparam])_$(momname[imom]).png")
+        savefig(plot_only_smooth, "Output/Comparative/clean_moment_$(pname[iparam])_$(momname[imom]).pdf")
 
     end
 end

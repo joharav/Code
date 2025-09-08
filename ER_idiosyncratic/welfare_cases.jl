@@ -10,11 +10,24 @@ Computes:
 function welfare_full_summary(pe_A::Vector{Float64}, pe_B::Vector{Float64})
     nu = pe_A[5]
     gamma = pe_A[6]
-    # Solve baseline (λ = 0)
-    ansA = valfun(pe_A; λ=0.0)
-    ansB = valfun(pe_B; λ=0.0)
+    # Solve baseline 
+    ansA = valfun(pe_A)
+    ansB = valfun(pe_B)
     μA = compute_ergodic(ansA)
     μB = compute_ergodic(ansB)
+    simB=simmodel(ansB)
+    moms, _, _, _, _, _ = makemoments(simB, pe_B; shock=false)
+    vol_c_with = moms[5]
+    vol_x_with = moms[6]
+
+    # #No dollars
+    # pe_B_nod = copy(pe_B); pe_B_nod[16] = 0.0
+    # ansB_nod = valfun(pe_B_nod)
+    # simB_nod = simmodel(ansB_nod)
+    # momsB_nod, _, _, _, _, _ = makemoments(simB_nod, pe_B_nod; shock=false)
+    # vol_c_no = momsB_nod[5]
+    # vol_x_no = momsB_nod[6]
+
 
     # Welfare in each case
     wAA = sum(ansA.v .* μA)    # (1) Welfare in A under A
@@ -56,7 +69,11 @@ function welfare_full_summary(pe_A::Vector{Float64}, pe_B::Vector{Float64})
     # println("Comp. transfer λ (c-only):    $(round(λ_c_only*100, digits=2))%")
 
     return (wAA=wAA, wBA=wBA, wBB=wBB, wAB=wAB,
-            cev_BA=cev_BA, cev_AB=cev_AB,
-            λ_composite=λ_composite, λ_c_only=λ_c_only,
-            keepDistAB=keepDistAB, keepDistBA=keepDistBA, acrossSS=acrossSS)
+    cev_BA=cev_BA, cev_AB=cev_AB,
+    λ_composite=λ_composite, λ_c_only=λ_c_only,
+    keepDistAB=keepDistAB, keepDistBA=keepDistBA, acrossSS=acrossSS, vol_c_with=vol_c_with, vol_x_with=vol_x_with) 
+    
+    #,
+    #vol_c_with=vol_c_with, vol_x_with=vol_x_with,
+    #vol_c_no=vol_c_no,     vol_x_no=vol_x_no
 end
