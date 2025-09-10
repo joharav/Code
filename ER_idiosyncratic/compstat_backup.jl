@@ -7,26 +7,6 @@ using Main.sz,  Main.settings, Main.globals, Main.dtp;
 
 commence = time()
 
-# # Define moments of interest
-# momname = [
-#     "mu_d",           # 1
-#     "var_d",          # 2
-#     "mu_a",           # 3
-#     "var_a",          # 4
-#     "mu_c",           # 5
-#     "var_c",          # 6
-#     "mu_d_wealth",    # 7
-#     "mu_d_c",         # 8
-#     "mu_gap",         # 9
-#     "var_gap",        # 10
-#     "cev",            # 11  <-- new addition
-#     "adjustment_ratio", # 12
-#     "IQR_d_wealth",   # 13
-#     "IQR_d_c",        # 14
-#     "p90_10_d_wealth",# 15
-#     "p90_10_d_c"      # 16
-# ]
-
 # Only the three you’re actually returning/using now:
 momname = [
     "adjustment_ratio", 
@@ -69,26 +49,6 @@ param_labels = Dict(
 
 )
 
-# Map raw moment names to prettier labels
-# mom_labels = Dict(
-#     "mu_d" => "Mean Durable rate",
-#     "var_d" => "Var Durable",
-#     "mu_a" => "Mean Assets rate",
-#     "var_a" => "Var Assets",
-#     "mu_c" => "Mean Consumption",
-#     "var_c" => "Var Consumption",
-#     "mu_d_wealth" => "Durables-Wealth Ratio",
-#     "mu_d_c" => "Durables-Cons. Ratio",
-#     "mu_gap" => "Mean Gap",
-#     "var_gap" => "Var Gap",
-#     "cev" => "Welfare change",
-#     "adjustment_ratio" => "Adj. Ratio",
-#     "IQR_d_wealth" => "Interquartile ratio durable-wealth",
-#     "IQR_d_c" => "Interquartile ratio durable-consumption",
-#     "p90_10_d_wealth" => "90-10 ratio durable-wealth",
-#     "p90_10_d_c" => "90-10 ratio durable-consumption"
-
-# )
 mom_labels = Dict(
     "adjustment_ratio" => "Adj. frequency",
     "mu_a" => "Change in average dollar assets"
@@ -100,6 +60,9 @@ sel_index = Dict(
 
 # Get the true parameter values
 pea = ptrue(sz.nop)
+moms_baseline = momentgen(pea)
+base_adj = moms_baseline[sel_index["adjustment_ratio"]]
+base_mua = moms_baseline[sel_index["mu_a"]]
 
 # Number of variations per parameter
 nvary  = 8 
@@ -107,7 +70,7 @@ nparam = sz.nop
 nnmom   = length(momname)  # Number of selected moments
 
 # Define parameters to vary
-varying_params = [4]   #7,4,5, 7, 9, 11, 14, 15
+varying_params = [7]   #7,4,5, 7, 9, 11, 14, 15
 
 # Define parameter ranges (min, max)
 maxmin = [
@@ -117,7 +80,7 @@ maxmin = [
     0.22   0.90;  # sigma_e (Volatility of exchange rate shock)
     0.20  0.90;  # nu (Share parameter for nondurable consumption)
     0.50  3.00;  # gamma (Risk aversion)
-    0.01  0.8;  # f (Adjustment fixed cost)
+    0.01  0.2;  # f (Adjustment fixed cost)
     0.50  5.00;  # w (Wage)
     0.1   0.9;   # chi (Required maintenance)
     2     8;     # pd (Price of durables)
@@ -128,6 +91,10 @@ maxmin = [
     0.05  0.8    # sigma_y (Volatility of idiosyncratic income shock)
     0.0   1.0     # theta (New parameter for specification 2)
 ]
+
+
+
+
 
 # Storage for parameter values and selected moments
 allparams = zeros(nvary, nparam)  
@@ -143,6 +110,7 @@ for iparam in varying_params
 
         # Compute new parameter value
         glop = (maxmin[iparam,2] - maxmin[iparam,1]) * ivary / (nvary - 1.0) + maxmin[iparam,1]
+        println("New value for ", pname[iparam], " = ", glop)
         ppp[iparam] = glop  
 
         # Compute the moments
@@ -165,7 +133,7 @@ for iparam in varying_params
                                xlabel=pname[iparam], ylabel=momname[imom],
                                legend=false, label=" ")
 
-        filename = "Output/Comparative/moment_$(pname[iparam])_$(momname[imom]).pdf"
+        filename = "Output/Comparative/check_moment_$(pname[iparam])_$(momname[imom]).pdf"
         savefig(plot_comp, filename)
         x_data = allparams[:, iparam]  # Parameter values
         y_data = allmoms[:, iparam, imom]  # Moment values
@@ -182,7 +150,7 @@ for iparam in varying_params
         plot!(x_smooth, y_smooth, linewidth=2, label="Polynomial Fit (deg=$degree)", linestyle=:dash)
 
         # Save plot
-        filename = "Output/Comparative/smoothed_moment_$(pname[iparam])_$(momname[imom]).pdf"
+        filename = "Output/Comparative/check_smoothed_moment_$(pname[iparam])_$(momname[imom]).pdf"
         savefig(plot_comp_smooth,filename)
 
         # Generate smoothed fit without scatter
@@ -195,8 +163,13 @@ for iparam in varying_params
         ylabel = mom_labels[momname[imom]],
         title = "Effect of $(param_labels[pname[iparam]]) on $(mom_labels[momname[imom]])"
         )
-        savefig(plot_only_smooth, "Output/Comparative/clean_moment_$(pname[iparam])_$(momname[imom]).pdf")
 
+         # Add the baseline as a horizontal dashed line
+         baseline_val = (momname[imom] == "adjustment_ratio") ? base_adj : base_mua
+         hline!(plot_only_smooth, [baseline_val], linestyle = :dash, color = :black, label = "Baseline")
+         savefig(plot_only_smooth, "Output/Comparative/check_clean_moment_$(pname[iparam])_$(momname[imom]).pdf")
+
+    
     end
 end
 

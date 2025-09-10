@@ -81,22 +81,25 @@ p90_10_d          = disp_d[3]
 corr_d_c = cor(vec(d), vec(c))
 corr_d_a = cor(vec(d), vec(a))
 
-plot_aggregates(simdata)
-d_adjust_time_size(simdata)
-plot_simulated_d_and_a_by_state(simdata)
+#plot_aggregates(simdata)
+#d_adjust_time_size(simdata)
+#plot_simulated_d_and_a_by_state(simdata)
 if settings.verbose==true
 
   #  plotgaps(x_values, f_x, h_x, gap_vec; shock=shock)
 #    plotdensities(x_values_d_income, f_d_income, "f_income"; shock=shock)
 #    plotdensities(x_values_d_wealth, f_d_wealth, "f_wealth"; shock=shock)
 #    plotdensities(x_values_d_consumption, f_d_consumption, "d_c"; shock=shock)
-    plot_aggregates(simdata)
+ #   plot_aggregates(simdata)
   #  d_adjust_time_size(simdata)
   #  plot_simulated_d_and_a_by_state(simdata)
 end
 
 outmoms = [d_dispersion, mu_d_wealth, adjustment_ratio,mu_a, vol_c, vol_x]  # Select moments based on sz.pick
 
-
+println("=== Moments Summary ===")
+for (i, mom) in enumerate(outmoms)
+    println("Moment $(i): $(round(mom, digits=4))")
+end
 return outmoms, x_values, f_x, h_x, IQR_d, p90_10_d
 end
