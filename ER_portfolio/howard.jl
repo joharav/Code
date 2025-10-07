@@ -1,26 +1,18 @@
-function howard(queuelong::Array{Float64},util::Array{Float64},old_iidx::dtp.Ipol);
+function howard(queuelong::Array{Float64,5}, util::Array{Float64,8}, old_iidx::dtp.Ipol)
+    # queuelong: (ne,ny,npa,npa,npd)
+    # util:      (ne,ny,na,na,nd,npa,npa,npd)  at the chosen (iiaa,iia,iid)
+    β = pea[1]
+    vnew = zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)
 
-    # Inputs
-    # queuelong: interpolated value function
-    # util: utility array
-    # old_aint current policy integer function
-    # old_dint current policy integer function
+    @Threads.threads for ie in 1:sz.ne
+        for iy in 1:sz.ny, iaa in 1:sz.na, ia in 1:sz.na, id in 1:sz.nd
+            iiaa = old_iidx.aa[ie,iy,iaa,ia,id]   # ∈ 1:sz.npa
+            iia  = old_iidx.a[ie,iy,iaa,ia,id]    # ∈ 1:sz.npa
+            iid  = old_iidx.d[ie,iy,iaa,ia,id]    # ∈ 1:sz.npd
 
-    # Outputs
-    # vnew: new value function
-    beta = pea[1]
-    old_gidx = deepcopy(old_iidx)
-    vnew = zeros(sz.ne,sz.ny,sz.na,sz.nd);
-    Threads.@threads for id in 1:sz.nd
-        Threads.@threads for ia in 1:sz.na;
-            Threads.@threads for iy in 1:sz.ny;
-                Threads.@threads for ie in 1:sz.ne
-                    iia = old_gidx.a[ie,iy,ia,id]; 
-                    iid = old_gidx.d[ie,iy,ia,id];
-                    vnew[ie,iy,ia,id] = beta*queuelong[ie,iy,iia,iid] + util[ie,iy,ia,id,iia,iid]   
-                end
-            end
-        end 
+            @inbounds vnew[ie,iy,iaa,ia,id] =
+                util[ie,iy,iaa,ia,id,iiaa,iia,iid] + β*queuelong[ie,iy,iiaa,iia,iid]
+        end
     end
-    return vnew::Array{Float64}, old_gidx::dtp.Ipol; 
+    return vnew, old_iidx  # evaluation only; no policy change here
 end

@@ -19,3 +19,13 @@ function compute_cev_array(v_alt::Array{Float64,5}, v_base::Vector{Float64}, pe:
     end
     return cev
 end
+
+# Function to compute dispersion measures
+function compute_dispersion(x::Vector{Float64})
+    std_dev = std(x)
+    iqr     = percentile(x, 75) - percentile(x, 25)
+    p90_10  = percentile(x, 90) - percentile(x, 10)
+    
+    outuple = (std_dev, iqr, p90_10)
+    return outuple
+end

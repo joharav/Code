@@ -1,19 +1,24 @@
-function howard_noadjust(queuelong::Array{Float64}, util::Array{Float64}, iid, gidx::dtp.Ipol)
-    vnew = zeros(sz.ne, sz.ny, sz.na, sz.nd)
-    beta = pea[1]
-    iiid = zeros(Int, sz.nd)
+function howard_noadjust(queuelong::Array{Float64,5},
+    util::Array{Float64,8},
+    iid_map::Vector{Int},
+    old_iidx::dtp.Ipol)
+# queuelong: (ne,ny,npa,npa,npd)
+# util:      (ne,ny,na,na,nd,npa,npa,npd) but only the slice at iid_map[id] is valid
+    β = pea[1]
+    vnew = zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)
 
-    Threads.@threads for id in 1:sz.nd
-        iiid = iid[id]
-        Threads.@threads for ia in 1:sz.na
-            Threads.@threads for iy in 1:sz.ny
-                Threads.@threads for ie in 1:sz.ne
-                    iia = gidx.a[ie, iy, ia, id]
-                    vnew[ie, iy, ia, id] = util[ie, iy, ia, id, iia,iiid] + beta * queuelong[ie, iy, iia, iiid]
-                end
-            end
+    @Threads.threads for ie in 1:sz.ne
+        for iy in 1:sz.ny, iaa in 1:sz.na, ia in 1:sz.na, id in 1:sz.nd
+            iiaa = old_iidx.aa[ie,iy,iaa,ia,id]      # 1:sz.npa
+            iia  = old_iidx.a[ie,iy,iaa,ia,id]       # 1:sz.npa
+            iid  = iid_map[id]                       # pinned durable index
+
+            vnew[ie,iy,iaa,ia,id] =
+            util[ie,iy,iaa,ia,id,iiaa,iia,iid] + β*queuelong[ie,iy,iiaa,iia,iid]
         end
     end
 
-    return vnew, gidx
+    # keep the durable policy index pinned
+     old_iidx.d[:, :, :, :, :] .= reshape(iid_map, (1,1,1,1,sz.nd))
+    return vnew, old_iidx
 end

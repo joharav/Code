@@ -8,21 +8,14 @@ function ptrue(enn::Int64)
     pea[6] = 2.00;                               # gamma    = Risk aversion parameter 
     pea[7] = 0.03;                               # f        = adj cost 0.3 gives you a 3% adj
     pea[8] = 1;                                  # w        = wage rate
-    pea[9] = 0.755;                                # chi      = Required maintenance 0.4
+    pea[9] = 0.03;                                # r_foreign      = Foreign rate
     pea[10] = 5;                                 # pd      = price durable goods
-    pea[11] = 0.57;                              # ft      = fixed cost on wage rate
+    pea[11] = 0.5;                              # kappa    = fixed cost of asset adjustment
     pea[12] = 0.0;                              # tau      = tax rate
     pea[13] = 1;                               # h        = hours worked
     pea[14] = 0.9;                              # rho_y    = AR(1) persistence for idiosyncratic income
     pea[15] = 0.2;                               # sigma_y  = Volatility of idiosyncratic income shock
     pea[16] = 1.0;                               # theta   = Share dollar savings
-
-    # --- New portfolio adjustment parameters ---
-    pea[17] = 0.002;     # τ_port  small proportional cost
-    pea[18] = 0.02;      # φ_port  quadratic cost (smooth)
-    pea[19] = 0.0;       # F_port  fixed cost (0 to keep the Bellman smooth)
-    pea[20] = 1.00;      # R_F     gross dollar return
-
 
 
     return pea::Vector{Float64};

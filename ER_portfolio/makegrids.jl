@@ -2,7 +2,6 @@ function makegrids(ppp::Vector{Float64})
     delta = ppp[2]
     rho_e = ppp[3]
     sigma_e = ppp[4]
-    chi = ppp[5]
     rho_y = ppp[14]
     sigma_y = ppp[15]
     pd = ppp[10]
@@ -23,9 +22,12 @@ function makegrids(ppp::Vector{Float64})
         numstd_e = sz.nstd_e
         mew = 3.0
         eg, trans_e = tauchen(mew, sigma_e, rho_e, nume, numstd_e)
-            # Rescale to (0,2]
-     #   eg = 0.01 .+ (1.99) .* (eg .- minimum(eg)) ./ (maximum(eg) - minimum(eg))
+        eg = exp.(eg)  # ensure E > 0
+        
     end
+
+
+
 
     # Idiosyncratic income
 
@@ -67,7 +69,7 @@ function makegrids(ppp::Vector{Float64})
     dg = collect(range(0.0, stop=dmax, length=sz.nd))
 
     # Durable Policy Grid (combine adjust and non-adjust)
-    dpg_nonadjust = (1 .- delta .* (1 .- chi)) .* dg
+    dpg_nonadjust = (1 .- delta) .* dg
     dpg_adjust = collect(range(0.0, stop=dmax, length=sz.nd))
 
     dpg = sort(unique(vcat(dpg_nonadjust, dpg_adjust)))

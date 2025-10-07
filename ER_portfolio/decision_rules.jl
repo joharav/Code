@@ -1,78 +1,78 @@
 using Plots
-default(fontfamily = "Computer Modern")
 
 function decision_rules(answ)
-    output_dir = "Output/Aggregates"
-    isdir(output_dir) || mkpath(output_dir)
+    # output folder
+    outdir = "Output/Aggregates"
+    isdir(outdir) || mkpath(outdir)
 
     # Grids
-    ex = answ.g.ex
-    a  = answ.g.a
-    d  = answ.g.d
+    ex  = answ.g.ex
+    a   = answ.g.a      # foreign asset grid
+    aa  = answ.g.aa     # local  asset grid
+    d   = answ.g.d
 
-    # Policies & indicator
-    d_pol                  = answ.pol.d
-    d_adjust_pol           = answ.adjust_result.pol.d
-    adjust_indicator_policy= answ.adjustment_indicator  # Bool/Bit array [ie,iy,iaa,ia,id]
+    ne, ny, na, nd = sz.ne, sz.ny, sz.na, sz.nd
 
-    # choose a middle y and aa state, like your style
-    iy0  = Int(clamp(floor(sz.ny/2), 1, sz.ny))
-    iaa0 = Int(clamp(floor(sz.na/2), 1, sz.na))
+    # Policies / flags (5-D: ie,iy,iaa,ia,id)
+    d_pol  = answ.pol.d
+    adj    = answ.adjustment_indicator  # BitArray{5}
 
-    # Δd for info (adjust-only)
-    d_change = d_adjust_pol .- reshape(d, (1,1,1,1,sz.nd))
-    d_change_adjust = zeros(size(d_change))
-    d_change_adjust[adjust_indicator_policy] .= d_change[adjust_indicator_policy]
-    d_sign_adjust = sign.(d_change_adjust)
+    # Compute Δd = d' - d(id) at each state
+    d_change = similar(d_pol)
+    @inbounds for id in 1:nd
+        d_change[:,:,:,:,id] .= d_pol[:,:,:,:,id] .- d[id]
+    end
+    d_sign = sign.(d_change)
 
-    # Fixed d: heatmap over (e × a), fixing y=iy0 and aa=iaa0
-    for id in 1:sz.nd
-        H = dropdims(adjust_indicator_policy[:, iy0, iaa0, :, id], dims=(2,3)) # [ie, ia]
-        heatmap(a, ex, H, xlabel="Foreign assets a", ylabel="Exchange rate e",
-                title="Adjust regions (fix d[$id], y=iy0, aa=mid)", color=:blues)
-        savefig(joinpath(output_dir, "FixedD_Decision_Rules_d$id.png"))
+    # Keep only adjusted states
+    d_sign_adj   = zeros(Int,  size(d_sign));   d_sign_adj[adj]   .= Int.(d_sign[adj])
+    d_change_adj = zeros(Float64, size(d_change)); d_change_adj[adj] .= d_change[adj]
+
+    # Choose “middle” indices for fixed slices
+    iy_mid  = cld(ny,2)
+    iaa_mid = cld(na,2)
+    ia_mid  = cld(na,2)
+    ie_mid  = cld(ne,2)
+
+    # -------- Fixed d: plot over (e × a), fixing y=mid, aa=mid --------
+    for id in 1:nd
+        Z = adj[:, iy_mid, iaa_mid, :, id]                # (ne, na)
+        heatmap(a, ex, Z, xlabel="Foreign assets a", ylabel="Exchange rate e",
+                title="Adjust region | d=$(round(d[id],digits=3)), aa=mid, y=mid",
+                color=:blues, legend=false)
+        savefig(joinpath(outdir, "AdjRegion_fixd$(id).png"))
+
+        Zs = d_change_adj[:, iy_mid, iaa_mid, :, id]      # (ne, na)
+        heatmap(a, ex, Zs, xlabel="Foreign assets a", ylabel="Exchange rate e",
+                title="Adjust size Δd | d=$(round(d[id],digits=3)), aa=mid, y=mid",
+                color=cgrad([:blue, :white, :red]), legend=false)
+        savefig(joinpath(outdir, "AdjSize_fixd$(id).png"))
+
+        Zsgn = d_sign_adj[:, iy_mid, iaa_mid, :, id]      # (ne, na)
+        heatmap(a, ex, Zsgn, xlabel="Foreign assets a", ylabel="Exchange rate e",
+                title="Sign(Δd) | d=$(round(d[id],digits=3)), aa=mid, y=mid",
+                color=[:white, :skyblue, :blue], legend=false)
+        savefig(joinpath(outdir, "AdjSign_fixd$(id).png"))
     end
 
-    # Fixed a: heatmap over (e × d), fixing y=iy0, aa=iaa0, and a=ia
-    for ia in 1:sz.na
-        H = dropdims(adjust_indicator_policy[:, iy0, iaa0, ia, :], dims=(2,3)) # [ie, id]
-        heatmap(d, ex, H, xlabel="Durables d", ylabel="Exchange rate e",
-                title="Adjust regions (fix a[$ia], y=iy0, aa=mid)", color=:blues)
-        savefig(joinpath(output_dir, "FixedA_Decision_Rules_a$ia.png"))
+    # -------- Fixed a: plot over (e × d), fixing y=mid, aa=mid --------
+    for ia in 1:na
+        Z = adj[:, iy_mid, iaa_mid, ia, :]                 # (ne, nd)
+        heatmap(d, ex, Z, xlabel="Durables d", ylabel="Exchange rate e",
+                title="Adjust region | a=$(round(a[ia],digits=3)), aa=mid, y=mid",
+                color=:blues, legend=false)
+        savefig(joinpath(outdir, "AdjRegion_fixa$(ia).png"))
     end
 
-    # Size of adjustment, same slices
-    cmap = cgrad([:blue, :white])
-    for id in 1:sz.nd
-        S = dropdims(d_change_adjust[:, iy0, iaa0, :, id], dims=(2,3))
-        heatmap(a, ex, S, xlabel="Foreign assets a", ylabel="Exchange rate e",
-                title="Adjustment size (fix d[$id], y=iy0, aa=mid)", color=cmap)
-        savefig(joinpath(output_dir, "Size_Decision_Rules_d$id.png"))
-    end
-    for ia in 1:sz.na
-        S = dropdims(d_change_adjust[:, iy0, iaa0, ia, :], dims=(2,3))
-        heatmap(d, ex, S, xlabel="Durables d", ylabel="Exchange rate e",
-                title="Adjustment size (fix a[$ia], y=iy0, aa=mid)", color=cmap)
-        savefig(joinpath(output_dir, "Size_Decision_Rules_a$ia.png"))
+    # -------- Fixed (e,y,d): plane over (a × aa) --------
+    for id in 1:nd
+        Z = adj[ie_mid, iy_mid, :, :, id]                  # (na, na)
+        # heatmap expects size(Z) == (length(ygrid), length(xgrid)); transpose to align (aa,y) vs (a,x) if desired
+        heatmap(a, aa, Z', xlabel="Foreign assets a", ylabel="Local assets aa",
+                title="Adjust region | e=mid, y=mid, d=$(round(d[id],digits=3))",
+                color=:blues, legend=false)
+        savefig(joinpath(outdir, "AdjRegion_plane_a_aa_d$(id).png"))
     end
 
-    # Sign panels
-    palette = [:white, :skyblue, :blue]
-    levels = [-1, 0, 1]
-    for id in 1:sz.nd
-        S = dropdims(d_sign_adjust[:, iy0, iaa0, :, id], dims=(2,3))
-        heatmap(a, ex, S, xlabel="Foreign assets a", ylabel="Exchange rate e",
-                title="Durable sign change (fix d[$id], y=iy0, aa=mid)",
-                color=palette, discrete_values=levels,
-                colorbar_ticks=[(l, string(l)) for l in levels])
-        savefig(joinpath(output_dir, "Sign_Decision_Rules_d$id.png"))
-    end
-    for ia in 1:sz.na
-        S = dropdims(d_sign_adjust[:, iy0, iaa0, ia, :], dims=(2,3))
-        heatmap(d, ex, S, xlabel="Durables d", ylabel="Exchange rate e",
-                title="Durable sign change (fix a[$ia], y=iy0, aa=mid)",
-                color=palette, discrete_values=levels,
-                colorbar_ticks=[(l, string(l)) for l in levels])
-        savefig(joinpath(output_dir, "Sign_Decision_Rules_a$ia.png"))
-    end
+    return nothing
 end

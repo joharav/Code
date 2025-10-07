@@ -1,13 +1,12 @@
 function valfun_noadjust(pea::Vector{Float64})
     beta  = pea[1]
     delta = pea[2]
-    chi   = pea[9]
 
     # grids first
     grids = makegrids(pea)
     d  = grids.d
     dp = grids.dp
-    ddp = (1 - delta * (1 - chi)) .* d
+    ddp = (1 - delta) .* d
     iid = [argmin(abs.(dp .- ddp[id])) for id in 1:sz.nd]
     ut  = utility_noadjust(grids, pea)
     tmat = grids.t

@@ -64,8 +64,8 @@ module dtp;
     end
     
     mutable struct Pol
-        a::Array{Float64,5}   # foreign-asset policy (levels)
         aa::Array{Float64,5}  # local-asset policy (levels)
+        a::Array{Float64,5}   # foreign-asset policy (levels)
         d::Array{Float64,5}
         c::Array{Float64,5}
     end
@@ -85,10 +85,10 @@ end;
 
 module settings; 
     const compstat      = false; 
-    const verbose       = false; 
+    const verbose       = true; 
     const irfsshock     = false;     
     const specif_two    = false;
-    const welfare       = false;
+    const welfare       = true;
     const complicated   = false;     # Complicated = true is an identity weight matrix. Otherwise, optimal weight matrix. 
 
 end
