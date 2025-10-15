@@ -8,8 +8,8 @@ using Main.kst
 function buildparam(p::Vector{Float64})
     pea = ptrue(sz.nop)
     pea[5]  = p[1]   # ν_ndurables
-    pea[7]  = p[2]   # f_d
-    pea[11] = p[3]   # f_t
+    pea[7]  = p[2]   # f_d, fixed cost
+    pea[11] = p[3]   # kappa, fixed cost asset
     return pea
 end
 

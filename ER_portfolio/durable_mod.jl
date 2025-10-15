@@ -20,7 +20,7 @@ module sz;
     const noestp    = 3;             #number of parameters you actual estimate 
     const nstd_e    = 3.0;           #number of standard deviations for Tauchen exchange rate, 1.2 for dollar
     const nstd_y    = 1.0;           #number of standard deviations for Tauchen exchange rate, 1.2 for dollar
-    const pick = [1, 2, 3];  # moments to use
+    const pick = [1, 3,4,5,6,7,8];  # moments to use
 end;
 
 

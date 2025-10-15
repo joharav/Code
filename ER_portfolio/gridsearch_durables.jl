@@ -20,16 +20,16 @@ doiterations = false      # run optimization or just compute stats
 
 # ----------------- Starting values and bounds -----------------
 x_start = zeros(sz.noestp)
-x_start[1] = 0.8   # nu
-x_start[2] = 0.4   # f_d
-x_start[3] = 0.4   # f_t
+x_start[1] = 0.5   # nu
+x_start[2] = 0.05   # f_d
+x_start[3] = 0.02   # kappa
 
 lb = zeros(sz.noestp)
 ub = zeros(sz.noestp)
 
 lb[1] = 0.3;   ub[1] = 0.999   # nu
 lb[2] = 0.01;   ub[2] = 0.9     # f_d
-lb[3] = 0.01;   ub[3] = 0.9     # f_t
+lb[3] = 0.01;   ub[3] = 0.9     # kappa
 pea = buildparam(x_start)
 moms = momentgen(pea)
 # ----------------- SA tuning -----------------
