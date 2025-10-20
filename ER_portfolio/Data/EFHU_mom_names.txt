@@ -1,3 +1,12 @@
-d_dispersion
-d_wealth_ratio
-adj_ratio
+d_inc_mean
+d_inc_var
+adj_rate
+corr_adj_dinc
+corr_adj_usdsh
+usd_particip
+corr_usdsh_dinc
+corr_usdsh_aeff
+d_wealth_mean
+d_wealth_var
+spell_mean_y
+d_log1p_var

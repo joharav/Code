@@ -156,7 +156,7 @@ function print_smm_results(stats, p::Vector{Float64})
     pname   = collect(readdlm(kst.PNAME_FILE))
 
     open(kst.RESULTS_FILE, "w") do io
-        @printf(io, "Final SMM results (ν_ndurables, f_d, f_t)\n\n")
+        @printf(io, "Final SMM results (ν_ndurables, f_d, kappa)\n\n")
         @printf(io, "Parameter estimates and standard errors\n\n")
         for j in eachindex(p)
             @printf(io, "%-20s  %12.6f   (SE = %12.6f)\n", pname[j], p[j], stats.se[j])

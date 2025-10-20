@@ -1,152 +1,150 @@
+############  Stata-equivalent moments (m1..m12)  ############
+# Matches your Stata code:
+# m1  mean(d_income_ratio)
+# m2  var(d_income_ratio)
+# m3  mean(adj_spell)  where adj_spell = 1/(1+duration_years)
+# m4  corr(adj_spell, d_income_ratio)
+# m5  corr(adj_spell, usd_sh)
+# m6  mean(usd_pt)  with usd_pt = 1(usd_sh>0)
+# m7  corr(usd_sh, d_income_ratio)
+# m8  corr(usd_sh, a_eff)
+# m9  mean(d_wealth_ratio)
+# m10 var(d_wealth_ratio)
+# m11 mean(duration_years)
+# m12 var(log(1 + d_value))
+
 using Statistics
-using StatsBase
 
-# ---------- helpers ----------
-# Safe percent change: 100*(x - xlag)/xlag with guards against 0/neg/NaN
-safe_change(x, xlag) = 100 .* (x .- xlag) ./ max.(abs.(xlag), 1e-12)
-
-# Safe log with floor
-@inline safe_log(x; eps=1e-12) = log.(max.(x, eps))
-
-# Keep only finite entries from one or two aligned vectors
+# --- small helpers ---
 _fin(v) = v[isfinite.(v)]
-_fin2(x, y) = begin
+function _fin2(x, y)
     m = isfinite.(x) .& isfinite.(y)
-    (x[m], y[m])
+    return x[m], y[m]
 end
 
-# Decile index (1..10) based on x (unweighted); returns Vector{Int}
-function decile_index(x::AbstractVector{<:Real})
-    xf = _fin(x)
-    qs = quantile(xf, 0:0.1:1)   # 11 cutpoints
-    idx = similar(x, Int)
-    @inbounds for i in eachindex(x)
-        v = x[i]
-        idx[i] = isfinite(v) ? clamp(searchsortedlast(qs, v), 1, 10) : 0
-    end
-    return idx
-end
-
-# Mean by decile with simple fallback if a decile is empty
-function mean_by_decile(y::AbstractVector{<:Real}, dec::Vector{Int})
-    out = fill(NaN, 10)
-    @inbounds for d in 1:10
-        m = dec .== d
-        if any(m)
-            out[d] = mean(_fin(y[m]))
+# Time since last adjustment (in periods) for each column at the FINAL row
+# adj: T×N indicator (Bool/Int)
+function last_spell_lengths(adj::AbstractMatrix)
+    T, N = size(adj)
+    out = fill(NaN, N)
+    @inbounds for j in 1:N
+        # walk back from T until the last 1
+        len = 0
+        for t in T:-1:1
+            if adj[t, j] > 0
+                break
+            end
+            len += 1
         end
+        out[j] = len
     end
-    # fill NaNs with nearest neighbor to keep diffs/corrs defined
-    for d in 1:10
-        if !isfinite(out[d])
-            l = findlast(isfinite, out[1:d])
-            rpos = findfirst(isfinite, out[d:end])
-            r = rpos === nothing ? d - 1 : d + rpos - 1
-            out[d] = l === nothing && r < d ? 0.0 : (l === nothing ? out[r] : out[l])
-        end
-    end
-    return out
+    return out # in periods
 end
 
-# ---------- moments ----------
+"""
+makemoments_stata(simdata, pea; per_year=4)
+
+Return the 12-moment vector that replicates your Stata definitions.
+"""
 function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool=false)
-    β  = pea[1]
-    w  = pea[8]
-    pd = pea[10]
+    # --- parameters used for valuation ---
+    w  = pea[8]   # scale for earnings if needed
+    pd = pea[10]  # USD durable price
 
-    # aligned windows (quarterly); assumes globals: sz.burnin, sz.nYears
-    t0 = (sz.burnin - 2):sz.nYears
-    t1 = (sz.burnin - 3):(sz.nYears - 1)
+    # --- aligned windows ---
+    t0 = (sz.burnin-2):sz.nYears        # current (T rows)
+    t1 = (sz.burnin-3):(sz.nYears-1)    # lagged  (T rows)
 
-    # pull series (T×N)
-    a   = @view simdata.a[t0, :];     aa  = @view simdata.aa[t0, :]
-    d   = @view simdata.d[t0, :];     ex  = @view simdata.ex[t0, :]
-    y   = @view simdata.y[t0, :]
-    d_a = @view simdata.d_adjust[t0, :]           # target d*
-    adj = @view simdata.adjust_indicator[t0, :]   # 1 if adjusted at t
-    d_lag = @view simdata.d[t1, :]               # lagged d for spells
-    # core objects
-    a_eff  = aa .+ ex .* a
-    Vd     = pd .* ex .* d
+    a        = simdata.a[t0, :]
+    aa       = simdata.aa[t0, :]
+    d        = simdata.d[t0, :]
+    ex       = simdata.ex[t0, :]
+    c        = simdata.c[t0, :]
+    y        = simdata.y[t0, :]
+    d_a    = simdata.d_adjust[t0, :]
+    adj  = simdata.adjust_indicator[t0, :]
+  
+    a_lag    = simdata.a[t1, :]
+    aa_lag   = simdata.aa[t1, :]
+    d_lag    = simdata.d[t1, :]
+    ex_lag   = simdata.ex[t1, :]
+
+
+    # value of durables (local units): price is USD*ex
+    Vd   = pd .* ex .* d
+
+    # total liquid savings in local units
+    a_loc = aa                      # pesos
+    a_fx  = ex .* a                 # dollars valued in local units
+    a_eff = a_loc .+ a_fx           # total savings (local units)
+
+    # income in local units (guard against zeros)
     income = max.(w .* y, 1e-12)
 
-    # ----- d-to-income distribution -----
-    dinc   = vec(Vd) ./ vec(income)
-    dinc_f = _fin(dinc)
+    # ---------- Cross-sectional objects (use last period per household) ----------
+    # take the final row as the "survey" cross-section
+    Vd_cs     = vec(view(Vd, size(Vd,1), :))
+    a_eff_cs  = vec(view(a_eff, size(a_eff,1), :))
+    income_cs = vec(view(income, size(income,1), :))
+    a_fx_cs   = vec(view(a_fx, size(a_fx,1), :))
+    a_tot_cs  = max.(a_eff_cs, 1e-12)  # same denom as Stata "total_savings_final"
+
+    # Stata counterparts
+    d_value_cs      = Vd_cs
+    d_income_ratio  = d_value_cs ./ income_cs
+    d_wealth_ratio  = d_value_cs ./ max.(d_value_cs .+ a_eff_cs, 1e-12)
+    usd_sh          = a_fx_cs ./ a_tot_cs
+    usd_pt          = usd_sh .> 0.0
+
+    # duration (years since last update) at the final date
+    last_spells_periods = last_spell_lengths(adj)             # in periods
+    duration_years      = last_spells_periods ./ 4
+    adj_spell           = 1.0 ./ (1.0 .+ duration_years)      # (0,1]
+
+    # ---------- Moments (exactly as in your Stata block) ----------
+    # m1/m2: mean/var of d_income_ratio
+    dinc_f = _fin(d_income_ratio)
     m1 = mean(dinc_f)
     m2 = var(dinc_f)
-    qd = quantile(dinc_f, [0.25, 0.50, 0.75]); m3, m4, m5 = qd...
 
-    # ----- dollarization -----
-    a_loc  = aa
-    a_fx   = ex .* a
-    a_tot  = max.(a_loc .+ a_fx, 1e-12)
-    usd_sh = vec(a_fx) ./ vec(a_tot)
-    usd_pt = usd_sh .> 0.0
-    m9     = mean(usd_pt)
+    # m3: mean(adj_spell)
+    m3 = mean(_fin(adj_spell))
 
-    dec_idx = decile_index(vec(income))
-    bydec   = mean_by_decile(usd_sh, dec_idx)
-    m10     = bydec[9] - bydec[3]
+    # m4: corr(adj_spell, d_income_ratio)
+    x, yv = _fin2(adj_spell, d_income_ratio)
+    m4 = length(x) > 1 ? cor(x, yv) : NaN
 
-    # ----- adjustment rate & corrs -----
-    adj_flag = vec(adj) .> 0
-    m6 = mean(adj_flag)
+    # m5: corr(adj_spell, usd_sh)
+    x, yv = _fin2(adj_spell, usd_sh)
+    m5 = length(x) > 1 ? cor(x, yv) : NaN
 
-    xs, ys = _fin2(adj_flag, dinc);   m7  = cor(xs, ys)
-    xs, ys = _fin2(adj_flag, usd_sh); m8  = cor(xs, ys)
-    xs, ys = _fin2(usd_sh, dinc);     m11 = cor(xs, ys)
-    xs, ys = _fin2(usd_sh, vec(a_eff)); m12 = cor(xs, ys)
+    # m6: mean(usd_pt)
+    m6 = mean(_fin(Float64.(usd_pt)))
 
-    # ----- d-to-wealth distribution -----
-    wealth = max.(Vd .+ a_eff, 1e-12)
-    dw     = vec(Vd) ./ vec(wealth)
-    dw_f   = _fin(dw)
-    m13 = mean(dw_f)
-    m14 = var(dw_f)
-    qdw  = quantile(dw_f, [0.25, 0.50, 0.75]); m15, m16, m17 = qdw...
+    # m7: corr(usd_sh, d_income_ratio)
+    x, yv = _fin2(usd_sh, d_income_ratio)
+    m7 = length(x) > 1 ? cor(x, yv) : NaN
+
+    # m8: corr(usd_sh, a_eff)
+    x, yv = _fin2(usd_sh, a_eff_cs)
+    m8 = length(x) > 1 ? cor(x, yv) : NaN
+
+    # m9/m10: mean/var of d_wealth_ratio
+    dw_f = _fin(d_wealth_ratio)
+    m9  = mean(dw_f)
+    m10 = var(dw_f)
+
+    # m11: mean(duration_years)
+    m11 = mean(_fin(duration_years))
+
+    # m12: var(log(1 + d_value))
+    m12 = var(_fin(log.(1 .+ d_value_cs)))
 
     # ----- gap–hazard diagnostics -----
-    gap_vec, f_x, x_vals, h_x, I_d_abs, mu_gap, var_gap, adj_rate_gap =
-        adjustment_gaps_sim(d_lag, d_a, adj)
-    m18, m19, m20 = mu_gap, var_gap, I_d_abs
-    # (adj_rate_gap should be ~ m6, but keep it as a cross-check if you like)
+    gap_vec, f_x, x_values, h_x, I_d_abs, mu_gap, var_gap, adj_rate_gap =
+    adjustment_gaps_sim(d_lag, d_a, adj)
 
-    # -----  duration spells of durable -----
-    spells = spells_from_panel(adj)                # lengths in *quarters*
-    spells_f = _fin(spells)
-    m21 = mean(spells_f) /4                      # mean spell length (yy)
-    qs  = quantile(spells_f, [0.50, 0.75])     # median & p75
-    m22, m23 = qs...
-
-    # -----  dispersion -----
-
-    d_dispersion = var(log1p.(vec(Vd)))
-    m24 = d_dispersion;
-
-
-    outmoms = [m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15,m16,m17,m21,m24]
-
-    # out_named = (
-    #     d_inc_mean      = m1,
-    #     d_inc_var       = m2,
-    #     d_inc_p25       = m3,
-    #     d_inc_p50       = m4,
-    #     d_inc_p75       = m5,
-    #     adj_rate        = m6,
-    #     corr_adj_dinc   = m7,
-    #     corr_adj_usdsh  = m8,
-    #     usd_particip    = m9,
-    #     usdsh_p90m_p30  = m10,
-    #     corr_usdsh_dinc = m11,
-    #     corr_usdsh_aeff = m12,
-    #     d_wealth_mean   = m13,
-    #     d_wealth_var    = m14,
-    #     d_wealth_p25    = m15,
-    #     d_wealth_p50    = m16,
-    #     d_wealth_p75    = m17,
-    #     spell_mean_y    = m21,
-    #     d_dispersion    = m24)
-
-    return outmoms
+    outmoms = [m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12]
+    return outmoms, x_values, f_x, h_x
 end
+

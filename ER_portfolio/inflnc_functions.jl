@@ -120,3 +120,34 @@ function wvar(x::AbstractVector{<:Union{Missing,Real}}, w::AbstractVector{<:Real
     μ = sum(wv .* xv) / sum(wv)
     return sum(wv .* (xv .- μ).^2) / sum(wv)
 end
+
+
+# ---------- helpers ----------
+# Finite/missing aligners
+function aligned_xw(xu::AbstractVector, w::Vector{Float64})
+    mask = [!ismissing(xu[i]) && isfinite(Float64(xu[i])) for i in eachindex(xu)]
+    x = Float64.(xu[mask]); ww = w[mask]
+    return x, ww, mask
+end
+
+function aligned_xyw(xu::AbstractVector, yu::AbstractVector, w::Vector{Float64})
+    mask = [!ismissing(xu[i]) && !ismissing(yu[i]) &&
+            isfinite(Float64(xu[i])) && isfinite(Float64(yu[i])) for i in eachindex(xu)]
+    x = Float64.(xu[mask]); y = Float64.(yu[mask]); ww = w[mask]
+    return x, y, ww, mask
+end
+
+# Weighted covariance with probability weights (sum to 1 recommended)
+wcov(x::Vector{Float64}, y::Vector{Float64}, w::Vector{Float64}) = begin
+    μx, μy = mean(x, Weights(w)), mean(y, Weights(w))
+    sum(w .* (x .- μx) .* (y .- μy))
+end
+
+# KDE for quantile IFs if you ever bring them back
+function w_density_at(x::Vector{Float64}, w::Vector{Float64}, θ::Float64)
+    n = length(x)
+    σ = std(x, Weights(w)); σ = σ > 0 ? σ : 1e-8
+    h = 1.06 * σ * n^(-1/5) + 1e-12
+    z = (x .- θ) ./ h
+    sum(w .* pdf.(Normal(), z)) / h
+end

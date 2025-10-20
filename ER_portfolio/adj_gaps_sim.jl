@@ -39,38 +39,61 @@ Returns:
 - mu_gap, var_gap: moments of g
 - adj_rate: unconditional adjustment freq
 """
-function adjustment_gaps_sim(current_d, d_star, adjust_ind)
-    good = (current_d .> 0) .& (d_star .> 0) .& isfinite.(current_d) .& isfinite.(d_star)
-    gaps = safe_log(d_star[good]) .- safe_log(current_d[good])     # signed g
-    adj  = vec(adjust_ind[good])
-
+function adjustment_gaps_sim(current_d, d_star, adjustment_indicator)
+    # Calculate the adjustment gaps
+    gaps    = log.(d_star) .- log.(current_d)
     gap_vec = vec(gaps)
-    adj_rate = mean(adj)
 
-    # KDE of signed gaps
-    kd = kde(gap_vec)
+    # Flatten indicator so its length matches gap_vec
+    mask = vec(adjustment_indicator .== 1)
+
+    # Subset only adjusted cases
+    adjusted_gaps = gap_vec[mask]
+
+    # Unconditional adjustment rate
+    adj_rate = mean(mask)
+
+    # --- guard: if no adjusted obs, return safe placeholders ---
+    if length(adjusted_gaps) < 2 || length(unique(adjusted_gaps)) < 2
+        return adjusted_gaps, Float64[], Float64[], Float64[], NaN, NaN, NaN, adj_rate
+    end
+
+    # KDE of signed gaps (only adjusted)
+    kd = kde(adjusted_gaps)
     x_values = collect(kd.x)
     f_x = kd.density
 
     # Hazard h(|g|) on bins of |g|
     abs_g = abs.(gap_vec)
-    nb = max(20, ceil(Int, sqrt(length(abs_g))))    # sensible bin count
-    edges = range(minimum(abs_g), stop=maximum(abs_g), length=nb+1)
+    nb = max(20, ceil(Int, sqrt(length(abs_g))))  # sensible bin count
+
+    gmin, gmax = minimum(abs_g), maximum(abs_g)
+    if !isfinite(gmin) || !isfinite(gmax) || gmin == gmax
+        return adjusted_gaps, f_x, x_values, Float64[], NaN, mean(adjusted_gaps), var(adjusted_gaps), adj_rate
+    end
+
+    edges = range(gmin, stop=gmax, length=nb+1)
     centers = (edges[1:end-1] .+ edges[2:end]) ./ 2
+
+    # Bin index for each observation (flattened)
     bin_idx = clamp.(searchsortedlast.(Ref(edges), abs_g), 1, nb)
-    hazard = [mean(@view adj[bin_idx .== i]) for i in 1:nb]
-    # interpolate hazard(|g|) onto |x_values|
+
+    # Mean adjustment rate per bin (use flattened mask)
+    hazard = [mean(mask[bin_idx .== i]) for i in 1:nb]
+
+    # Interpolate hazard(|g|) onto |x_values|
     Hin = LinearInterpolation(centers, hazard; extrapolation_bc=Flat())
     h_x = Hin.(abs.(x_values))
 
     # Caballero-style magnitude integral on signed support
     I_d_abs = trapz(x_values, abs.(x_values) .* h_x .* f_x)
 
-    mu_gap  = mean(gap_vec)
-    var_gap = var(gap_vec)
+    mu_gap  = mean(adjusted_gaps)
+    var_gap = var(adjusted_gaps)
 
-    return gap_vec, f_x, x_values, h_x, I_d_abs, mu_gap, var_gap, adj_rate
+    return adjusted_gaps, f_x, x_values, h_x, I_d_abs, mu_gap, var_gap, adj_rate
 end
+
 
 # ---------- duration spells ----------
 """

@@ -27,9 +27,9 @@ x_start[3] = 0.02   # kappa
 lb = zeros(sz.noestp)
 ub = zeros(sz.noestp)
 
-lb[1] = 0.3;   ub[1] = 0.999   # nu
-lb[2] = 0.01;   ub[2] = 0.9     # f_d
-lb[3] = 0.01;   ub[3] = 0.9     # kappa
+lb[1] = 0.35;   ub[1] = 0.95   # nu
+lb[2] = 0.005;   ub[2] = 0.4     # f_d
+lb[3] = 0.001;   ub[3] = 0.2     # kappa
 pea = buildparam(x_start)
 moms = momentgen(pea)
 # ----------------- SA tuning -----------------

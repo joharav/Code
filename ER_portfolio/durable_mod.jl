@@ -20,33 +20,33 @@ module sz;
     const noestp    = 3;             #number of parameters you actual estimate 
     const nstd_e    = 3.0;           #number of standard deviations for Tauchen exchange rate, 1.2 for dollar
     const nstd_y    = 1.0;           #number of standard deviations for Tauchen exchange rate, 1.2 for dollar
-    const pick = [1, 3,4,5,6,7,8];  # moments to use
+    const pick = [1,2,3,4,5,6,7,12];  # moments to use
 end;
 
 
 module kst;
-    const beta   = 0.95;       # Discount factor
-    const delta  = 0.05;        # Depreciation rate for durable goods
-    const rho_e  = 0.9;       # AR(1) persistence for exchange rate
-    const sigma_e= 0.25;       # Volatility of exchange rate shock
-    const nu     = 0.5;       # Share parameter for nondurable consumption
-    const gamma  = 2;          # Risk aversion parameter
-    const f      = 0.4;        # Adjustment fixed cost
-    const w      = 1.0;        # Wage rate
-    const chi    = 0.755;       # Required maintenance 
-    const pd     = 5.0;        # Price of durable goods
-    const ft     = 0.4;       # Fixed cost on wage rate
-    const tau    = 0.0;       # Tax rate
-    const h      = 1;        # Hours worked
-    const rho_y  = 0.9;       # AR(1) persistence for idiosyncratic income
-    const sigma_y= 0.2;        # Volatility of idiosyncratic income shock
-    const theta  = 1.0;       # Share dollar savings
-    const DATA_DIR   = "Data";
-    const OUT_DIR    = "Output";
-    const MOMS_FILE  = joinpath(DATA_DIR, "datamoments.txt")  ;  # from EFHU
-    const W_FILE     = joinpath(DATA_DIR, "W_unclustered.txt") ; # unclustered weighting matrix
-    const MNAME_FILE = joinpath(DATA_DIR, "EFHU_mom_names.txt"); # your moment names
-    const PNAME_FILE = joinpath(DATA_DIR, "EFHU_param_names.txt"); # parameter names
+    const beta          = 0.985;       # Discount factor
+    const delta         = 0.012;        # Depreciation rate for durable goods
+    const rho_e         = 0.66;       # AR(1) persistence for exchange rate
+    const sigma_e       = 0.08;       # Volatility of exchange rate shock
+    const nu            = 0.51;       # Share parameter for nondurable consumption
+    const gamma         = 2;          # Risk aversion parameter
+    const f             = 0.03;        # Adjustment fixed cost
+    const w             = 1.0;        # Wage rate
+    const r_foreign     = 0.0075;       # Required maintenance 
+    const pd            = 5.0;        # Price of durable goods
+    const kappa         = 0.01;       # Fixed cost on wage rate
+    const tau           = 0.0;       # Tax rate
+    const h             = 1;        # Hours worked
+    const rho_y         = 0.9;       # AR(1) persistence for idiosyncratic income
+    const sigma_y       = 0.2;        # Volatility of idiosyncratic income shock
+    const theta         = 1.0;       # Share dollar savings
+    const DATA_DIR      = "Data";
+    const OUT_DIR       = "Output";
+    const MOMS_FILE     = joinpath(DATA_DIR, "datamoments.txt")  ;  # from EFHU
+    const W_FILE         = joinpath(DATA_DIR, "W_unclustered.txt") ; # unclustered weighting matrix
+    const MNAME_FILE    = joinpath(DATA_DIR, "EFHU_mom_names.txt"); # your moment names
+    const PNAME_FILE    = joinpath(DATA_DIR, "EFHU_param_names.txt"); # parameter names
     const PROGRESS_FILE = joinpath(OUT_DIR, "progress.txt");
     const EST_FILE      = joinpath(OUT_DIR, "estfil.txt");
     const RESULTS_FILE  = joinpath(OUT_DIR, "results.txt");
@@ -85,10 +85,10 @@ end;
 
 module settings; 
     const compstat      = false; 
-    const verbose       = true; 
+    const verbose       = false; 
     const irfsshock     = false;     
     const specif_two    = false;
-    const welfare       = true;
+    const welfare       = false;
     const complicated   = false;     # Complicated = true is an identity weight matrix. Otherwise, optimal weight matrix. 
 
 end

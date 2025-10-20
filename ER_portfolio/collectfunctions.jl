@@ -42,6 +42,7 @@ include("decision_rules.jl")
 include("plotgaps_shock.jl")
 include("plot_ergodic.jl")
 include("plot_distribution_panels.jl")
+#include("disaster_process.jl")
 # ============ GMM and SMM =================================
 include("gmmfunctions_broad.jl")
 #include("inflnc_functions.jl")
@@ -51,7 +52,7 @@ include("simann.jl")
 
 # ============Making moments ===============================
 include("momentgen.jl"); #wrapper
-include("makemoments_smm.jl");
+include("makemoments_5assets.jl");
 include("adj_gaps_sim.jl")
 include("welfare.jl")
 include("welfare_dispersion.jl")
