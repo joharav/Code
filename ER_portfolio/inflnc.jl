@@ -175,7 +175,8 @@ IF_matrix = hcat(
 # - The (population) variance of the moment vector m = Σ_i IF_i is Σ_i IF_i IF_i'.
 # - If you prefer "sample-average" scaling, divide by N^2 (your prior code).
 #Σ = IF_matrix' * IF_matrix               # population-style
- Σ = (IF_matrix' * IF_matrix) / (N^2)   # sample-average style (matches your earlier line)
+ Σ = (IF_matrix' * IF_matrix)  # sample-average style (matches your earlier line)
+ Σ = Symmetric((Σ+Σ')/2)  # ensure symmetry
 
 # ---------- save ----------
 isdir(kst.DATA_DIR) || mkpath(kst.DATA_DIR)

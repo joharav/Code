@@ -9,18 +9,18 @@ module sz;
     const nYears    = 5000;         #number of years to simulate
     const burnin    = 250;           #number of initial years to toss
     const nFirms    = 1000;           #number of firms to simulate
-    const nmom      = 21;             #number of moments to calculate
+    const nmom      = 12;             #number of moments to calculate
     const maxiter   = 5000;          #maximum number of VFI iterations
     const maxditer  = 1000;          #maximum number of iterations for the stationary distribution
     const distol    = 0.0001;      #tolerance for the stationary distribution
     const toler     = 0.0001;      #VFI tolerance
     const earlyiter = 2;             # Number of times to do the full grid search before you do local searches. 
     const maxpolit  = 5 ;            # Number of times the policy function converges before I believe it.
-    const nop       = 20;             #maximum number of parameters
+    const nop       = 16;             #maximum number of parameters
     const noestp    = 3;             #number of parameters you actual estimate 
     const nstd_e    = 3.0;           #number of standard deviations for Tauchen exchange rate, 1.2 for dollar
     const nstd_y    = 1.0;           #number of standard deviations for Tauchen exchange rate, 1.2 for dollar
-    const pick = [1,2,3,4,5,6,7,12];  # moments to use
+    const pick = [1,3,4,5,6,7,12];  # moments to use
 end;
 
 

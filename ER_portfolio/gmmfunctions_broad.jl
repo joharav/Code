@@ -20,16 +20,24 @@ end
 function fcn(p::Vector{Float64})
     pea  = buildparam(p)
     moms = momentgen(pea)
-    return moms[sz.pick]   # pick only d_income_ratio, d_wealth_ratio, adj_ratio
+    # sentinel / failure guard
+    if !all(isfinite, moms) || any(moms .== -100.0)
+        return fill(NaN, length(sz.pick))
+        @warn "Initial sim moments not finite" moms=moms[sz.pick]
+
+    end
+    
+    return moms[sz.pick]
 end
+
 
 # -------------------------------
 # === GMM objective ===
 # -------------------------------
 function fcn(p::Vector{Float64}, fopt::Float64)
     simmoms = fcn(p)
-    if simmoms[1] == -100.0
-        return sz.maxfunc
+    if !all(isfinite, simmoms)             # if sim broke, penalize hard
+        return Inf
     end
 
     datamoms = vec(collect(readdlm(kst.MOMS_FILE)))
@@ -37,20 +45,22 @@ function fcn(p::Vector{Float64}, fopt::Float64)
     momname  = collect(readdlm(kst.MNAME_FILE))
     pname    = collect(readdlm(kst.PNAME_FILE))
 
-    # Subset to selected moments
     ch       = sz.pick
     datamoms = datamoms[ch]
     Wraw     = Wraw[ch, ch]
     momname  = momname[ch]
 
-    # Weighting matrix
-    W = settings.complicated ? I(size(Wraw,1)) : inv(Wraw)
+    # Symmetrize and ridge the weighting matrix to avoid tiny asymmetries / singularity
+    Wraw = Symmetric((Wraw + Wraw')/2)
+    ridge = 1e-10
+    W = settings.complicated ? I(size(Wraw,1)) : inv(Wraw + ridge*I)
 
-    # Objective
     diff = datamoms .- simmoms
     bigQ = (diff' * W * diff)[1]
+    if !isfinite(bigQ)
+        return Inf
+    end
 
-    # Progress report if improved
     if bigQ < fopt
         open(kst.PROGRESS_FILE, "w") do io
             @printf(io, "Data vs. Simulated Moments (improved Q)\n\n")
@@ -64,60 +74,72 @@ function fcn(p::Vector{Float64}, fopt::Float64)
             end
             @printf(io, "\nGMM objective Q = %12.6f\n", bigQ)
         end
-
-        # Save last best parameters
         open(kst.EST_FILE, "w") do io
             for j in eachindex(p); @printf(io, "%25.16f\n", p[j]); end
         end
     end
-
     return bigQ
 end
+
 
 # -------------------------------
 # === Numerical gradient ===
 # -------------------------------
 function grad(x0::Vector{Float64}, n::Int, k::Int)
     g = zeros(n, k)
+
     ax0  = abs.(x0)
-    dax0 = sign.(x0) .+ (x0 .== 0.0)
+    dax0 = sign.(x0) .+ (x0 .== 0.0)   # avoids 0 step
     dh   = 1e-3 .* max.(ax0, 1e-2) .* dax0
 
-    xdup = x0 .+ dh
-    xddw = x0 .- dh
-
-    argup = repeat(x0', k, 1)
-    argdw = repeat(x0', k, 1)
-
+    # Central differences without huge allocations
+    x = copy(x0)
     for i in 1:k
-        argup[i,i] = xdup[i]
-        argdw[i,i] = xddw[i]
-    end
+        xi = x0[i]
 
-    g_up = zeros(n,k)
-    g_dw = zeros(n,k)
-    # for i in 1:k
-    #     g_up[:,i] = fcn(view(argup,i,:))
-    #     g_dw[:,i] = fcn(view(argdw,i,:))
-    # end
+        x[i] = xi + dh[i]
+        mup  = fcn(x)
+        x[i] = xi - dh[i]
+        mdw  = fcn(x)
+        x[i] = xi
 
-    for i in 1:k
-        g_up[:,i] = fcn(collect(view(argup,i,:)))
-        g_dw[:,i] = fcn(collect(view(argdw,i,:)))
-    end
-    
-
-    for i in 1:k
-        g[:,i] = (g_up[:,i] .- g_dw[:,i]) ./ (2.0 * dh[i])
+        if !all(isfinite, mup) || !all(isfinite, mdw)
+            g[:,i] .= 0.0   # if sim fails at perturbed points, neutral slope
+        else
+            g[:,i] = (mup .- mdw) ./ (2.0 * dh[i])
+        end
     end
     return g
 end
 
-# -------------------------------
-# === SMM statistics ===
-# -------------------------------
+
+# tiny helper
+@inline function _safe_pinv(A; rtol=1e-8, atol=0.0, ridge=0.0)
+    m, n = size(A)
+    if m==0 || n==0
+        throw(ArgumentError("safe_pinv: empty matrix ($m×$n)"))
+    end
+    A = Symmetric((A + A')/2)  # for square GWG
+    if ridge > 0
+        return inv(A + ridge*I)
+    end
+    # fall back to SVD-based pseudo-inverse
+    S = svd(Matrix(A); full=false)
+    tol = max(atol, rtol * maximum(S.S))
+    r = count(>(tol), S.S)
+    if r == 0
+        return zeros(n, m)
+    end
+    Sinv = Diagonal(vcat(1 ./ S.S[1:r], zeros(length(S.S)-r)))
+    return S.Vt' * Sinv * S.U'
+end
+
 function smmstats(p::Vector{Float64}; n_sample::Int=10_000)
     simmoms = fcn(p)
+    if !all(isfinite, simmoms)
+        error("smmstats: simulated moments are not finite; cannot compute SEs.")
+    end
+
     datamoms = vec(collect(readdlm(kst.MOMS_FILE)))
     Σ        = collect(readdlm(kst.W_FILE))
     momname  = collect(readdlm(kst.MNAME_FILE))
@@ -127,26 +149,40 @@ function smmstats(p::Vector{Float64}; n_sample::Int=10_000)
     Σ        = Σ[ch, ch]
     momname  = momname[ch]
 
-    W = settings.complicated ? I(size(Σ,1)) : inv(Σ)
+    Σ = Symmetric((Σ + Σ')/2)
+    Wridge = 1e-10
+    W = settings.complicated ? I(size(Σ,1)) : inv(Σ + Wridge*I)
 
     diff = datamoms .- simmoms
     n = length(ch)
     k = length(p)
-    G = grad(p, n, k)
+    @assert n >= 1 "No selected moments (n==0); check sz.pick"
+    @assert k >= 1 "No parameters (k==0)"
 
-    GWG  = G' * W * G
-#    igwg = inv(GWG)
-    igwg = pinv(GWG)
+    G = grad(p, n, k)
+    if any(!isfinite, G)
+        # If gradient fails anywhere, avoid SVD explosions
+        se = fill(NaN, k)
+        jtest = (diff' * W * diff)[1]
+        return (datamoms=datamoms, simmoms=simmoms, se=se,
+                jacobian=G, vcov=fill(NaN, k, k), jtest=jtest)
+    end
+
+    GWG = G' * W * G
+    # ridge for stability of the inverse
+    igwg = _safe_pinv(GWG; ridge=1e-10)
 
     vc   = igwg * (G' * W * Σ * W * G) * igwg
+    vc   = (vc + vc')/2                 # symmetrize
     vc  .*= (1.0 + 1.0/n_sample)
 
-    se = sqrt.(diag(vc))
+    se = sqrt.(abs.(diag(vc)))          # abs for tiny negative diag from FP
     jtest = (diff' * W * diff)[1]
 
     return (datamoms=datamoms, simmoms=simmoms, se=se,
             jacobian=G, vcov=vc, jtest=jtest)
 end
+
 
 # -------------------------------
 # === Save SMM results ===

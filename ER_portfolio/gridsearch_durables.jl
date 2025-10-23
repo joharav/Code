@@ -27,14 +27,14 @@ x_start[3] = 0.02   # kappa
 lb = zeros(sz.noestp)
 ub = zeros(sz.noestp)
 
-lb[1] = 0.35;   ub[1] = 0.95   # nu
+lb[1] = 0.35;    ub[1] = 0.95   # nu
 lb[2] = 0.005;   ub[2] = 0.4     # f_d
 lb[3] = 0.001;   ub[3] = 0.2     # kappa
 pea = buildparam(x_start)
 moms = momentgen(pea)
 # ----------------- SA tuning -----------------
 iseed = 1924
-n_trials = 2000
+n_trials = 2
 Random.seed!(iseed)
 # ---------------------------
 # Simulated Annealing / Random Search
@@ -63,5 +63,8 @@ end
 println("\n✅ Optimization finished")
 println("Optimal parameters: ", x_opt)
 println("Function value at optimum: ", f_opt)
+if !isfinite(f_opt)
+    @warn "Best objective is not finite; printing stats may fail."
+end
 wahoo = smmstats(x_opt)
 print_smm_results(wahoo,x_opt)

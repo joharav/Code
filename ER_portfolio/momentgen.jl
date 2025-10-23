@@ -12,7 +12,7 @@ function momentgen(p::Vector{Float64})
 
         # ============ MOMENTS ===================================
         moms, x_values, f_x, h_x = makemoments(simdata, p; shock=false)
-        plot_distribution_panels(simdata, p)
+       # plot_distribution_panels(simdata, p)
         if settings.compstat==false && settings.verbose==true
             decision_rules(answ)
         end        
