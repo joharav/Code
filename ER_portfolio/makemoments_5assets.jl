@@ -112,22 +112,22 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool=fals
 
     # m4: corr(adj_spell, d_income_ratio)
     x, yv = _fin2(adj_spell, d_income_ratio)
-    m4 = length(x) > 1 ? cor(x, yv) : NaN
+    m4 = cor(x, yv) 
 
     # m5: corr(adj_spell, usd_sh)
     x, yv = _fin2(adj_spell, usd_sh)
-    m5 = length(x) > 1 ? cor(x, yv) : NaN
+    m5 = cor(x, yv) 
 
     # m6: mean(usd_pt)
     m6 = mean(_fin(Float64.(usd_pt)))
 
     # m7: corr(usd_sh, d_income_ratio)
     x, yv = _fin2(usd_sh, d_income_ratio)
-    m7 = length(x) > 1 ? cor(x, yv) : NaN
+    m7 = cor(x, yv) 
 
     # m8: corr(usd_sh, a_eff)
     x, yv = _fin2(usd_sh, a_eff_cs)
-    m8 = length(x) > 1 ? cor(x, yv) : NaN
+    m8 = cor(x, yv) 
 
     # m9/m10: mean/var of d_wealth_ratio
     dw_f = _fin(d_wealth_ratio)
@@ -145,6 +145,29 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64}; shock::Bool=fals
     adjustment_gaps_sim(d_lag, d_a, adj)
 
     outmoms = [m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12]
+
+
+    if settings.verbose == true
+
+        println("----------------------------------------------------------")
+        println("\nStatistics:\n")
+        println("Average durables to income: $m1\n")
+        println("Variance odurables to income: $m2\n")
+        println("Adj. Spell: $m3\n")
+        println("Corr(Adj. Spell, Durables to income): $m4\n")
+        println("Corr(Adj. Spell, Dollar assets): $m5\n")
+        println("Dollar assets mean: $m6\n")
+        println("Corr(Durables to income, Dollar assets): $m7\n")
+        println("Corr(Total assets, Dollar assets): $m8\n")
+        println("Average durables to wealth: $m9\n")
+        println("Variance durables to wealth: $m10\n")
+        println("Average Duration: $m11\n")
+        println("Durable Dispersion: $m12\n")
+        println("----------------------------------------------------------")
+    
+        println("----------------------------------------------------------")
+
+    end
     return outmoms, x_values, f_x, h_x
 end
 

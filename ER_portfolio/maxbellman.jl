@@ -1,11 +1,10 @@
-function maxbellman(queuelong::Array{Float64}, util::Array{Float64})
+function maxbellman(queuelong::Array{Float64}, util::Array{Float64}, beta::Float64)
     vnew = zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)
     gidx = dtp.Ipol(
         Int.(zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)), # a′  (foreign)
         Int.(zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)), # aa′ (local)
         Int.(zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd))  # d′
     )
-    beta = pea[1]
 
     @Threads.threads for id in 1:sz.nd
         @Threads.threads for ia in 1:sz.na

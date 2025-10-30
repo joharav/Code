@@ -1,5 +1,4 @@
-function makepol_d_na(grid::Vector{Float64})
-    delta = pea[2];
+function makepol_d_na(grid::Vector{Float64}, delta::Float64)
     dpol = zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)
     d = grid
     Threads.@threads for id in 1:sz.nd

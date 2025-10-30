@@ -1,10 +1,9 @@
-function tinybellman(q::Array{Float64,5}, pr::Array{Float64,8}, old_gidx::dtp.Ipol)
+function tinybellman(q::Array{Float64,5}, pr::Array{Float64,8}, old_gidx::dtp.Ipol, beta::Float64)
     # q  :: (ne, ny, iiaa, iia, iid)  expected value over z' at policy grids
     # pr :: (ne, ny, iaa,  ia,  id,   iiaa, iia, iid) current-period utility
     @assert size(q)  == (sz.ne, sz.ny, sz.npa, sz.npa, sz.npd)
     @assert size(pr) == (sz.ne, sz.ny, sz.na,  sz.na,  sz.nd,  sz.npa, sz.npa, sz.npd)
 
-    beta = pea[1]
 
     vnew = zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)
     gidx = deepcopy(old_gidx)

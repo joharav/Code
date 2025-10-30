@@ -1,5 +1,5 @@
 function makepol_c_twoasset(aa_pol::Array{Float64}, a_pol::Array{Float64}, dpol::Array{Float64},
-    grid::NamedTuple, ind::Int64)
+    grid::NamedTuple, ind::Int64, pea::Vector{Float64})
     beta  = pea[1];  delta = pea[2];  f = pea[7];  w = pea[8]
     pd    = pea[10]; kappa = pea[11];  tau = pea[12]; h = pea[13]
     rr    = (1 / beta) - 1
@@ -22,7 +22,7 @@ function makepol_c_twoasset(aa_pol::Array{Float64}, a_pol::Array{Float64}, dpol:
                         inc_assets = (1 + rr) *aa[iaa] + (1+rr_foreign) * E*a[ia]
                         inc_labor  = Y * w * h * (1 - tau)
                         income = inc_assets + inc_labor
-                        dollar_cost = kappa*(E * abs(a_pol[ie,iy,iaa,ia,id]-a[ia]))
+                        dollar_cost = kappa*(E * a_pol[ie,iy,iaa,ia,id])
 
                         next_pay = aa_pol[ie,iy,iaa,ia,id] + E * a_pol[ie,iy,iaa,ia,id]
 

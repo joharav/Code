@@ -1,13 +1,32 @@
 #!/bin/bash
 #SBATCH --account=joharav0
+#SBATCH --job-name=evalfun
 #SBATCH --nodes=2
-#SBATCH --ntasks-per-node=4
-#SBATCH --mem-per-cpu=10gb
+#SBATCH --ntasks-per-node=4           # 8 total MPI/Julia processes
+#SBATCH --mem-per-cpu=10G
 #SBATCH --partition=standard
 #SBATCH --time=03:00:00
-#SBATCH --output=evalfun_output.log
+#SBATCH --output=logs/%x-%j.out
+#SBATCH --error=logs/%x-%j.err
+#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-user=joharav@umich.edu
 
-module load julia  # Load Julia if needed
+# ------------------------------
+# Environment setup
+# ------------------------------
+module purge
+module load julia
 
-julia -p 8 evalfun.jl  # Run Julia with 8 processes, each with 4 threads
+export JULIA_NUM_THREADS=4             # threads per process (match ntasks-per-node)
+mkdir -p logs
 
+# ------------------------------
+# Run Julia job
+# ------------------------------
+echo "Starting evalfun.jl at $(date) on $(hostname)"
+echo "Nodes: $SLURM_JOB_NUM_NODES | Tasks: $SLURM_NTASKS | Threads: $JULIA_NUM_THREADS"
+
+# Each node has 4 tasks → total 8 processes
+julia --machine-file $SLURM_NODEFILE -p $SLURM_NTASKS evalfun.jl
+
+echo "Finished evalfun.jl at $(date)"

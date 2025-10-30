@@ -1,5 +1,4 @@
-function maxbellman_noadjust(queuelong::Array{Float64}, util::Array{Float64}, iid::Vector{Int64})
-    beta = pea[1]
+function maxbellman_noadjust(queuelong::Array{Float64}, util::Array{Float64}, iid::Vector{Int64}, beta::Float64)
     vnew = zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)
     gidx = dtp.Ipol(
         Int.(zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)),

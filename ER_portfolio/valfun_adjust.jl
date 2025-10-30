@@ -58,13 +58,13 @@ function valfun_adjust(pea::Vector{Float64})
 
         if iter <= sz.earlyiter || sum_in_a_row == 0
             if sum_in_a_row > 0
-                vnew, gidx = maxbellman(queuelong, ut)        # MUST set a, aa, d
-            else
-                vnew, gidx = howard(queuelong, ut, gidx)
+                vnew, gidx = maxbellman(queuelong, ut, beta)        # MUST set a, aa, d
+           # else
+             #   vnew, gidx = howard(queuelong, ut, gidx, beta) 
             end
         else
-            vnew, gidx = tinybellman(queuelong, ut, gidx)
-        end
+            vnew, gidx = tinybellman(queuelong, ut, gidx, beta)
+        end 
 
         vdiff = vnew - v
         pgap = sum(abs.(gidx.a  - old.a)) +
@@ -106,7 +106,7 @@ function valfun_adjust(pea::Vector{Float64})
                 pol.a  = makepol(gidx.a,  grids.ap)    # foreign
                 pol.aa = makepol(gidx.aa, grids.aap)   # local
                 pol.d  = makepol(gidx.d,  grids.dp)
-                pol.c  = makepol_c_twoasset(pol.aa, pol.a, pol.d, grids, 1)  # (aa,a,d), adjust
+                pol.c  = makepol_c_twoasset(pol.aa, pol.a, pol.d, grids, 1, pea)  # (aa,a,d), adjust
                 break
             end
         end

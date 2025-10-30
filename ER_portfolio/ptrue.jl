@@ -1,9 +1,9 @@
 function ptrue(enn::Int64)
     pea = zeros(enn);
-    pea[1] = 0.985;                               # beta     = Discount factor
+    pea[1] = 0.95;                               # beta     = Discount factor
     pea[2] = 0.05;                               # delta    = Depreciation rate
     pea[3] = 0.66;                               # rho_e    = persistence
-    pea[4] = 0.08;                               # sigma_e  = exchange rate innovation standard deviation
+    pea[4] = 0.25;                               # sigma_e  = exchange rate innovation standard deviation
     pea[5] = 0.51;                               # nu       = Share parameter for nondurable consumption 
     pea[6] = 2.00;                               # gamma    = Risk aversion parameter 
     pea[7] = 0.03;                               # f        = adj cost 0.3 gives you a 3% adj

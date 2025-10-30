@@ -1,10 +1,9 @@
 function howard_noadjust(queuelong::Array{Float64,5},
     util::Array{Float64,8},
     iid_map::Vector{Int},
-    old_iidx::dtp.Ipol)
+    old_iidx::dtp.Ipol, beta::Float64)
 # queuelong: (ne,ny,npa,npa,npd)
 # util:      (ne,ny,na,na,nd,npa,npa,npd) but only the slice at iid_map[id] is valid
-    β = pea[1]
     vnew = zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)
 
     @Threads.threads for ie in 1:sz.ne
@@ -14,7 +13,7 @@ function howard_noadjust(queuelong::Array{Float64,5},
             iid  = iid_map[id]                       # pinned durable index
 
             vnew[ie,iy,iaa,ia,id] =
-            util[ie,iy,iaa,ia,id,iiaa,iia,iid] + β*queuelong[ie,iy,iiaa,iia,iid]
+            util[ie,iy,iaa,ia,id,iiaa,iia,iid] + beta*queuelong[ie,iy,iiaa,iia,iid]
         end
     end
 

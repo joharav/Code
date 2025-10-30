@@ -11,28 +11,24 @@ function valfun_noadjust(pea::Vector{Float64})
     ut  = utility_noadjust(grids, pea)
     tmat = grids.t
 
-    # same counts for a and aa
-    naa = sz.na     # local  asset dim
-    na  = sz.na     # foreign asset dim
-
-    v    = zeros(sz.ne, sz.ny, naa, na, sz.nd)
+    v    = zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)
     vnew = similar(v)
 
     gidx = dtp.Ipol(
-        Int.(zeros(sz.ne, sz.ny, naa, na, sz.nd)),  # a′  (foreign index)
-        Int.(zeros(sz.ne, sz.ny, naa, na, sz.nd)),  # aa′ (local  index)
-        Int.(zeros(sz.ne, sz.ny, naa, na, sz.nd))   # d′
+        Int.(zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)),  # a′  (foreign index)
+        Int.(zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)),  # aa′ (local  index)
+        Int.(zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd))   # d′
     )
     pol = dtp.Pol(
-        zeros(sz.ne, sz.ny, naa, na, sz.nd),        # a′  (foreign level)
-        zeros(sz.ne, sz.ny, naa, na, sz.nd),        # aa′ (local   level)
-        zeros(sz.ne, sz.ny, naa, na, sz.nd),        # d′
-        zeros(sz.ne, sz.ny, naa, na, sz.nd)         # c
+        zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd),        # a′  (foreign level)
+        zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd),        # aa′ (local   level)
+        zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd),        # d′
+        zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)         # c
     )
     old = dtp.Ipol(
-        Int.(zeros(sz.ne, sz.ny, naa, na, sz.nd)),
-        Int.(zeros(sz.ne, sz.ny, naa, na, sz.nd)),
-        Int.(zeros(sz.ne, sz.ny, naa, na, sz.nd))
+        Int.(zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)),
+        Int.(zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)),
+        Int.(zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd))
     )
 
     errcode = 0
@@ -59,24 +55,24 @@ function valfun_noadjust(pea::Vector{Float64})
         if sz.na == sz.npa && sz.nd == sz.npd
             queuelong = queue
         else
-            queuelong = fillin(queue, grids)  # your 5-D fillin we fixed earlier
+            queuelong = fillin(queue, grids)  
         end
 
         # maximize
         if iter <= sz.earlyiter || sum_in_a_row == 0
             if sum_in_a_row > 0
-                vnew, gidx = maxbellman_noadjust(queuelong, ut, iid)   # MUST set gidx.a, gidx.aa, gidx.d
-            else
-                vnew, gidx = howard_noadjust(queuelong, ut, iid, gidx)
+                vnew, gidx = maxbellman_noadjust(queuelong, ut, iid, beta)   
+           # else
+            #    vnew, gidx = howard_noadjust(queuelong, ut, iid, gidx, beta) 
             end
         else
-            vnew, gidx = tinybellman_noadjust(queuelong, ut, iid, gidx)
+            vnew, gidx = tinybellman_noadjust(queuelong, ut, iid, gidx, beta) 
         end
 
         # enforce d′ = iid[id] on both asset dims
         @Threads.threads for id in 1:sz.nd
-            @Threads.threads for ia in 1:na
-                @Threads.threads for iaa in 1:naa
+            @Threads.threads for ia in 1:sz.na
+                @Threads.threads for iaa in 1:sz.na
                     @Threads.threads for iy in 1:sz.ny
                         @Threads.threads for ie in 1:sz.ne
                             gidx.d[ie,iy,iaa,ia,id] = iid[id]
@@ -126,8 +122,8 @@ function valfun_noadjust(pea::Vector{Float64})
             else
                 pol.a  = makepol(gidx.a,  grids.ap)    # foreign
                 pol.aa = makepol(gidx.aa, grids.aap)   # local
-                pol.d  = makepol_d_na(grids.d)
-                pol.c  = makepol_c_twoasset(pol.aa, pol.a, pol.d, grids, 0)  # (aa,a,d), non-adjust
+                pol.d  = makepol_d_na(grids.d, delta) 
+                pol.c  = makepol_c_twoasset(pol.aa, pol.a, pol.d, grids, 0, pea)  # (aa,a,d), non-adjust
                 break
             end
         end

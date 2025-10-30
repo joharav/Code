@@ -14,12 +14,12 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
     util = zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd, sz.npa, sz.npa, sz.npd)
 
     Threads.@threads for iia in 1:sz.npa
-        Threads.@threads for iiaa in 1:sz.npa
-            Threads.@threads for id in 1:sz.nd
-                Threads.@threads for ia in 1:sz.na
-                    Threads.@threads for iaa in 1:sz.na
-                        Threads.@threads for iy in 1:sz.ny
-                            Threads.@threads for ie in 1:sz.ne
+         for iiaa in 1:sz.npa
+             for id in 1:sz.nd
+                 for ia in 1:sz.na
+                     for iaa in 1:sz.na
+                        for iy in 1:sz.ny
+                            for ie in 1:sz.ne
                                 E  = e[ie]; Y = y[iy]
                                 aa_now = aa[iaa]
                                 a_now  = a[ia]
@@ -29,7 +29,7 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
                                 aa_next = aap[iiaa]
                                 a_next  = ap[iia]
                                 next_pay = aa_next + E*a_next
-                                dollar_cost = kappa*(E * abs(a_next-a_now))
+                                dollar_cost = kappa*(E * a_next)
 
                                 inc = Y*w*h*(1 - tau) + carry
                                 c = inc - next_pay  - dollar_cost

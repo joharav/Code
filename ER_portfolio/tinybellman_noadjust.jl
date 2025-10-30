@@ -1,5 +1,4 @@
-function tinybellman_noadjust(q::Array{Float64,5}, pr::Array{Float64,8}, iid::Vector{Int}, old_gidx::dtp.Ipol)
-    beta = pea[1]
+function tinybellman_noadjust(q::Array{Float64,5}, pr::Array{Float64,8}, iid::Vector{Int}, old_gidx::dtp.Ipol, beta::Float64)
 
     vnew = zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)
     gidx = deepcopy(old_gidx)

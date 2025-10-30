@@ -10,13 +10,13 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
     util = zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd, sz.npa, sz.npa, sz.npd)
 
     Threads.@threads for iid in 1:sz.npd
-        Threads.@threads for iia in 1:sz.npa
-            Threads.@threads for iiaa in 1:sz.npa
-                Threads.@threads for id in 1:sz.nd
-                    Threads.@threads for ia in 1:sz.na
-                        Threads.@threads for iaa in 1:sz.na
-                            Threads.@threads for iy in 1:sz.ny
-                                Threads.@threads for ie in 1:sz.ne
+         for iia in 1:sz.npa
+             for iiaa in 1:sz.npa
+                 for id in 1:sz.nd
+                     for ia in 1:sz.na
+                         for iaa in 1:sz.na
+                             for iy in 1:sz.ny
+                                 for ie in 1:sz.ne
                                     # current holdings (local currency units)
                                     E  = e[ie]; Y = y[iy]
                                     aa_now = aa[iaa]
@@ -34,7 +34,7 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
                                     income = Y*w*h*(1 - tau) + carry
                                     sale_value = E * pd * (1 - f) * (1 - delta) * d[id]
                                     durable_purchase = E * pd * dp[iid]
-                                    dollar_cost = kappa*(E * abs(a_next-a_now))
+                                    dollar_cost = kappa*(E * a_next)
 
                                     c = income + sale_value - durable_purchase - next_pay - dollar_cost
 
@@ -61,4 +61,5 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
     
     return util
 end
+
 
