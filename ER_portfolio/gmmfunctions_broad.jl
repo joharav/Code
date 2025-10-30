@@ -14,63 +14,48 @@ function buildparam(p::Vector{Float64})
 end
 
 # -------------------------------
-# === Simulation wrapper ===
+# === Simulation wrapper (robust) ===
 # -------------------------------
 
 function fcn(p::Vector{Float64})
     pea  = buildparam(p)
     moms = momentgen(pea)
-    # sentinel / failure guard
-    if !all(isfinite, moms) || any(moms .== -100.0)
-        return fill(NaN, length(sz.pick))
-        @warn "Initial sim moments not finite" moms=moms[sz.pick]
-
+    bad = .!isfinite.(moms) .| (moms .== -100.0)
+    if any(bad)
+        k = findfirst(bad)
+        @warn "Non-finite/flagged sim moments" first_bad=k first_bad_name=ALL_MN[k] first_bad_val=moms[k]
+        return fill(BIGPEN, length(sz.pick))
     end
-    
-    return moms[sz.pick]
+    moms[sz.pick]
 end
 
 
+
+
 # -------------------------------
-# === GMM objective ===
+# === GMM objective (robust) ===
 # -------------------------------
 function fcn(p::Vector{Float64}, fopt::Float64)
-    simmoms = fcn(p)
-    if !all(isfinite, simmoms)             # if sim broke, penalize hard
-        return Inf
+    simmoms = fcn(p)                           # uses robust sim wrapper above
+    if !all(isfinite, simmoms)
+        return BIGPEN
     end
 
-    datamoms = vec(collect(readdlm(kst.MOMS_FILE)))
-    Wraw     = collect(readdlm(kst.W_FILE))
-    momname  = collect(readdlm(kst.MNAME_FILE))
-    pname    = collect(readdlm(kst.PNAME_FILE))
-
-    ch       = sz.pick
-    datamoms = datamoms[ch]
-    Wraw     = Wraw[ch, ch]
-    momname  = momname[ch]
-
-    # Symmetrize and ridge the weighting matrix to avoid tiny asymmetries / singularity
-    Wraw = Symmetric((Wraw + Wraw')/2)
-    ridge = 1e-10
-    W = settings.complicated ? I(size(Wraw,1)) : inv(Wraw + ridge*I)
-
-    diff = datamoms .- simmoms
+    diff = DM .- simmoms
     bigQ = (diff' * W * diff)[1]
     if !isfinite(bigQ)
-        return Inf
+        return BIGPEN
     end
 
     if bigQ < fopt
         open(kst.PROGRESS_FILE, "w") do io
             @printf(io, "Data vs. Simulated Moments (improved Q)\n\n")
             for j in eachindex(diff)
-                @printf(io, "%-20s  data = %12.6f   sim = %12.6f\n",
-                        momname[j], datamoms[j], simmoms[j])
+                @printf(io, "%-20s  data = %12.6f   sim = %12.6f\n", MN[j], DM[j], simmoms[j])
             end
             @printf(io, "\nParameters:\n")
             for j in eachindex(p)
-                @printf(io, "%-20s  %12.6f\n", pname[j], p[j])
+                @printf(io, "%-20s  %12.6f\n", PN[j], p[j])
             end
             @printf(io, "\nGMM objective Q = %12.6f\n", bigQ)
         end
@@ -80,6 +65,7 @@ function fcn(p::Vector{Float64}, fopt::Float64)
     end
     return bigQ
 end
+
 
 
 # -------------------------------

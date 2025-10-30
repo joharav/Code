@@ -96,11 +96,8 @@ end
 # localcheck = _compute_locally()  # uncomment to verify vs Stata’s `datamoments`
 
 mom_names = [
-    "d_inc_mean","d_inc_var",
     "adj_rate",
-    "corr_adj_dinc","corr_adj_usdsh",
     "usd_particip",
-    "corr_usdsh_dinc","corr_usdsh_aeff",
     "d_wealth_mean","d_wealth_var",
     "spell_mean_y",
     "d_log1p_var"
@@ -145,28 +142,27 @@ function IF_wshare_pos(zm, p::Vector{Float64})
 end
 
 # Build IF columns in the exact order of mom_names (12 cols)
-IF_m1  = IF_wmean(d_income_ratio, p)                     # d_inc_mean
-IF_m2  = IF_wvar(d_income_ratio, p)                      # d_inc_var
-IF_m3  = IF_wmean(adj_ratio, p)                          # adj_rate
-IF_m4  = IF_wcorr(adj_ratio, d_income_ratio, p)          # corr_adj_dinc
-IF_m5  = IF_wcorr(adj_ratio, usd_share, p)               # corr_adj_usdsh
-IF_m6  = IF_wshare_pos(usd_share, p)                     # usd_particip
-IF_m7  = IF_wcorr(usd_share, d_income_ratio, p)          # corr_usdsh_dinc
-IF_m8  = any(.!ismissing.(a_eff)) ? IF_wcorr(usd_share, a_eff, p) : zeros(N)  # corr_usdsh_aeff
-IF_m9  = IF_wmean(d_wealth_ratio, p)                     # d_wealth_mean
-IF_m10 = IF_wvar(d_wealth_ratio, p)                      # d_wealth_var
-IF_m11 = IF_wmean(duration, p)                           # spell_mean_y
+#IF_m1  = IF_wmean(d_income_ratio, p)                     # d_inc_mean
+#IF_m2  = IF_wvar(d_income_ratio, p)                      # d_inc_var
+IF_m1  = IF_wmean(adj_ratio, p)                          # adj_rate
+#IF_m4  = IF_wcorr(adj_ratio, d_income_ratio, p)          # corr_adj_dinc
+#IF_m5  = IF_wcorr(adj_ratio, usd_share, p)               # corr_adj_usdsh
+IF_m2  = IF_wshare_pos(usd_share, p)                     # usd_particip
+#IF_m7  = IF_wcorr(usd_share, d_income_ratio, p)          # corr_usdsh_dinc
+#IF_m8  = any(.!ismissing.(a_eff)) ? IF_wcorr(usd_share, a_eff, p) : zeros(N)  # corr_usdsh_aeff
+IF_m3  = IF_wmean(d_wealth_ratio, p)                     # d_wealth_mean
+IF_m4 = IF_wvar(d_wealth_ratio, p)                      # d_wealth_var
+IF_m5 = IF_wmean(duration, p)                           # spell_mean_y
 # m12: var(log1p(d_value))
 x, _, idx = aligned_xw(d_value, p)
 z = log1p.(x)
 tmp = Vector{Union{Missing,Float64}}(fill(missing, N))
 tmp[idx] = z
-IF_m12 = IF_wvar(tmp, p)
+IF_m6 = IF_wvar(tmp, p)
 
 
 IF_matrix = hcat(
-    IF_m1, IF_m2, IF_m3, IF_m4, IF_m5, IF_m6,
-    IF_m7, IF_m8, IF_m9, IF_m10, IF_m11, IF_m12
+    IF_m1, IF_m2, IF_m3, IF_m4, IF_m5, IF_m6
 )
 
 # ---------- covariance of moments ----------
@@ -184,5 +180,5 @@ writedlm(kst.MOMS_FILE, datamoments)
 writedlm(kst.W_FILE,   Σ)
 writedlm(kst.MNAME_FILE, mom_names)
 
-println("✅ Saved 12 moments and Σ ($(size(Σ))). Columns:")
+println("✅ Saved 6 moments and Σ ($(size(Σ))). Columns:")
 println(join(mom_names, ", "))

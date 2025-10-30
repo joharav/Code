@@ -24,7 +24,26 @@ using Main.sz, Main.kst, Main.settings, Main.dtp, Main.globals
 
 const EPS  = 1e-12
 const seed = 1924
-const n_trials = 700
+const n_trials = 10
+# -------------------------------
+# === Data & weights (cached) ===
+# -------------------------------
+const DAT = let
+    dm = vec(collect(readdlm(kst.MOMS_FILE)))
+    W0 = collect(readdlm(kst.W_FILE))
+    mnames = vec(collect(readdlm(kst.MNAME_FILE)))
+    pnames = vec(collect(readdlm(kst.PNAME_FILE)))
+    (; dm, W0, mnames, pnames)
+end
+
+const CH   = sz.pick
+const DM   = DAT.dm[CH]
+const WRAW = DAT.W0[CH, CH]
+const MN   = DAT.mnames[CH]
+const PN   = DAT.pnames
+const W    = let Wsym = Symmetric((WRAW + WRAW')/2); ridge=1e-10; inv(Wsym + ridge*I); end
+const BIGPEN = 1e12
+const ALL_MN = vec(collect(readdlm(kst.MNAME_FILE)))  # full names (pre-pick)
 
 # ---------- robust wrappers ----------
 function safe_fcn(x, best_so_far)
@@ -73,16 +92,16 @@ f_opt = ck === nothing ? safe_fcn(x_opt, 1e12) : ck.f_best
 println("Starting search with x0 = ", x_opt, ", f(x0) = ", f_opt)
 
 # Adaptive loop with time budget
-i = 1
-nevals = 0
+global i = 1
+global nevals = 0
 t_loop0 = time()
 while i ≤ n_trials && time_left() > 30.0      # 30s safety margin
     x = lb .+ (ub .- lb) .* rand(sz.noestp)
     f = safe_fcn(x, f_opt)
-    nevals += 1
+    global nevals += 1
     if isfinite(f) && f < f_opt
-        x_opt .= x
-        f_opt  = f
+       global x_opt .= x
+       global  f_opt  = f
         @printf("New optimum at trial %d: f = %.6g, x = %s\n", i, f_opt, string(x_opt))
         save_ckpt!(x_opt, f_opt)
     end
@@ -94,7 +113,7 @@ while i ≤ n_trials && time_left() > 30.0      # 30s safety margin
         @printf("Progress: i=%d, evals=%d, avg %.3fs/eval, time_left=%.1fs\n",
                 i, nevals, elapsed / max(nevals,1), time_left())
     end
-    i += 1
+    global i += 1
 end
 
 println("\n⏱️ Stopped at i=$i with time_left=$(round(time_left(); digits=1))s")
