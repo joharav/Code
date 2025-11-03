@@ -38,7 +38,7 @@ function valfun_noadjust(pea::Vector{Float64})
     gap          = 1000.0
     pgap         = 1000
 
-    Threads.@threads for iter in 1:sz.maxiter
+    for iter in 1:sz.maxiter
         # queue has same size as v
         queue = zeros(size(v))
 
@@ -72,10 +72,10 @@ function valfun_noadjust(pea::Vector{Float64})
 
         # enforce d′ = iid[id] on both asset dims
         @Threads.threads for id in 1:sz.nd
-            @Threads.threads for ia in 1:sz.na
-                @Threads.threads for iaa in 1:sz.na
-                    @Threads.threads for iy in 1:sz.ny
-                        @Threads.threads for ie in 1:sz.ne
+             for ia in 1:sz.na
+                for iaa in 1:sz.na
+                    for iy in 1:sz.ny
+                        for ie in 1:sz.ne
                             gidx.d[ie,iy,iaa,ia,id] = iid[id]
                         end
                     end

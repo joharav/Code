@@ -34,7 +34,7 @@ function valfun_adjust(pea::Vector{Float64})
     gap          = 1000.0
     pgap         = 1000
 
-    Threads.@threads for iter in 1:sz.maxiter
+    for iter in 1:sz.maxiter
         # queue has same size as v
         queue = zeros(size(v))
 

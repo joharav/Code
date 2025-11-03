@@ -75,8 +75,8 @@ x_start = zeros(sz.noestp)
 x_start[1] = 0.544265   # nu
 x_start[2] = 0.080529   # f_d
 x_start[3] = 0.076867   # kappa
-x_start[4] = 0.57       # ft
-x_start[5] = 0.755     # chi
+x_start[4] = 0.755     # chi
+x_start[5] = 0.57       # ft
 
 lb = zeros(sz.noestp);  ub = zeros(sz.noestp)
 lb[1] = 0.35;  ub[1] = 0.9
