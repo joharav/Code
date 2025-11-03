@@ -6,8 +6,9 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
     w, pd, kappa, tau, h      = pea[8], pea[10], pea[11], pea[12], pea[13]
     rr = (1 / beta) - 1
     rr_star = pea[9]
+    chi = pea[16]
 
-    d_next = (1 - delta ) .* d
+    d_next = (1 - delta * (1 - chi)) .* d
     iid_map = [argmin(abs.(dp .- d_next[id])) for id in 1:sz.nd]
 
     # util[ie,iy,iaa,ia,id, iiaa,iia, iid_map[id]]
@@ -25,6 +26,7 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
                                 a_now  = a[ia]
 
                                 carry = (1 + rr) * aa_now + (1+rr_star)*(E*a_now)
+                                maintenance =  E * pd * delta * chi * d[id]
 
                                 aa_next = aap[iiaa]
                                 a_next  = ap[iia]
@@ -32,7 +34,7 @@ function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
                                 dollar_cost = kappa*(E * a_next)
 
                                 inc = Y*w*h*(1 - tau) + carry
-                                c = inc - next_pay  - dollar_cost
+                                c = inc - next_pay  - dollar_cost - maintenance
 
                                 idd = iid_map[id]
                                 dkeep = d_next[id]

@@ -6,9 +6,7 @@ ENV["OPENBLAS_NUM_THREADS"] = "1"
 ENV["MKL_NUM_THREADS"]     = "1"
 ENV["OMP_NUM_THREADS"]      = "1"
 
-const BUDGET_MIN = 105                    # in-Julia budget; leaves cushion
-const T0 = time()
-const TDEAD = T0 + 60.0 * BUDGET_MIN
+
 @inline time_left() = TDEAD - time()
 
 using Random, Statistics, Printf, LinearAlgebra, Serialization, Distributions
@@ -22,9 +20,7 @@ include("gmmfunctions_broad.jl")
 
 using Main.sz, Main.kst, Main.settings, Main.dtp, Main.globals
 
-const EPS  = 1e-12
-const seed = 1924
-const n_trials = 10
+
 # -------------------------------
 # === Data & weights (cached) ===
 # -------------------------------
@@ -44,6 +40,12 @@ const PN   = DAT.pnames
 const W    = let Wsym = Symmetric((WRAW + WRAW')/2); ridge=1e-10; inv(Wsym + ridge*I); end
 const BIGPEN = 1e12
 const ALL_MN = vec(collect(readdlm(kst.MNAME_FILE)))  # full names (pre-pick)
+const BUDGET_MIN = 105                    # in-Julia budget; leaves cushion
+const T0 = time()
+const TDEAD = T0 + 60.0 * BUDGET_MIN
+const EPS  = 1e-12
+const seed = 1924
+const n_trials = 2000
 
 # ---------- robust wrappers ----------
 function safe_fcn(x, best_so_far)
@@ -70,16 +72,19 @@ Random.seed!(seed)
 
 # Bounds & start
 x_start = zeros(sz.noestp)
-x_start[1] = 0.80   # nu
-x_start[2] = 0.10   # f_d
-x_start[3] = 0.20   # kappa
+x_start[1] = 0.544265   # nu
+x_start[2] = 0.080529   # f_d
+x_start[3] = 0.076867   # kappa
+x_start[4] = 0.57       # ft
+x_start[5] = 0.755     # chi
 
 lb = zeros(sz.noestp);  ub = zeros(sz.noestp)
-lb[1] = 0.35;  ub[1] = 0.95
-lb[2] = 0.005; ub[2] = 0.80
+lb[1] = 0.35;  ub[1] = 0.9
+lb[2] = 0.001; ub[2] = 0.80
 lb[3] = 0.001; ub[3] = 0.80
+lb[4] = 0.01;  ub[4] = 0.9
+lb[5] = 0.01;   ub[5] = 0.9
 
-# (optional) quick JIT warmup so the first real eval is fast
 try
     _ = safe_fcn(x_start, 1e12)
 catch

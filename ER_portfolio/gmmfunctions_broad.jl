@@ -10,6 +10,8 @@ function buildparam(p::Vector{Float64})
     pea[5]  = p[1]   # ν_ndurables
     pea[7]  = p[2]   # f_d, fixed cost
     pea[11] = p[3]   # kappa, fixed cost asset
+    pea[17] = p[4]   # ft, time fixed cost
+    pea[16] = p[5]   # chi, maintenance effectiveness
     return pea
 end
 
@@ -17,18 +19,16 @@ end
 # === Simulation wrapper (robust) ===
 # -------------------------------
 
+
 function fcn(p::Vector{Float64})
-    pea  = buildparam(p)
-    moms = momentgen(pea)
+    pea = buildparam(p)
+    moms= momentgen(pea)   
     bad = .!isfinite.(moms) .| (moms .== -100.0)
     if any(bad)
-        k = findfirst(bad)
-        @warn "Non-finite/flagged sim moments" first_bad=k first_bad_name=ALL_MN[k] first_bad_val=moms[k]
-        return fill(BIGPEN, length(sz.pick))
+        @warn "Non-finite/flagged sim moments" first_bad=findfirst(bad) first_bad_val=moms[findfirst(bad)]
     end
-    moms[sz.pick]
+    return moms  # if moms is already the 6 you need, just `return moms`
 end
-
 
 
 

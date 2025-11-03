@@ -1,22 +1,22 @@
 function ptrue(enn::Int64)
     pea = zeros(enn);
-    pea[1] = 0.95;                               # beta     = Discount factor
-    pea[2] = 0.05;                               # delta    = Depreciation rate
-    pea[3] = 0.66;                               # rho_e    = persistence
-    pea[4] = 0.25;                               # sigma_e  = exchange rate innovation standard deviation
-    pea[5] = 0.51;                               # nu       = Share parameter for nondurable consumption 
-    pea[6] = 2.00;                               # gamma    = Risk aversion parameter 
-    pea[7] = 0.03;                               # f        = adj cost 0.3 gives you a 3% adj
-    pea[8] = 1;                                  # w        = wage rate
-    pea[9] = 0.03;                                # r_foreign      = Foreign rate
-    pea[10] = 5;                                 # pd      = price durable goods
-    pea[11] = 0.01;                              # kappa    = fixed cost of asset adjustment
-    pea[12] = 0.0;                              # tau      = tax rate
-    pea[13] = 1;                               # h        = hours worked
-    pea[14] = 0.9;                              # rho_y    = AR(1) persistence for idiosyncratic income
-    pea[15] = 0.2;                               # sigma_y  = Volatility of idiosyncratic income shock
-    pea[16] = 1.0;                               # theta   = Share dollar savings
+    pea[1] = 0.985         # beta
+    pea[2] = 0.05          # delta
+    pea[3] = 0.66          # rho_e
+    pea[4] = 0.12          # sigma_e
+    pea[5] = 0.544265      # nu
+    pea[6] = 2.00          # gamma
+    pea[7] = 0.080529      # f (durable adj cost share)
+    pea[8] = 1             # w
+    pea[9] = 0.0075        # r_foreign
+    pea[10] = 5            # pd
+    pea[11] = 0.076867     # kappa (asset adj cost)
+    pea[12] = 0.0          # tau
+    pea[13] = 1.0          # h
+    pea[14] = 0.9          # rho_y
+    pea[15] = 0.2          # sigma_y
+    pea[16] = 0.755        # chi (maintenance effectiveness)
+    pea[17] = 0.57         # ft  (time fixed cost)
 
-
-    return pea::Vector{Float64};
-end    
+    return pea
+end

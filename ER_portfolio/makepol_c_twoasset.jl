@@ -4,6 +4,8 @@ function makepol_c_twoasset(aa_pol::Array{Float64}, a_pol::Array{Float64}, dpol:
     pd    = pea[10]; kappa = pea[11];  tau = pea[12]; h = pea[13]
     rr    = (1 / beta) - 1
     rr_foreign = pea[9]; 
+    ft    = pea[17];  # time fixed cost
+    chi = pea[16];
 
     a   = grid.a     # foreign state grid
     aa  = grid.aa    # local   state grid
@@ -14,10 +16,10 @@ function makepol_c_twoasset(aa_pol::Array{Float64}, a_pol::Array{Float64}, dpol:
     cpol = zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd)
 
     Threads.@threads for id in 1:sz.nd
-        Threads.@threads for ia in 1:sz.na
-            Threads.@threads for iaa in 1:sz.na
-                Threads.@threads for iy in 1:sz.ny
-                    Threads.@threads for ie in 1:sz.ne
+         for ia in 1:sz.na
+            for iaa in 1:sz.na
+                 for iy in 1:sz.ny
+                    for ie in 1:sz.ne
                         E  = e[ie]; Y = y[iy]
                         inc_assets = (1 + rr) *aa[iaa] + (1+rr_foreign) * E*a[ia]
                         inc_labor  = Y * w * h * (1 - tau)
@@ -27,11 +29,14 @@ function makepol_c_twoasset(aa_pol::Array{Float64}, a_pol::Array{Float64}, dpol:
                         next_pay = aa_pol[ie,iy,iaa,ia,id] + E * a_pol[ie,iy,iaa,ia,id]
 
                         if ind == 0
-                            c = income - next_pay - dollar_cost
+                            maint_spend = E * pd * delta* chi * d[id]    # your previous choice
+
+                            c = income - next_pay - dollar_cost - maint_spend
                         else
                             sale_value = E * pd * (1 - f) * (1 - delta) * d[id]
                             purchase   = E * pd * dpol[ie,iy,iaa,ia,id]
-                            c = income + sale_value - purchase - next_pay - dollar_cost
+                            time_cost  = w * h * ft * Y   # NEW
+                            c = income + sale_value - purchase - next_pay - dollar_cost - time_cost
                         end
 
                         cpol[ie,iy,iaa,ia,id] = max(c, 1e-6)

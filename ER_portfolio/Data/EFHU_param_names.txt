@@ -1,3 +1,5 @@
 nu
 F^d
 kappa
+F^t
+chi

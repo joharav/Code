@@ -152,7 +152,7 @@ if any(.!isfinite.(outmoms))
 end
 
 
-   # if settings.verbose == true
+    if settings.verbose == true
 
         println("----------------------------------------------------------")
         println("\nStatistics:\n")
@@ -172,7 +172,7 @@ end
     
         println("----------------------------------------------------------")
 
-    #end
+    end
     return outmoms, x_values, f_x, h_x
 end
 

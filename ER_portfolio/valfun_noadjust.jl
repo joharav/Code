@@ -1,12 +1,13 @@
 function valfun_noadjust(pea::Vector{Float64})
     beta  = pea[1]
     delta = pea[2]
+    chi = pea[16]
 
     # grids first
     grids = makegrids(pea)
     d  = grids.d
     dp = grids.dp
-    ddp = (1 - delta) .* d
+    ddp = (1 - delta * (1 - chi)) .* d      # <— NEW
     iid = [argmin(abs.(dp .- ddp[id])) for id in 1:sz.nd]
     ut  = utility_noadjust(grids, pea)
     tmat = grids.t
@@ -122,7 +123,7 @@ function valfun_noadjust(pea::Vector{Float64})
             else
                 pol.a  = makepol(gidx.a,  grids.ap)    # foreign
                 pol.aa = makepol(gidx.aa, grids.aap)   # local
-                pol.d  = makepol_d_na(grids.d, delta) 
+                pol.d  = makepol_d_na(grids.d, delta, chi) 
                 pol.c  = makepol_c_twoasset(pol.aa, pol.a, pol.d, grids, 0, pea)  # (aa,a,d), non-adjust
                 break
             end

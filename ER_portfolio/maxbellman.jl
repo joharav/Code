@@ -7,10 +7,10 @@ function maxbellman(queuelong::Array{Float64}, util::Array{Float64}, beta::Float
     )
 
     @Threads.threads for id in 1:sz.nd
-        @Threads.threads for ia in 1:sz.na
-            @Threads.threads for iaa in 1:sz.na
-                @Threads.threads for iy in 1:sz.ny
-                    @Threads.threads for ie in 1:sz.ne
+        for ia in 1:sz.na
+            for iaa in 1:sz.na
+                for iy in 1:sz.ny
+                    for ie in 1:sz.ne
                         vstar = -Inf; astar = 1; aastar = 1; dstar = 1
                         for iiaa in 1:sz.npa
                             for iia in 1:sz.npa

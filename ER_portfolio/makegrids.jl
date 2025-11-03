@@ -8,6 +8,7 @@ function makegrids(ppp::Vector{Float64})
     w = ppp[8]
     tau = ppp[12]
     h = ppp[13]
+    chi = ppp[16]
 
 
     # Exchange Rate
@@ -67,10 +68,10 @@ function makegrids(ppp::Vector{Float64})
     # Durable Grid
     dmax = max(400.0, 6 * income_max / pd)
     dg = collect(range(0.0, stop=dmax, length=sz.nd))
-
     # Durable Policy Grid (combine adjust and non-adjust)
-    dpg_nonadjust = (1 .- delta) .* dg
+    dpg_nonadjust = (1 .- delta .* (1 .- chi)) .* dg
     dpg_adjust = collect(range(0.0, stop=dmax, length=sz.nd))
+
 
     dpg = sort(unique(vcat(dpg_nonadjust, dpg_adjust)))
     extra_needed = sz.npd - length(dpg)

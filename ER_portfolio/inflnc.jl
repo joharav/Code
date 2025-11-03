@@ -30,69 +30,69 @@ duration       = hasproperty(df, :duration) ? Vector{Union{Missing,Float64}}(df.
 # Option A (recommended): take the exact Stata moments to ensure perfect match
 mrow = CSV.read(joinpath(kst.DATA_DIR, "moments_vector_data_weighted.csv"), DataFrame)
 datamoments = vec(Matrix(mrow)[1, :])  # 12 numbers from your Stata export
+const pick6= [3,6, 9, 10,11, 12]  # moments to use (1-based)
+datamoments = datamoments[pick6]  # select only the 6 moments we use
+# function _compute_locally()
+#     m = Float64[]
+#     # 1–2: mean/var of d_income_ratio
+#     x, w, _ = aligned_xw(d_income_ratio, p)
+#     push!(m, mean(x, Weights(w)))
+#     push!(m, var(x, Weights(w)))
 
-# Option B (alt): compute locally (kept here for verification)
-function _compute_locally()
-    m = Float64[]
-    # 1–2: mean/var of d_income_ratio
-    x, w, _ = aligned_xw(d_income_ratio, p)
-    push!(m, mean(x, Weights(w)))
-    push!(m, var(x, Weights(w)))
+#     # 3: mean(adj_ratio)
+#     x, w, _ = aligned_xw(adj_ratio, p)
+#     push!(m, mean(x, Weights(w)))
 
-    # 3: mean(adj_ratio)
-    x, w, _ = aligned_xw(adj_ratio, p)
-    push!(m, mean(x, Weights(w)))
+#     # 4: corr(adj_ratio, d_income_ratio)
+#     x1, x2, w12, _ = aligned_xyw(adj_ratio, d_income_ratio, p)
+#     σ1 = sqrt(var(x1, Weights(w12)) + 1e-12)
+#     σ2 = sqrt(var(x2, Weights(w12)) + 1e-12)
+#     ρ  = wcov(x1, x2, w12) / (σ1 * σ2 + 1e-12)
+#     push!(m, ρ)
 
-    # 4: corr(adj_ratio, d_income_ratio)
-    x1, x2, w12, _ = aligned_xyw(adj_ratio, d_income_ratio, p)
-    σ1 = sqrt(var(x1, Weights(w12)) + 1e-12)
-    σ2 = sqrt(var(x2, Weights(w12)) + 1e-12)
-    ρ  = wcov(x1, x2, w12) / (σ1 * σ2 + 1e-12)
-    push!(m, ρ)
+#     # 5: corr(adj_ratio, usd_share)
+#     x1, x2, w12, _ = aligned_xyw(adj_ratio, usd_share, p)
+#     σ1 = sqrt(var(x1, Weights(w12)) + 1e-12)
+#     σ2 = sqrt(var(x2, Weights(w12)) + 1e-12)
+#     push!(m, wcov(x1, x2, w12) / (σ1 * σ2 + 1e-12))
 
-    # 5: corr(adj_ratio, usd_share)
-    x1, x2, w12, _ = aligned_xyw(adj_ratio, usd_share, p)
-    σ1 = sqrt(var(x1, Weights(w12)) + 1e-12)
-    σ2 = sqrt(var(x2, Weights(w12)) + 1e-12)
-    push!(m, wcov(x1, x2, w12) / (σ1 * σ2 + 1e-12))
+#     # 6: share(usd_share>0)
+#     mask = (!ismissing).(usd_share) .& (coalesce.(usd_share, 0.0) .> 0.0)
+#     push!(m, sum(p[mask]))
 
-    # 6: share(usd_share>0)
-    mask = (!ismissing).(usd_share) .& (coalesce.(usd_share, 0.0) .> 0.0)
-    push!(m, sum(p[mask]))
+#     # 7: corr(usd_share, d_income_ratio)
+#     x1, x2, w12, _ = aligned_xyw(usd_share, d_income_ratio, p)
+#     σ1 = sqrt(var(x1, Weights(w12)) + 1e-12)
+#     σ2 = sqrt(var(x2, Weights(w12)) + 1e-12)
+#     push!(m, wcov(x1, x2, w12) / (σ1 * σ2 + 1e-12))
 
-    # 7: corr(usd_share, d_income_ratio)
-    x1, x2, w12, _ = aligned_xyw(usd_share, d_income_ratio, p)
-    σ1 = sqrt(var(x1, Weights(w12)) + 1e-12)
-    σ2 = sqrt(var(x2, Weights(w12)) + 1e-12)
-    push!(m, wcov(x1, x2, w12) / (σ1 * σ2 + 1e-12))
+#     # 8: corr(usd_share, a_eff)
+#     if any(.!ismissing.(a_eff))
+#         x1, x2, w12, _ = aligned_xyw(usd_share, a_eff, p)
+#         σ1 = sqrt(var(x1, Weights(w12)) + 1e-12)
+#         σ2 = sqrt(var(x2, Weights(w12)) + 1e-12)
+#         push!(m, wcov(x1, x2, w12) / (σ1 * σ2 + 1e-12))
+#     else
+#         push!(m, NaN)
+#     end
 
-    # 8: corr(usd_share, a_eff)
-    if any(.!ismissing.(a_eff))
-        x1, x2, w12, _ = aligned_xyw(usd_share, a_eff, p)
-        σ1 = sqrt(var(x1, Weights(w12)) + 1e-12)
-        σ2 = sqrt(var(x2, Weights(w12)) + 1e-12)
-        push!(m, wcov(x1, x2, w12) / (σ1 * σ2 + 1e-12))
-    else
-        push!(m, NaN)
-    end
+#     # 9–10: mean/var of d_wealth_ratio
+#     x, w, _ = aligned_xw(d_wealth_ratio, p)
+#     push!(m, mean(x, Weights(w)))
+#     push!(m, var(x, Weights(w)))
 
-    # 9–10: mean/var of d_wealth_ratio
-    x, w, _ = aligned_xw(d_wealth_ratio, p)
-    push!(m, mean(x, Weights(w)))
-    push!(m, var(x, Weights(w)))
+#     # 11: mean(duration)
+#     x, w, _ = aligned_xw(duration, p)
+#     push!(m, mean(x, Weights(w)))
 
-    # 11: mean(duration)
-    x, w, _ = aligned_xw(duration, p)
-    push!(m, mean(x, Weights(w)))
+#     # 12: var(log1p(d_value))
+#     # (transform then weighted variance)
+#     x, w, _ = aligned_xw(d_value, p)
+#     z = log1p.(x)
+#     push!(m, var(z, Weights(w)))
 
-    # 12: var(log1p(d_value))
-    # (transform then weighted variance)
-    x, w, _ = aligned_xw(d_value, p)
-    z = log1p.(x)
-    push!(m, var(z, Weights(w)))
-
-    return m
-end
+#     return m
+# end
 # localcheck = _compute_locally()  # uncomment to verify vs Stata’s `datamoments`
 
 mom_names = [

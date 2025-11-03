@@ -5,6 +5,7 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
     f, w, pd, kappa, tau, h    = pea[7], pea[8], pea[10], pea[11], pea[12], pea[13]
     rr = (1 / beta) - 1
     rr_star = pea[9]
+    ft = pea[17]
 
     # util[ie,iy,iaa,ia,id, iiaa,iia,iid]
     util = zeros(sz.ne, sz.ny, sz.na, sz.na, sz.nd, sz.npa, sz.npa, sz.npd)
@@ -35,8 +36,9 @@ function utility(grids::NamedTuple, pea::Vector{Float64})
                                     sale_value = E * pd * (1 - f) * (1 - delta) * d[id]
                                     durable_purchase = E * pd * dp[iid]
                                     dollar_cost = kappa*(E * a_next)
+                                    time_cost = w * h * ft * Y         # <— NEW
 
-                                    c = income + sale_value - durable_purchase - next_pay - dollar_cost
+                                    c = income + sale_value - durable_purchase - next_pay - dollar_cost - time_cost
 
                                     if c > 0 && dp[iid] > 0 
                                         util[ie, iy, iaa, ia, id, iiaa, iia, iid] =

@@ -5,9 +5,8 @@ function momentgen(p::Vector{Float64})
     arret = time()
     println("elapse of time in seconds = ", arret-commence)
 
-    if answ.e == 0
+   # if answ.e == 0
         simdata = simmodel(answ)
-        ergodic_dist = compute_ergodic(answ)
 
 
         # ============ MOMENTS ===================================
@@ -32,6 +31,8 @@ function momentgen(p::Vector{Float64})
         end
         # ============ WELFARE COMPARISON ==============================
         if settings.welfare
+            ergodic_dist = compute_ergodic(answ)
+
             #Large Fixed Cost on Durables
             pe_B = copy(p)
             pe_B[7] = 1
@@ -83,9 +84,9 @@ function momentgen(p::Vector{Float64})
         end
 
 
-    else
-        moms = -100.0*ones(sz.nmom)
-    end
+  #  else
+   #     moms = -100.0*ones(sz.nmom)
+    #end
     
     return moms::Vector{Float64}
 end
