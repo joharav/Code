@@ -13,7 +13,7 @@ using Random, Statistics, Printf, LinearAlgebra, Serialization, Distributions
 # keep heavy deps out of the search loop unless required:
 # using JLD2, DataFrames, CSV, PrettyTables, StatsBase, KernelDensity, Plots
 
-include("durable_mod.jl")
+include("2_durable_mod.jl")
 include("collectfunctions.jl")
 include("simann.jl")
 include("gmmfunctions_broad.jl")
@@ -57,12 +57,12 @@ function safe_fcn(x, best_so_far)
     end
 end
 
-function save_ckpt!(x_best, f_best; path="Output/smm_ckpt.jls")
+function save_ckpt!(x_best, f_best; path="Output/2_smm_ckpt.jls")
     isdir(dirname(path)) || mkpath(dirname(path))
     serialize(path, (; x_best=copy(x_best), f_best=f_best, t=time()))
 end
 
-function load_ckpt(path="Output/smm_ckpt.jls")
+function load_ckpt(path="Output/2_smm_ckpt.jls")
     isfile(path) ? deserialize(path) : nothing
 end
 
@@ -73,10 +73,10 @@ Random.seed!(seed)
 # Bounds & start
 x_start = zeros(sz.noestp)
 x_start[1] = 0.544265   # nu
-x_start[2] = 0.080529   # f_d
+x_start[2] = 0.3   # f_d
 x_start[3] = 0.076867   # kappa
 x_start[4] = 0.755     # chi
-x_start[5] = 0.57       # ft
+x_start[5] = 0.3       # ft
 
 lb = zeros(sz.noestp);  ub = zeros(sz.noestp)
 lb[1] = 0.35;  ub[1] = 0.9

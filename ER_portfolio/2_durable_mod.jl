@@ -31,9 +31,9 @@ module kst;
     const W_FILE         = joinpath(DATA_DIR, "W_unclustered.txt") ; # unclustered weighting matrix
     const MNAME_FILE    = joinpath(DATA_DIR, "EFHU_mom_names.txt"); # your moment names
     const PNAME_FILE    = joinpath(DATA_DIR, "EFHU_param_names.txt"); # parameter names
-    const PROGRESS_FILE = joinpath(OUT_DIR, "progress.txt");
-    const EST_FILE      = joinpath(OUT_DIR, "estfil.txt");
-    const RESULTS_FILE  = joinpath(OUT_DIR, "results.txt");
+    const PROGRESS_FILE = joinpath(OUT_DIR, "2_progress.txt");
+    const EST_FILE      = joinpath(OUT_DIR, "2_estfil.txt");
+    const RESULTS_FILE  = joinpath(OUT_DIR, "2_results.txt");
 
 end;
 

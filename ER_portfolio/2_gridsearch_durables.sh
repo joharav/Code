@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=joharav0
-#SBATCH --job-name=smm
+#SBATCH --job-name=2_smm
 #SBATCH --partition=standard
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -8,8 +8,8 @@
 #SBATCH --mem=32G
 #SBATCH --time=6:00:00
 #SBATCH --requeue
-#SBATCH --output=logs/%x-%j.out
-#SBATCH --error=logs/%x-%j.err
+#SBATCH --output=logs/2_%x-%j.out
+#SBATCH --error=logs/2_%x-%j.err
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=joharav@umich.edu
 
@@ -30,9 +30,9 @@ export JULIA_PROJECT=@.
 # Headless plotting (GR)
 export GKSwstype=nul
 
-echo "Starting gridsearch_durables.jl at $(date)"
+echo "Starting 2_gridsearch_durables.jl at $(date)"
 echo "Host: $(hostname)  Threads: ${JULIA_NUM_THREADS}"
 
-julia --threads=${JULIA_NUM_THREADS} -O3 gridsearch_durables.jl
+julia --threads=${JULIA_NUM_THREADS} -O3 2_gridsearch_durables.jl
 
 echo "Job finished at $(date)"

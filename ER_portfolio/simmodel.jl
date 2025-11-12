@@ -1,61 +1,55 @@
 # ---------- tiny helpers ----------
-# clamp x to a grid's min/max
 @inline clamp_to_grid(x, g::AbstractVector{<:Real}) =
     min(max(x, first(g)), last(g))
 
-# sample an index from a CDF row (monotone, ends at 1). Always returns 1..length(cdfrow)
+# Sample an index from a CDF row (monotone, ends at 1). Returns 1..length(cdfrow)
 @inline function draw_next(cdfrow::AbstractVector{<:Real}, u::Real)
     @inbounds begin
         n  = length(cdfrow)
         @assert n > 0 "draw_next: empty cdf row"
-        uu = min(max(u, 0.0), 1.0 - eps())   # keep in [0, 1)
+        uu = min(max(u, 0.0), 1.0 - eps())   # keep in [0,1)
         j  = searchsortedfirst(cdfrow, uu)   # first index with cdf ≥ uu
         return j < 1 ? 1 : (j > n ? n : j)
     end
 end
 
-
 function simmodel(answ::NamedTuple)
-    # Unpack
-    v           = answ.v
-    pol         = answ.pol                 # expects fields: a, aa, d, c
-    grids       = answ.g
-    tmat        = grids.t
-    d_adjust    = answ.adjust_result.pol.d
-
-    exg = grids.ex
-    yg  = grids.y
+    # Unpack once
+    grids   = answ.g
+    tmat    = grids.t
+    exg     = grids.ex
+    yg      = grids.y
 
     # Precompute joint (e,y) CDF rows for transitions
-    phatcdf = cumsum(tmat, dims=2)                 # size: (ne*ny, ne*ny)
-    @inbounds phatcdf[:, end] .= 1.0               # force exact 1.0 at the end
+    phatcdf = cumsum(tmat, dims=2)           # size: (ne*ny, ne*ny)
+    @inbounds phatcdf[:, end] .= 1.0
 
-    # Optional: a crude stationary-ish init weight; keep but make safe
+    # Crude ergodic-ish initializer; force well-formed CDF
     cdf_wgt = Matrix(tmat')^100
     cdf_wgt = cumsum(cdf_wgt[:, Int(floor(sz.ne * 0.5)) + 1])
     @inbounds cdf_wgt[end] = 1.0
 
     # Storage
     allv        = zeros(sz.nYears, sz.nFirms)
-    alla        = zeros(sz.nYears, sz.nFirms)     # foreign
-    allaa       = zeros(sz.nYears, sz.nFirms)     # local
+    alla        = zeros(sz.nYears, sz.nFirms)     # foreign asset
+    allaa       = zeros(sz.nYears, sz.nFirms)     # local asset
     alle        = zeros(sz.nYears, sz.nFirms)
     ally        = zeros(sz.nYears, sz.nFirms)
     alld        = zeros(sz.nYears, sz.nFirms)
-    alld_adjust = zeros(sz.nYears, sz.nFirms)
     allc        = zeros(sz.nYears, sz.nFirms)
+    adjust_indicator = zeros(sz.nYears, sz.nFirms)
 
     # Initial joint-state indices (1..ne*ny), one per firm
     ls = zeros(Int, sz.nYears + 1, sz.nFirms)
     @inbounds for ifi in 1:sz.nFirms
-        u0 = globals.draws[1, ifi]
-        ls[1, ifi] = draw_next(cdf_wgt, u0)
+        ls[1, ifi] = draw_next(cdf_wgt, globals.draws[1, ifi])
     end
 
-    # initial idiosyncratic indices on asset/durable grids
+    # Initial idiosyncratic indices on grids
     astart  = globals.draws[1, :]
-    aastart = globals.draws[3, :]              # NEW: local asset init
+    aastart = globals.draws[3, :]
     dstart  = globals.draws[2, :]
+
 
     Threads.@threads for ifi in 1:sz.nFirms
         @inbounds begin
@@ -63,40 +57,62 @@ function simmodel(answ::NamedTuple)
             pickaa = min(Int(floor(sz.na * aastart[ifi])) + 1, sz.na)
             pickd  = min(Int(floor(sz.nd * dstart[ifi]))  + 1, sz.nd)
 
-            # unpack joint (e,y) from flat index
             pickey = ls[1, ifi]
             picke  = div(pickey - 1, sz.ny) + 1
             picky  = mod(pickey - 1, sz.ny) + 1
 
-            # Start from policy at that lattice point
-            aold  = pol.a[ picke, picky, pickaa, picka, pickd ]
-            aaold = pol.aa[picke, picky, pickaa, picka, pickd ]
-            dold  = pol.d[ picke, picky, pickaa, picka, pickd ]
-            d_adjustold = d_adjust[picke, picky, pickaa, picka, pickd ]
-            vold  = v[ picke, picky, pickaa, picka, pickd ]
-            cold  = pol.c[picke, picky, pickaa, picka, pickd ]
+            # Start from the merged-policy lattice point (only to get initial levels)
+            a_old   = answ.pol.a[ picke, picky, pickaa, picka, pickd ]
+            aa_old  = answ.pol.aa[picke, picky, pickaa, picka, pickd ]
+            d_old   = answ.pol.d[ picke, picky, pickaa, picka, pickd ]
+            v_old   = answ.v[     picke, picky, pickaa, picka, pickd ]
+            c_old   = answ.pol.c[ picke, picky, pickaa, picka, pickd ]
 
             for iti in 1:sz.nYears
-                # Current aggregate states
-                eold = exg[picke]
-                yold = yg[picky]
+                # Aggregate states (discrete)
+                e = exg[picke]
+                y = yg[picky]
 
-                # Clamp continuous states before interpolating
-                e_in  = eold                                # if discrete, OK
-                y_in  = clamp_to_grid(yold,  grids.y)
-                aa_in = clamp_to_grid(aaold, grids.aa)
-                a_in  = clamp_to_grid(aold,  grids.a)
-                d_in  = clamp_to_grid(dold,  grids.d)
+                # Clamp continuous states to grids before interpolation
+                e_in  = e
+                y_in  = clamp_to_grid(y,   grids.y)
+                aa_in = clamp_to_grid(aa_old, grids.aa)
+                a_in  = clamp_to_grid(a_old,  grids.a)
+                d_in  = clamp_to_grid(d_old,  grids.d)
 
-                # Interpolate continuation values and next policies (scalars)
-                vprime        = interpol(e_in, y_in, aa_in, a_in, d_in, grids, v)
-                aprime        = interpol(e_in, y_in, aa_in, a_in, d_in, grids, pol.a)
-                aaprime       = interpol(e_in, y_in, aa_in, a_in, d_in, grids, pol.aa)
-                dprime        = interpol(e_in, y_in, aa_in, a_in, d_in, grids, pol.d)
-                d_adjustprime = interpol(e_in, y_in, aa_in, a_in, d_in, grids, d_adjust)
-                cprime        = interpol(e_in, y_in, aa_in, a_in, d_in, grids, pol.c)
+                # Compare values across regimes at the current state
+                vA = interpol(e_in, y_in, aa_in, a_in, d_in, grids, answ.adjust_result.v)
+                vN = interpol(e_in, y_in, aa_in, a_in, d_in, grids, answ.noadjust_result.v)
+                do_adjust = (vA - vN) > sz.toler
 
-                # Draw next joint (e,y) using the row CDF
+                # Interpolate policies from the winner
+                if do_adjust
+                    a_pr  = interpol(e_in, y_in, aa_in, a_in, d_in, grids, answ.adjust_result.pol.a)
+                    aa_pr = interpol(e_in, y_in, aa_in, a_in, d_in, grids, answ.adjust_result.pol.aa)
+                    d_pr  = interpol(e_in, y_in, aa_in, a_in, d_in, grids, answ.adjust_result.pol.d)
+                    c_pr  = interpol(e_in, y_in, aa_in, a_in, d_in, grids, answ.adjust_result.pol.c)
+                    v_pr  = vA
+                else
+                    a_pr  = interpol(e_in, y_in, aa_in, a_in, d_in, grids, answ.noadjust_result.pol.a)
+                    aa_pr = interpol(e_in, y_in, aa_in, a_in, d_in, grids, answ.noadjust_result.pol.aa)
+                    d_pr  = interpol(e_in, y_in, aa_in, a_in, d_in, grids, answ.noadjust_result.pol.d)
+                    c_pr  = interpol(e_in, y_in, aa_in, a_in, d_in, grids, answ.noadjust_result.pol.c)
+                    v_pr  = vN
+                end
+
+                # Record adjustment only if chosen AND the durable truly moves
+                adjust_indicator[iti, ifi] = (do_adjust && abs(d_pr - d_in) > sz.toler) ? 1.0 : 0.0
+
+                # Save paths
+                allv[iti, ifi]  = v_pr
+                alla[iti, ifi]  = a_pr
+                allaa[iti, ifi] = aa_pr
+                alle[iti, ifi]  = e
+                ally[iti, ifi]  = y
+                alld[iti, ifi]  = d_pr
+                allc[iti, ifi]  = c_pr
+
+                # Next (e,y)
                 row = ls[iti, ifi]
                 u   = globals.draws[iti + 1, ifi]
                 nxt = draw_next(view(phatcdf, row, :), u)
@@ -104,45 +120,24 @@ function simmodel(answ::NamedTuple)
                 picke = div(nxt - 1, sz.ny) + 1
                 picky = mod(nxt - 1, sz.ny) + 1
 
-                eprime = exg[picke]
-                yprime = yg[picky]
-
-                # Save
-                allv[iti, ifi]        = vprime
-                alla[iti, ifi]        = aprime
-                allaa[iti, ifi]       = aaprime
-                alle[iti, ifi]        = eprime
-                ally[iti, ifi]        = yprime
-                alld[iti, ifi]        = dprime
-                alld_adjust[iti, ifi] = d_adjustprime
-                allc[iti, ifi]        = cprime
-
-                # Update state
-                vold  = vprime
-                aold  = aprime
-                aaold = aaprime
-                dold  = dprime
-                d_adjustold = d_adjustprime
-                cold  = cprime
+                # Update continuous states
+                v_old  = v_pr
+                a_old  = a_pr
+                aa_old = aa_pr
+                d_old  = d_pr
+                c_old  = c_pr
             end
         end
     end
 
-    # Adjustment indicator (1 if durable stayed at the "adjust" target)
-    adjust_indicator = zeros(size(alld))
-    @inbounds for i in 1:sz.nYears, j in 1:sz.nFirms
-        adjust_indicator[i, j] = (alld_adjust[i, j] == alld[i, j]) ? 1.0 : 0.0
-    end
-
     return (
-        v = allv,
-        d = alld,
-        a = alla,
+        v  = allv,
+        d  = alld,
+        a  = alla,
         aa = allaa,
         ex = alle,
-        y = ally,
-        d_adjust = alld_adjust,
+        y  = ally,
+        c  = allc,
         adjust_indicator = adjust_indicator,
-        c = allc
     )
 end

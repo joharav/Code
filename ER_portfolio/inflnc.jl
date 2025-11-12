@@ -3,11 +3,8 @@ using StatsBase: Weights, mean, var, cov, quantile, std
 using Distributions: Normal
 using DelimitedFiles: writedlm
 include("durable_mod.jl")
-
 include("inflnc_functions.jl")
-using Main.kst  # expects: DATA_DIR, MOMS_FILE, W_FILE, MNAME_FILE
-
-
+using Main.kst  
 # ---------- read per-observation data ----------
 df = CSV.read(joinpath(kst.DATA_DIR, "EFHU_moments_data_weighted.csv"), DataFrame)
 
@@ -29,79 +26,15 @@ duration       = hasproperty(df, :duration) ? Vector{Union{Missing,Float64}}(df.
 # ---------- data moments (12), computed here OR read the Stata export ----------
 # Option A (recommended): take the exact Stata moments to ensure perfect match
 mrow = CSV.read(joinpath(kst.DATA_DIR, "moments_vector_data_weighted.csv"), DataFrame)
-datamoments = vec(Matrix(mrow)[1, :])  # 12 numbers from your Stata export
-const pick6= [3,6, 9, 10,11, 12]  # moments to use (1-based)
+datamoments = vec(Matrix(mrow)[1, :])  
+const pick6= [11,6, 9, 10,12]  # moments to use (1-based)
 datamoments = datamoments[pick6]  # select only the 6 moments we use
-# function _compute_locally()
-#     m = Float64[]
-#     # 1–2: mean/var of d_income_ratio
-#     x, w, _ = aligned_xw(d_income_ratio, p)
-#     push!(m, mean(x, Weights(w)))
-#     push!(m, var(x, Weights(w)))
-
-#     # 3: mean(adj_ratio)
-#     x, w, _ = aligned_xw(adj_ratio, p)
-#     push!(m, mean(x, Weights(w)))
-
-#     # 4: corr(adj_ratio, d_income_ratio)
-#     x1, x2, w12, _ = aligned_xyw(adj_ratio, d_income_ratio, p)
-#     σ1 = sqrt(var(x1, Weights(w12)) + 1e-12)
-#     σ2 = sqrt(var(x2, Weights(w12)) + 1e-12)
-#     ρ  = wcov(x1, x2, w12) / (σ1 * σ2 + 1e-12)
-#     push!(m, ρ)
-
-#     # 5: corr(adj_ratio, usd_share)
-#     x1, x2, w12, _ = aligned_xyw(adj_ratio, usd_share, p)
-#     σ1 = sqrt(var(x1, Weights(w12)) + 1e-12)
-#     σ2 = sqrt(var(x2, Weights(w12)) + 1e-12)
-#     push!(m, wcov(x1, x2, w12) / (σ1 * σ2 + 1e-12))
-
-#     # 6: share(usd_share>0)
-#     mask = (!ismissing).(usd_share) .& (coalesce.(usd_share, 0.0) .> 0.0)
-#     push!(m, sum(p[mask]))
-
-#     # 7: corr(usd_share, d_income_ratio)
-#     x1, x2, w12, _ = aligned_xyw(usd_share, d_income_ratio, p)
-#     σ1 = sqrt(var(x1, Weights(w12)) + 1e-12)
-#     σ2 = sqrt(var(x2, Weights(w12)) + 1e-12)
-#     push!(m, wcov(x1, x2, w12) / (σ1 * σ2 + 1e-12))
-
-#     # 8: corr(usd_share, a_eff)
-#     if any(.!ismissing.(a_eff))
-#         x1, x2, w12, _ = aligned_xyw(usd_share, a_eff, p)
-#         σ1 = sqrt(var(x1, Weights(w12)) + 1e-12)
-#         σ2 = sqrt(var(x2, Weights(w12)) + 1e-12)
-#         push!(m, wcov(x1, x2, w12) / (σ1 * σ2 + 1e-12))
-#     else
-#         push!(m, NaN)
-#     end
-
-#     # 9–10: mean/var of d_wealth_ratio
-#     x, w, _ = aligned_xw(d_wealth_ratio, p)
-#     push!(m, mean(x, Weights(w)))
-#     push!(m, var(x, Weights(w)))
-
-#     # 11: mean(duration)
-#     x, w, _ = aligned_xw(duration, p)
-#     push!(m, mean(x, Weights(w)))
-
-#     # 12: var(log1p(d_value))
-#     # (transform then weighted variance)
-#     x, w, _ = aligned_xw(d_value, p)
-#     z = log1p.(x)
-#     push!(m, var(z, Weights(w)))
-
-#     return m
-# end
-# localcheck = _compute_locally()  # uncomment to verify vs Stata’s `datamoments`
 
 mom_names = [
-    "adj_rate",
+    "spell_mean_y",
     "usd_particip",
     "d_wealth_mean","d_wealth_var",
-    "spell_mean_y",
-    "d_log1p_var"
-]
+    "usd_particip_var"]
 
 # ---------- influence functions for the 12 moments ----------
 # IF for weighted mean: IF_i = p_i*(x_i - μ)
@@ -142,34 +75,18 @@ function IF_wshare_pos(zm, p::Vector{Float64})
 end
 
 # Build IF columns in the exact order of mom_names (12 cols)
-#IF_m1  = IF_wmean(d_income_ratio, p)                     # d_inc_mean
-#IF_m2  = IF_wvar(d_income_ratio, p)                      # d_inc_var
-IF_m1  = IF_wmean(adj_ratio, p)                          # adj_rate
-#IF_m4  = IF_wcorr(adj_ratio, d_income_ratio, p)          # corr_adj_dinc
-#IF_m5  = IF_wcorr(adj_ratio, usd_share, p)               # corr_adj_usdsh
+
+IF_m1  = IF_wmean(duration, p)                          # duration
 IF_m2  = IF_wshare_pos(usd_share, p)                     # usd_particip
-#IF_m7  = IF_wcorr(usd_share, d_income_ratio, p)          # corr_usdsh_dinc
-#IF_m8  = any(.!ismissing.(a_eff)) ? IF_wcorr(usd_share, a_eff, p) : zeros(N)  # corr_usdsh_aeff
 IF_m3  = IF_wmean(d_wealth_ratio, p)                     # d_wealth_mean
 IF_m4 = IF_wvar(d_wealth_ratio, p)                      # d_wealth_var
-IF_m5 = IF_wmean(duration, p)                           # spell_mean_y
-# m12: var(log1p(d_value))
-x, _, idx = aligned_xw(d_value, p)
-z = log1p.(x)
-tmp = Vector{Union{Missing,Float64}}(fill(missing, N))
-tmp[idx] = z
-IF_m6 = IF_wvar(tmp, p)
+IF_m5  = IF_wvar(usd_share, p)          # usd_particip_var
 
 
 IF_matrix = hcat(
-    IF_m1, IF_m2, IF_m3, IF_m4, IF_m5, IF_m6
+    IF_m1, IF_m2, IF_m3, IF_m4, IF_m5
 )
 
-# ---------- covariance of moments ----------
-# IMPORTANT scaling note:
-# - IF columns above already include the probability weight p_i.
-# - The (population) variance of the moment vector m = Σ_i IF_i is Σ_i IF_i IF_i'.
-# - If you prefer "sample-average" scaling, divide by N^2 (your prior code).
 #Σ = IF_matrix' * IF_matrix               # population-style
  Σ = (IF_matrix' * IF_matrix)  # sample-average style (matches your earlier line)
  Σ = Symmetric((Σ+Σ')/2)  # ensure symmetry
@@ -180,5 +97,5 @@ writedlm(kst.MOMS_FILE, datamoments)
 writedlm(kst.W_FILE,   Σ)
 writedlm(kst.MNAME_FILE, mom_names)
 
-println("✅ Saved 6 moments and Σ ($(size(Σ))). Columns:")
+println("✅ Saved 5 moments and Σ ($(size(Σ))). Columns:")
 println(join(mom_names, ", "))

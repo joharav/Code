@@ -7,11 +7,8 @@ function momentgen(p::Vector{Float64})
 
    # if answ.e == 0
         simdata = simmodel(answ)
-
-
         # ============ MOMENTS ===================================
-        moms, x_values, f_x, h_x = makemoments(simdata, p; shock=false)
-       # plot_distribution_panels(simdata, p)
+        moms = makemoments(simdata, p; per_year = 4,shock=false)
         if settings.compstat==false && settings.verbose==true
             decision_rules(answ)
         end        
@@ -20,7 +17,7 @@ function momentgen(p::Vector{Float64})
             simdata_irf = simmodel_girf(answ, Int(sz.nYears/2))
             
             # Get moments for simulation with shock
-            moms_shock, x_values_shock, f_x_shock, h_x_shock = makemoments(simdata_irf, p; shock=true)
+            moms_shock = makemoments(simdata_irf, p; shock=true)
             
             # Create GIRF plots
             girf = girf_plots(simdata_irf, simdata)

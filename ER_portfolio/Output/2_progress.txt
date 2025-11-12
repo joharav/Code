@@ -1,0 +1,15 @@
+Data vs. Simulated Moments (improved Q)
+
+adj_rate              data =     0.086067   sim =     1.000000
+usd_particip          data =     0.892488   sim =     0.974000
+d_wealth_mean         data =     0.912323   sim =     0.392228
+d_wealth_var          data =     0.013873   sim =     0.046701
+spell_mean_y          data =    25.495630   sim =     0.000000
+d_log1p_var           data =    18.494196   sim =     0.094483
+
+Parameters:
+nu                        0.500000
+F^d                       0.100000
+kappa                     0.200000
+
+GMM objective Q = 17019044.426943
