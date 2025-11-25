@@ -1,6 +1,5 @@
 # gridsearch_durables.jl — robust, time-budgeted random search
 
-# --- headless + sane threading ---
 ENV["GKSwstype"] = "nul"
 ENV["OPENBLAS_NUM_THREADS"] = "1"
 ENV["MKL_NUM_THREADS"]     = "1"
@@ -10,7 +9,6 @@ ENV["OMP_NUM_THREADS"]      = "1"
 @inline time_left() = TDEAD - time()
 
 using Random, Statistics, Printf, LinearAlgebra, Serialization, Distributions
-# keep heavy deps out of the search loop unless required:
 # using JLD2, DataFrames, CSV, PrettyTables, StatsBase, KernelDensity, Plots
 
 include("durable_mod.jl")
@@ -40,12 +38,12 @@ const PN   = DAT.pnames
 const W    = let Wsym = Symmetric((WRAW + WRAW')/2); ridge=1e-10; inv(Wsym + ridge*I); end
 const BIGPEN = 1e12
 const ALL_MN = vec(collect(readdlm(kst.MNAME_FILE)))  # full names (pre-pick)
-const BUDGET_MIN = 180                    # in-Julia budget; leaves cushion
+const BUDGET_MIN = 2860                    # in-Julia budget; leaves cushion
 const T0 = time()
 const TDEAD = T0 + 60.0 * BUDGET_MIN
 const EPS  = 1e-12
 const seed = 1924
-const n_trials = 2000
+const n_trials = 500
 
 # ---------- robust wrappers ----------
 function safe_fcn(x, best_so_far)
@@ -74,16 +72,16 @@ Random.seed!(seed)
 x_start = zeros(sz.noestp)
 x_start[1] = 0.544265   # nu
 x_start[2] = 0.080529   # f_d
-x_start[3] = 0.076867   # kappa
-x_start[4] = 0.755     # chi
-x_start[5] = 0.57       # ft
+#x_start[3] = 0.076867   # kappa
+#x_start[4] = 0.755     # chi
+#x_start[5] = 0.57       # ft
 
 lb = zeros(sz.noestp);  ub = zeros(sz.noestp)
 lb[1] = 0.35;  ub[1] = 0.9
 lb[2] = 0.001; ub[2] = 0.80
-lb[3] = 0.001; ub[3] = 0.80
-lb[4] = 0.01;  ub[4] = 0.9
-lb[5] = 0.01;   ub[5] = 0.9
+#lb[3] = 0.001; ub[3] = 0.80
+#lb[4] = 0.01;  ub[4] = 0.9
+#lb[5] = 0.01;   ub[5] = 0.9
 
 try
     _ = safe_fcn(x_start, 1e12)
@@ -96,7 +94,7 @@ if ck === nothing || length(ck.x_best) != sz.noestp
     @warn "Ignoring incompatible or missing checkpoint" ck_len = (ck === nothing ? missing : length(ck.x_best)) noestp = sz.noestp
     x_opt = copy(x_start)
     f_opt = safe_fcn(x_opt, 1e12)
-    save_ckpt!(x_opt, f_opt)  # start a fresh ckpt with the new dimensionality
+    save_ckpt!(x_opt, f_opt)  
 else
     x_opt = copy(ck.x_best)
     f_opt = ck.f_best
@@ -104,16 +102,15 @@ end
 println("Starting search with x0 = ", x_opt, ", f(x0) = ", f_opt)
 
 
-# Adaptive loop with time budget
 global i = 1
 global nevals = 0
 t_loop0 = time()
-while i ≤ n_trials && time_left() > 30.0      # 30s safety margin
+while i ≤ n_trials && time_left() > 30.0      
     x = lb .+ (ub .- lb) .* rand(sz.noestp)
     f = safe_fcn(x, f_opt)
     global nevals += 1
     if isfinite(f) && f < f_opt
-        global x_opt = copy(x)   # length can differ if you ever change noestp
+        global x_opt = copy(x)   
         global f_opt = f        
         @printf("New optimum at trial %d: f = %.6g, x = %s\n", i, f_opt, string(x_opt))
         save_ckpt!(x_opt, f_opt)
@@ -121,7 +118,6 @@ while i ≤ n_trials && time_left() > 30.0      # 30s safety margin
     # save occasionally regardless, and near the end
     if (i % 25 == 0) || (time_left() < 60.0)
         save_ckpt!(x_opt, f_opt)
-        # throughput log
         elapsed = time() - t_loop0
         @printf("Progress: i=%d, evals=%d, avg %.3fs/eval, time_left=%.1fs\n",
                 i, nevals, elapsed / max(nevals,1), time_left())
@@ -133,9 +129,7 @@ println("\n⏱️ Stopped at i=$i with time_left=$(round(time_left(); digits=1))
 println("Best so far: f = ", f_opt, " at x = ", x_opt)
 save_ckpt!(x_opt, f_opt)
 
-# Post: only if finite
 if isfinite(f_opt)
-    # If these are heavy, consider moving to a separate follow-up job that reads the checkpoint.
     stats = smmstats(x_opt)
     print_smm_results(stats, x_opt)
 else

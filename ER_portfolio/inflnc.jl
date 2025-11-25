@@ -2,98 +2,124 @@ using Statistics, LinearAlgebra, DataFrames, CSV
 using StatsBase: Weights, mean, var, cov, quantile, std
 using Distributions: Normal
 using DelimitedFiles: writedlm
+
 include("durable_mod.jl")
 include("inflnc_functions.jl")
 using Main.kst  
+
 # ---------- read per-observation data ----------
 df = CSV.read(joinpath(kst.DATA_DIR, "EFHU_moments_data_weighted.csv"), DataFrame)
 
-N = nrow(df)
+N     = nrow(df)
 peso  = Vector{Float64}(df.pesoEFHU)
-p     = peso ./ sum(peso)  # normalize to probabilities
+p     = peso ./ sum(peso)  # normalized weights
 
-# Variables (Union{Missing,Float64} where applicable)
+# Variables (Union{Missing,Float64})
 d_value        = Vector{Union{Missing,Float64}}(df.durables)
 a_eff          = Vector{Union{Missing,Float64}}(df.a_eff)
 usd_share      = Vector{Union{Missing,Float64}}(df.usd_share)
-usd_particip   = (.!ismissing.(usd_share)) .& (coalesce.(usd_share, 0.0) .> 0.0)  # bool mask for ref
+usd_particip   = (.!ismissing.(usd_share)) .& (coalesce.(usd_share, 0.0) .> 0.0)
+
 d_income_ratio = Vector{Union{Missing,Float64}}(df.d_income_ratio)
 d_wealth_ratio = Vector{Union{Missing,Float64}}(df.d_wealth_ratio)
 adj_ratio      = Vector{Union{Missing,Float64}}(df.adj_ratio)
-duration       = hasproperty(df, :duration) ? Vector{Union{Missing,Float64}}(df.duration) :
-                                             fill(missing, N)
 
-# ---------- data moments (12), computed here OR read the Stata export ----------
-# Option A (recommended): take the exact Stata moments to ensure perfect match
-mrow = CSV.read(joinpath(kst.DATA_DIR, "moments_vector_data_weighted.csv"), DataFrame)
-datamoments = vec(Matrix(mrow)[1, :])  
-const pick6= [11,6, 9, 10,12]  # moments to use (1-based)
-datamoments = datamoments[pick6]  # select only the 6 moments we use
+duration = hasproperty(df, :duration) ?
+    Vector{Union{Missing,Float64}}(df.duration) :
+    fill(missing, N)
+
+usd_heavy   = Vector{Union{Missing,Float64}}(usd_share .> 0.5)
+dwealth_usd = Vector{Union{Missing,Float64}}(ifelse.(usd_particip, d_wealth_ratio, missing))
+
+# ---------- read data moment vector ----------
+mrow_full = CSV.read(joinpath(kst.DATA_DIR, "moments_vector_data_weighted.csv"), DataFrame)
+datamom_full = vec(Matrix(mrow_full)[1, :])  # length 10 in original order
+
+# Original 10-moment order (for reference):
+# 1: duration_mean
+# 2: usd_particip_mean
+# 3: dwealth_mean
+# 4: dwealth_var
+# 5: usd_particip_var
+# 6: adj_rate
+# 7: owner_share
+# 8: usd_share_mean
+# 9: usd_heavy_share
+# 10: dwealth_cond_usd
+
+# We now only want 5 moments: 1,3,4,6,7
+const pick5 = [1, 3, 4, 6, 7]
+datamom = datamom_full[pick5]
 
 mom_names = [
-    "spell_mean_y",
-    "usd_particip",
-    "d_wealth_mean","d_wealth_var",
-    "usd_particip_var"]
+    "duration_mean",   # m1
+    "dwealth_mean",    # m3
+    "dwealth_var",     # m4
+    "adj_rate",        # m6
+    "owner_share"      # m7
+]
 
-# ---------- influence functions for the 12 moments ----------
-# IF for weighted mean: IF_i = p_i*(x_i - μ)
-function IF_wmean(xm, p::Vector{Float64})
+# ---------- influence functions ----------
+# Helpers from inflnc_functions.jl:
+# aligned_xw, aligned_xyw, wcov, etc.
+
+function IF_wmean(xm, p)
     x, w, mask = aligned_xw(xm, p)
     μ = mean(x, Weights(w))
-    out = zeros(length(xm)); out[mask] = w .* (x .- μ); out
+    out = zeros(length(xm))
+    out[mask] = w .* (x .- μ)
+    return out
 end
 
-# IF for weighted variance (population): σ² = Σ p (x-μ)²
-function IF_wvar(xm, p::Vector{Float64})
+function IF_wvar(xm, p)
     x, w, mask = aligned_xw(xm, p)
     μ  = mean(x, Weights(w))
     σ2 = var(x, Weights(w))
-    out = zeros(length(xm)); out[mask] = w .* ((x .- μ).^2 .- σ2); out
+    out = zeros(length(xm))
+    out[mask] = w .* ((x .- μ).^2 .- σ2)
+    return out
 end
 
-# IF for weighted correlation ρ_xy
-function IF_wcorr(xm, ym, p::Vector{Float64})
-    x, y, w, mask = aligned_xyw(xm, ym, p)
-    μx, μy = mean(x, Weights(w)), mean(y, Weights(w))
-    cx, cy = x .- μx, y .- μy
-    σx2, σy2 = var(x, Weights(w)), var(y, Weights(w))
-    σx = sqrt(σx2 + 1e-12); σy = sqrt(σy2 + 1e-12)
-    covxy = wcov(x, y, w)
-    ρ = covxy / (σx*σy + 1e-12)
-    t1 = (cx .* cy .- covxy) ./ (σx*σy + 1e-12)
-    t2 = 0.5 * ρ .* ((cx.^2 .- σx2) ./ (σx2 + 1e-12) .+ (cy.^2 .- σy2) ./ (σy2 + 1e-12))
-    loc = w .* (t1 .- t2)
-    out = zeros(length(xm)); out[mask] = loc; out
-end
-
-# IF for weighted participation share P = Σ p * 1{u>0}
-function IF_wshare_pos(zm, p::Vector{Float64})
+function IF_wshare_pos(zm, p)
     z, w, mask = aligned_xw(zm, p)
     P = sum(w .* (z .> 0.0))
-    out = zeros(length(zm)); out[mask] = w .* ((z .> 0.0) .- P); out
+    out = zeros(length(zm))
+    out[mask] = w .* ((z .> 0.0) .- P)
+    return out
 end
 
-# Build IF columns in the exact order of mom_names (12 cols)
+# ---------- Build IFs for the 5 moments ----------
+# 1) duration_mean
+IF_m1 = IF_wmean(duration, p)
 
-IF_m1  = IF_wmean(duration, p)                          # duration
-IF_m2  = IF_wshare_pos(usd_share, p)                     # usd_particip
-IF_m3  = IF_wmean(d_wealth_ratio, p)                     # d_wealth_mean
-IF_m4 = IF_wvar(d_wealth_ratio, p)                      # d_wealth_var
-IF_m5  = IF_wvar(usd_share, p)          # usd_particip_var
+# 2) dwealth_mean
+IF_m3 = IF_wmean(d_wealth_ratio, p)
 
+# 3) dwealth_var
+IF_m4 = IF_wvar(d_wealth_ratio, p)
 
+# 4) adj_rate (mean adjustment ratio)
+IF_m6 = IF_wmean(adj_ratio, p)
+
+# 5) owner_share (d_value > 0)
+IF_m7 = IF_wshare_pos(d_value, p)
+
+# Stack only these 5 columns
 IF_matrix = hcat(
-    IF_m1, IF_m2, IF_m3, IF_m4, IF_m5
+    IF_m1,  # duration_mean
+    IF_m3,  # dwealth_mean
+    IF_m4,  # dwealth_var
+    IF_m6,  # adj_rate
+    IF_m7   # owner_share
 )
 
-#Σ = IF_matrix' * IF_matrix               # population-style
- Σ = (IF_matrix' * IF_matrix)  # sample-average style (matches your earlier line)
- Σ = Symmetric((Σ+Σ')/2)  # ensure symmetry
+# Covariance-style matrix Σ ∝ E[IF IF']
+Σ_raw = IF_matrix' * IF_matrix
+Σ     = Symmetric((Σ_raw + Σ_raw')/2)
 
 # ---------- save ----------
 isdir(kst.DATA_DIR) || mkpath(kst.DATA_DIR)
-writedlm(kst.MOMS_FILE, datamoments)
+writedlm(kst.MOMS_FILE, datamom)
 writedlm(kst.W_FILE,   Σ)
 writedlm(kst.MNAME_FILE, mom_names)
 

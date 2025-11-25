@@ -1,5 +1,5 @@
-spell_mean_y
-usd_particip
-d_wealth_mean
-d_wealth_var
-usd_particip_var
+duration_mean
+dwealth_mean
+dwealth_var
+adj_rate
+owner_share

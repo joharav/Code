@@ -4,16 +4,6 @@ using Statistics
 _fin(v) = v[isfinite.(v)]
 @inline _safe_den(x) = max(x, 1e-12)
 
-@inline function safe_cor(x::AbstractVector, y::AbstractVector)
-    # coerce Bool→Float64 and drop non-finite pairs
-    xx = Float64.(x); yy = Float64.(y)
-    m = isfinite.(xx) .& isfinite.(yy)
-    if !any(m) || std(xx[m]) ≤ 0 || std(yy[m]) ≤ 0
-        return 0.0    # or NaN if you prefer to flag
-    end
-    return cor(xx[m], yy[m])
-end
-
 
 # Running time-since-last-adjustment (in periods) for each (t,i) in r0
 # adj: T×N Bool/Int in the selected window r0
@@ -35,85 +25,99 @@ function running_spells(adj::AbstractMatrix)
 end
 
 
+
+
+
 function makemoments(simdata::NamedTuple, pea::Vector{Float64};
-                     per_year::Int = 4, shock::Bool=false)
+    per_year::Int = 4, shock::Bool=false)
 
-    # --- parameters ---
-    w  = pea[8]    # earnings scale
-    pd = pea[10]   # durable price (USD)
+# --- parameters ---
+w  = pea[8]    # earnings scale
+pd = pea[10]   # durable price (USD)
 
-    # --- post-burn-in window ---
-    r0 = (sz.burnin-2):sz.nYears
-    r1 = (sz.burnin-3):(sz.nYears-1)
+# --- post-burn-in window ---
+r0 = (sz.burnin-2):sz.nYears
+r1 = (sz.burnin-3):(sz.nYears-1)
 
-    # slice panel
-    a      = simdata.a[r0, :]
-    aa     = simdata.aa[r0, :]
-    d      = simdata.d[r0, :]
-    ex     = simdata.ex[r0, :]
-    y      = simdata.y[r0, :]
-#    c      = simdata.c[r0, :]
-#    d_a    = simdata.d_adjust[r0, :]
-    adj    = simdata.adjust_indicator[r0, :]
+# slice panel
+a      = simdata.a[r0, :]
+aa     = simdata.aa[r0, :]
+d      = simdata.d[r0, :]
+ex     = simdata.ex[r0, :]
+y      = simdata.y[r0, :]
+adj    = simdata.adjust_indicator[r0, :]
 
- #   a_lag  = simdata.a[r1, :]
-  #  aa_lag = simdata.aa[r1, :]
-   # d_lag  = simdata.d[r1, :]
-   # ex_lag = simdata.ex[r1, :]
+# --- value/denominators in local units, panel-wide ---
+Vd    = pd .* ex .* d                         # durable value
+a_loc = aa
+a_fx  = ex .* a                               # USD assets valued in local
+a_eff = a_loc .+ a_fx                         # total liquid in local
 
-    # --- value/denominators in local units, panel-wide ---
-    Vd    = pd .* ex .* d                         # durable value
-    a_loc = aa
-    a_fx  = ex .* a                               # USD assets valued in local
-    a_eff = a_loc .+ a_fx                         # total liquid in local
-  #  income = max.(w .* y, 1e-12)                  # guard zeros
+# --- build panel vectors (flatten time×households) ---
+d_value_vec     = vec(Vd)
+a_eff_vec       = vec(a_eff)
+a_fx_vec        = vec(a_fx)
 
-    # --- build panel vectors (flatten time×households) ---
-    d_value_vec     = vec(Vd)
-    a_eff_vec       = vec(a_eff)
-    a_fx_vec        = vec(a_fx)
-#    income_vec      = vec(income)
+# shares/ratios at (t,i)
+d_wealth_ratio  = d_value_vec ./ max.(d_value_vec .+ a_eff_vec, 1e-12)
+usd_sh          = a_fx_vec    ./ max.(a_eff_vec, 1e-12)
+usd_pt          = usd_sh .> 0.0
 
-    # shares/ratios at (t,i)
-   # d_income_ratio  = d_value_vec ./ income_vec
-    d_wealth_ratio  = d_value_vec ./ max.(d_value_vec .+ a_eff_vec, 1e-12)
-    usd_sh          = a_fx_vec    ./ max.(a_eff_vec, 1e-12)
-    usd_pt          = usd_sh .> 0.0
+# --- durations at every (t,i) ---
+spells_periods = running_spells(adj)              # T×N
+duration_years = vec(spells_periods) ./ per_year  # flatten
 
-    # --- durations at every (t,i) ---
-    spells_periods = running_spells(adj)              # T×N
-    duration_years = vec(spells_periods) ./ per_year  # flatten
-   # adj_spell      = 1.0 ./ (1.0 .+ duration_years)
+# ---- core moments over the entire panel ----
+m1 = mean(_fin(duration_years))                       # mean duration
+#m2 = mean(_fin(Float64.(usd_pt)))                     # USD participation rate
 
-    # ---- moments over the entire panel ----
-    m1 = mean(_fin(duration_years))
-    m2 = mean(_fin(Float64.(usd_pt)))
+dwr_fin = _fin(d_wealth_ratio)
+m3 = mean(dwr_fin)                                    # mean d/wealth
+m4 = var(dwr_fin)                                     # var d/wealth
+#m5 = var(_fin(Float64.(usd_pt)))                      # var USD participation
 
-    dwr_fin = _fin(d_wealth_ratio)
-    m3 = mean(dwr_fin)
-    m4 = var(dwr_fin)                     
-    m5 = var(_fin(Float64.(usd_pt)))
- 
+# ---- NEW: extra first-moment moments for identification ----
 
-    # Diagnostics you already use
-  #  gap_vec, f_x, x_values, h_x, I_d_abs, mu_gap, var_gap, adj_rate_gap =
-   #     adjustment_gaps_sim(d_lag, d_a, adj)
+# Adjustment frequency: targets κ (and ties to sanity check)
+adj_rate = mean(vec(adj) .> 0.0)
+m6 = adj_rate
 
-    outmoms = [m1, m2, m3, m4, m5]
+# Durable ownership share: targets ν and F^d
+owner_share = mean(vec(d) .> 0.0)
+m7 = owner_share
 
-    if any(.!isfinite.(outmoms))
-        badix = findfirst(!isfinite, outmoms)
-        @warn "makemoments (panel) produced NaN/Inf" bad_moment=badix bad_value=outmoms[badix]
-    end
+# Mean USD share among all (not just an indicator): targets F^t
+#m8 = mean(_fin(usd_sh))
 
-    if settings.verbose
-        println("Moments over full panel (|r0|×N = $(length(r0))×$(size(adj,2)))")
-        println("m1 duration = ", m1)
-        println("m2 USD participation mean = ", m2)
-        println("m3 d/wealth mean = ", m3)
-        println("m4 d/wealth var  = ", m4)
-        println("m5 USD participation var = ", m5)
-    end
+# Share of "heavily dollarized" agents: USD share > 0.5
+#m9 = mean(vec(usd_sh) .> 0.5)
 
-    return outmoms
+#dwr_usd = d_wealth_ratio[usd_pt .== 1.0]
+#dwr_usd = _fin(dwr_usd)       # remove missing/NaN
+#m10 = mean(dwr_usd)
+
+
+#outmoms = [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10]
+outmoms = [m1,  m3, m4,  m6, m7]
+
+if any(.!isfinite.(outmoms))
+badix = findfirst(!isfinite, outmoms)
+@warn "makemoments (panel) produced NaN/Inf" bad_moment=badix bad_value=outmoms[badix]
+end
+
+if settings.verbose
+println("Moments over full panel (|r0|×N = $(length(r0))×$(size(adj,2)))")
+println("m1 duration                     = ", m1)
+println("m2 USD participation mean       = ", m2)
+println("m3 d/wealth mean                = ", m3)
+println("m4 d/wealth var                 = ", m4)
+println("m5 USD participation var        = ", m5)
+println("m6 adjustment rate              = ", m6)
+println("m7 durable ownership share      = ", m7)
+println("m8 mean USD share               = ", m8)
+println("m9 share USD share > 0.5        = ", m9)
+println("m10 mean d/wealth | USD holder  = ", m10)
+end
+
+return outmoms
 end

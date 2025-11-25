@@ -1,5 +1,2 @@
 nu
 F^d
-kappa
-chi
-F^t

@@ -6,9 +6,9 @@ module sz;
     const npd       = 23;            #number of points in the durable policy grid51
     const npa       = 23;            #number of points in the asset policy grid51
     const pad       = 11;            #number of points to search around the previous point
-    const nYears    = 5000;         #number of years to simulate
+    const nYears    = 1500;         #number of years to simulate
     const burnin    = 250;           #number of initial years to toss
-    const nFirms    = 1000;           #number of firms to simulate
+    const nFirms    = 400;           #number of firms to simulate
     const nmom      = 5;             #number of moments to calculate
     const maxiter   = 5000;          #maximum number of VFI iterations
     const maxditer  = 1000;          #maximum number of iterations for the stationary distribution
@@ -17,7 +17,7 @@ module sz;
     const earlyiter = 2;             # Number of times to do the full grid search before you do local searches. 
     const maxpolit  = 5 ;            # Number of times the policy function converges before I believe it.
     const nop       = 17;             #maximum number of parameters
-    const noestp    = 5;             #number of parameters you actual estimate 
+    const noestp    = 2;             #number of parameters you actual estimate 
     const nstd_e    = 3.0;           #number of standard deviations for Tauchen exchange rate, 1.2 for dollar
     const nstd_y    = 1.0;           #number of standard deviations for Tauchen exchange rate, 1.2 for dollar
     const pick = [1,2,3,4,5];  # moments to use

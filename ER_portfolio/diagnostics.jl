@@ -4,8 +4,13 @@ using LinearAlgebra, Statistics, Printf
 using DelimitedFiles
 
 # --- Parameter bookkeeping (names must match your 5-D estimation vector) ---
-const PAR_NAMES = [:nu, :F_d, :kappa_a, :chi, :F_t]              # from gmmfunctions_broad.jl
-const PAR_INDEX = Dict(p=>i for (i,p) in enumerate(PAR_NAMES))
+
+# define the weird ones once
+const Fd_sym = Symbol("F^d")
+const Ft_sym = Symbol("F^t")
+
+const PAR_NAMES = [:nu, Fd_sym, :kappa, :chi, Ft_sym]   # from gmmfunctions_broad.jl
+const PAR_INDEX = Dict(p => i for (i,p) in enumerate(PAR_NAMES))
 
 # --- Objective and moments hooks (rely on your existing methods) ---
 # Objective: call the 2-arg fcn, passing +Inf as "best so far"
@@ -50,8 +55,11 @@ function slice2D(θhat; p1::Symbol, g1, p2::Symbol, g2)
     return Z
 end
 
-function run_slices(θhat; pairs::Vector{Tuple{Symbol,AbstractVector,Symbol,AbstractVector}},
-                    outcsv_dir="slices")
+function run_slices(
+    θhat;
+    pairs::Vector{Tuple{Symbol,AbstractVector,Symbol,AbstractVector}},
+    outcsv_dir="slices"
+)
     isdir(outcsv_dir) || mkpath(outcsv_dir)
     for (p1, g1, p2, g2) in pairs
         Z = slice2D(θhat; p1, g1, p2, g2)
@@ -99,7 +107,9 @@ function run_moment_sensitivities(θhat; grids::Dict{Symbol,AbstractVector}, out
         fn = joinpath(outcsv_dir, "$(p)_moments_over_grid.csv")
         open(fn, "w") do io
             @printf(io, "theta")
-            for nm in mnames; @printf(io, ",%s", String(nm)); end
+            for nm in mnames
+                @printf(io, ",%s", String(nm))
+            end
             @printf(io, "\n")
             for i in eachindex(res.grid)
                 @printf(io, "%.10f", res.grid[i])
