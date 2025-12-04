@@ -70,18 +70,18 @@ Random.seed!(seed)
 
 # Bounds & start
 x_start = zeros(sz.noestp)
-x_start[1] = 0.544265   # nu
-x_start[2] = 0.080529   # f_d
+x_start[1] = 0.668653   # nu
+x_start[2] = 0.042788   # f_d
 #x_start[3] = 0.076867   # kappa
-#x_start[4] = 0.755     # chi
-#x_start[5] = 0.57       # ft
+x_start[3] = 0.870535     # chi
+x_start[4] = 0.1       # ft
 
 lb = zeros(sz.noestp);  ub = zeros(sz.noestp)
 lb[1] = 0.35;  ub[1] = 0.9
 lb[2] = 0.001; ub[2] = 0.80
 #lb[3] = 0.001; ub[3] = 0.80
-#lb[4] = 0.01;  ub[4] = 0.9
-#lb[5] = 0.01;   ub[5] = 0.9
+lb[3] = 0.01;  ub[3] = 0.9
+lb[4] = 0.01;   ub[4] = 0.5
 
 try
     _ = safe_fcn(x_start, 1e12)

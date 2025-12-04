@@ -1,2 +1,4 @@
 nu
 F^d
+chi
+F^t

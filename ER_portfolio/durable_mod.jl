@@ -17,7 +17,7 @@ module sz;
     const earlyiter = 2;             # Number of times to do the full grid search before you do local searches. 
     const maxpolit  = 5 ;            # Number of times the policy function converges before I believe it.
     const nop       = 17;             #maximum number of parameters
-    const noestp    = 2;             #number of parameters you actual estimate 
+    const noestp    = 4;             #number of parameters you actual estimate 
     const nstd_e    = 3.0;           #number of standard deviations for Tauchen exchange rate, 1.2 for dollar
     const nstd_y    = 1.0;           #number of standard deviations for Tauchen exchange rate, 1.2 for dollar
     const pick = [1,2,3,4,5];  # moments to use
