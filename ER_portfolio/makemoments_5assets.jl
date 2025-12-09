@@ -103,7 +103,28 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64};
 
     # outmoms = [duration_mean, dwealth_mean, dwealth_var, adj_rate, dollar mean, dollar vol]
     #outmoms = [m1, m3, m4, m6, m8, m9, cons_vol, d_spend_vol, a_eff_vol]
-    outmoms = [duration_mean, dwealth_mean, dwealth_var, adj_rate, usd_share_mean ,m9, cons_vol, d_spend_vol, a_eff_vol]
+    # outmoms = [duration_mean, dwealth_mean, dwealth_var, adj_rate, dollar mean, dollar vol]
+    # Order:
+    # 1 duration_mean
+    # 2 dwealth_mean
+    # 3 dwealth_var
+    # 4 adj_rate
+    # 5 usd_share_mean
+    # 6 usd_share_var
+    # 7 cons_vol
+    # 8 d_spend_vol
+    # 9 a_eff_vol
+    outmoms = [
+        m1,              # duration_mean
+        m3,              # dwealth_mean
+        m4,              # dwealth_var
+        m6,              # adj_rate
+        usd_share_mean,  # usd_share_mean (== m8)
+        m9,              # usd_share_var
+        cons_vol,        # cons_vol
+        d_spend_vol,     # d_spend_vol
+        a_eff_vol        # a_eff_vol
+    ]
 
 
 

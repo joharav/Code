@@ -3,8 +3,9 @@ function valfun_noadjust(pea::Vector{Float64})
     delta = pea[2]
     chi = pea[16]
 
-    # grids first
-    grids = makegrids(pea)
+    # grids first (can be baseline or disaster)
+    grids = grid_builder(pea)
+
     d  = grids.d
     dp = grids.dp
     ddp = (1 - delta * (1 - chi)) .* d      # <— NEW

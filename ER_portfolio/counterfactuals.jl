@@ -63,6 +63,26 @@ function welfare_change(pe_A::Vector{Float64}, pe_B::Vector{Float64})
     res = welfare_full_summary(pe_A, pe_B)
     return res.λ_composite
 end
+"""
+    unpack_moments(m::AbstractVector)
+
+Map moment vector to a NamedTuple with the semantic names used below.
+Ordering must match makemoments_5assets.jl.
+"""
+function unpack_moments(m::AbstractVector)
+    @assert length(m) >= 9 "Expected at least 9 moments, got $(length(m))"
+    return (
+        duration_mean   = m[1],
+        dwealth_mean    = m[2],
+        dwealth_var     = m[3],
+        adj_rate        = m[4],
+        usd_share_mean  = m[5],
+        usd_share_var   = m[6],
+        cons_vol        = m[7],
+        d_spend_vol     = m[8],
+        a_eff_vol       = m[9],
+    )
+end
 
 # ---- main driver ----
 
@@ -70,13 +90,11 @@ function run_counterfactuals()
     p_base = baseline_params()
 
     println("=== Baseline ===")
-    ans_base = valfun(p_base)
-    sim_base = simmodel(ans_base)
-    mech_base = makemoments(simdata, p_base; per_year = 4,shock=false)
-
+    mech_base = unpack_moments(momentgen(p_base))
+   
     @printf("duration_mean       = %.4f\n", mech_base.duration_mean)
     @printf("adj_rate            = %.4f\n", mech_base.adj_rate)
-    @printf("owner_share         = %.4f\n", mech_base.owner_share)
+    @printf("owner_share         = %.4f\n", mech_base.dwealth_mean)   # if you dropped owner_share, adjust text
     @printf("usd_share_mean      = %.4f\n", mech_base.usd_share_mean)
     @printf("cons_vol            = %.4f\n", mech_base.cons_vol)
     @printf("d_spend_vol         = %.4f\n", mech_base.d_spend_vol)
@@ -84,11 +102,9 @@ function run_counterfactuals()
 
     # ---- higher F^d ----
     println("\n--- CF: higher F^d ---")
-    p_Fd = cf_higher_Fd(p_base; factor=2.0)
-    ans_Fd = valfun(p_Fd)
-    sim_Fd = simmodel(ans_Fd)
-    mech_Fd = makemoments(sim_Fd, p_Fd; per_year = 4,shock=false)
-    λ_Fd = welfare_change(p_base, p_Fd)
+    p_Fd     = cf_higher_Fd(p_base; factor=2.0)
+    mech_Fd  = unpack_moments(momentgen(p_Fd))
+    λ_Fd     = welfare_change(p_base, p_Fd)
 
     @printf("Δduration_mean      = %.4f\n", mech_Fd.duration_mean - mech_base.duration_mean)
     @printf("Δadj_rate           = %.4f\n", mech_Fd.adj_rate        - mech_base.adj_rate)
@@ -101,11 +117,9 @@ function run_counterfactuals()
 
     # ---- higher sigma_e ----
     println("\n--- CF: higher σ_e ---")
-    p_se = cf_higher_sigma_e(p_base; factor=2.0)
-    ans_se = valfun(p_se)
-    sim_se = simmodel(ans_se)
-    mech_se = makemoments(sim_se, p_se; per_year=4)
-    λ_se = welfare_change(p_base, p_se)
+    p_se    = cf_higher_sigma_e(p_base; factor=2.0)
+    mech_se = unpack_moments(momentgen(p_se))
+    λ_se    = welfare_change(p_base, p_se)
 
     @printf("Δduration_mean      = %.4f\n", mech_se.duration_mean - mech_base.duration_mean)
     @printf("Δadj_rate           = %.4f\n", mech_se.adj_rate        - mech_base.adj_rate)
@@ -118,11 +132,9 @@ function run_counterfactuals()
 
     # ---- fixed ER ----
     println("\n--- CF: fixed ER ---")
-    p_fix = cf_fixed_ER(p_base)
-    ans_fix = valfun(p_fix)
-    sim_fix = simmodel(ans_fix)
-    mech_fix = makemoments(sim_fix, p_fix; per_year=4)
-    λ_fix = welfare_change(p_base, p_fix)
+    p_fix    = cf_fixed_ER(p_base)
+    mech_fix = unpack_moments(momentgen(p_fix))
+    λ_fix    = welfare_change(p_base, p_fix)
 
     @printf("Δduration_mean      = %.4f\n", mech_fix.duration_mean - mech_base.duration_mean)
     @printf("Δadj_rate           = %.4f\n", mech_fix.adj_rate        - mech_base.adj_rate)
@@ -135,11 +147,9 @@ function run_counterfactuals()
 
     # ---- no dollar saving ----
     println("\n--- CF: no dollar saving ---")
-    p_nusd = cf_no_dollar_saving(p_base)
-    ans_nusd = valfun(p_nusd)
-    sim_nusd = simmodel(ans_nusd)
-    mech_nusd = makemoments(sim_nusd, p_nusd; per_year=4)
-    λ_nusd = welfare_change(p_base, p_nusd)
+    p_nusd    = cf_no_dollar_saving(p_base)
+    mech_nusd = unpack_moments(momentgen(p_nusd))
+    λ_nusd    = welfare_change(p_base, p_nusd)
 
     @printf("Δduration_mean      = %.4f\n", mech_nusd.duration_mean - mech_base.duration_mean)
     @printf("Δadj_rate           = %.4f\n", mech_nusd.adj_rate        - mech_base.adj_rate)
@@ -154,3 +164,4 @@ function run_counterfactuals()
 end
 
 run_counterfactuals()
+

@@ -8,6 +8,11 @@
 # ============ Stuff that goes into VFI ====================
 include("makegrids.jl")
 include("tauchen.jl")
+include("disaster_grids.jl")
+
+# Default grid builder: baseline (no disaster)
+grid_builder(ppp::Vector{Float64}) = makegrids(ppp)
+
 include("utility.jl")
 include("utility_noadjust.jl")
 include("fillin.jl")
@@ -42,7 +47,6 @@ include("decision_rules.jl")
 include("plotgaps_shock.jl")
 include("plot_ergodic.jl")
 include("plot_distribution_panels.jl")
-#include("disaster_process.jl")
 # ============ GMM and SMM =================================
 include("gmmfunctions_broad.jl")
 #include("inflnc_functions.jl")
@@ -58,6 +62,6 @@ include("welfare.jl")
 include("welfare_dispersion.jl")
 include("ergodic.jl")
 include("welfare_cases.jl")
-
+include("welfare_disaster.jl")
 
 

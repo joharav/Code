@@ -1,7 +1,8 @@
 function valfun_adjust(pea::Vector{Float64})
     beta = pea[1]
 
-    grids = makegrids(pea)
+    # grids first (can be baseline or disaster)
+    grids = grid_builder(pea)
     ut    = utility(grids, pea)
     tmat  = grids.t
 
