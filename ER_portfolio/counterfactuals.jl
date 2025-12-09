@@ -1,6 +1,7 @@
 # counterfactuals.jl
 
 using DelimitedFiles, Statistics, Printf, LinearAlgebra
+using Random, Distributions, Plots, StatsBase, KernelDensity, JLD2, PrettyTables, DataFrames, CSV;
 
 include("durable_mod.jl")
 include("collectfunctions.jl")
@@ -71,7 +72,7 @@ function run_counterfactuals()
     println("=== Baseline ===")
     ans_base = valfun(p_base)
     sim_base = simmodel(ans_base)
-    mech_base = mechanism_stats(sim_base, p_base; per_year=4)
+    mech_base = makemoments(simdata, p_base; per_year = 4,shock=false)
 
     @printf("duration_mean       = %.4f\n", mech_base.duration_mean)
     @printf("adj_rate            = %.4f\n", mech_base.adj_rate)
@@ -86,7 +87,7 @@ function run_counterfactuals()
     p_Fd = cf_higher_Fd(p_base; factor=2.0)
     ans_Fd = valfun(p_Fd)
     sim_Fd = simmodel(ans_Fd)
-    mech_Fd = mechanism_stats(sim_Fd, p_Fd; per_year=4)
+    mech_Fd = makemoments(sim_Fd, p_Fd; per_year = 4,shock=false)
     λ_Fd = welfare_change(p_base, p_Fd)
 
     @printf("Δduration_mean      = %.4f\n", mech_Fd.duration_mean - mech_base.duration_mean)
@@ -103,7 +104,7 @@ function run_counterfactuals()
     p_se = cf_higher_sigma_e(p_base; factor=2.0)
     ans_se = valfun(p_se)
     sim_se = simmodel(ans_se)
-    mech_se = mechanism_stats(sim_se, p_se; per_year=4)
+    mech_se = makemoments(sim_se, p_se; per_year=4)
     λ_se = welfare_change(p_base, p_se)
 
     @printf("Δduration_mean      = %.4f\n", mech_se.duration_mean - mech_base.duration_mean)
@@ -120,7 +121,7 @@ function run_counterfactuals()
     p_fix = cf_fixed_ER(p_base)
     ans_fix = valfun(p_fix)
     sim_fix = simmodel(ans_fix)
-    mech_fix = mechanism_stats(sim_fix, p_fix; per_year=4)
+    mech_fix = makemoments(sim_fix, p_fix; per_year=4)
     λ_fix = welfare_change(p_base, p_fix)
 
     @printf("Δduration_mean      = %.4f\n", mech_fix.duration_mean - mech_base.duration_mean)
@@ -137,7 +138,7 @@ function run_counterfactuals()
     p_nusd = cf_no_dollar_saving(p_base)
     ans_nusd = valfun(p_nusd)
     sim_nusd = simmodel(ans_nusd)
-    mech_nusd = mechanism_stats(sim_nusd, p_nusd; per_year=4)
+    mech_nusd = makemoments(sim_nusd, p_nusd; per_year=4)
     λ_nusd = welfare_change(p_base, p_nusd)
 
     @printf("Δduration_mean      = %.4f\n", mech_nusd.duration_mean - mech_base.duration_mean)

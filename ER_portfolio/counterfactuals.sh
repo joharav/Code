@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=joharav0
-#SBATCH --job-name=compstat
+#SBATCH --job-name=counterfactuals
 #SBATCH --partition=standard
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -30,9 +30,9 @@ export JULIA_PROJECT=@.
 # Headless plotting (GR)
 export GKSwstype=nul
 
-echo "Starting compstat.jl at $(date)"
+echo "Starting counterfactuals.jl at $(date)"
 echo "Host: $(hostname)  Threads: ${JULIA_NUM_THREADS}"
 
-julia --threads=${JULIA_NUM_THREADS} -O3 compstat.jl
+julia --threads=${JULIA_NUM_THREADS} -O3 counterfactuals.jl
 
 echo "Job finished at $(date)"

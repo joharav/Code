@@ -4,9 +4,9 @@
 #SBATCH --partition=standard
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=32G
-#SBATCH --time=48:00:00
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=128G
+#SBATCH --time=96:00:00
 #SBATCH --requeue
 #SBATCH --output=logs/%x-%j.out
 #SBATCH --error=logs/%x-%j.err
@@ -21,7 +21,7 @@ module load julia
 mkdir -p logs
 
 # Map BLAS/LAPACK to 1 thread to avoid oversubscription with Julia threads
-export JULIA_NUM_THREADS=8
+export JULIA_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 export OPENBLAS_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 export OMP_NUM_THREADS=1

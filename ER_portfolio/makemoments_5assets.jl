@@ -28,6 +28,7 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64};
     # --- parameters ---
     w  = pea[8]    # earnings scale
     pd = pea[10]   # durable price (USD)
+    delta = pea[2]  # depreciation rate
 
     # --- post-burn-in window ---
     r0 = (sz.burnin-2):sz.nYears
@@ -37,6 +38,7 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64};
     a      = simdata.a[r0, :]
     aa     = simdata.aa[r0, :]
     d      = simdata.d[r0, :]
+    d_lag  = simdata.d[r1, :]
     ex     = simdata.ex[r0, :]
     y      = simdata.y[r0, :]
     adj    = simdata.adjust_indicator[r0, :]
@@ -80,12 +82,10 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64};
     adj_rate = mean(vec(adj) .> 0.0)
     m6 = adj_rate
 
-    # ownership
-    owner_share = mean(vec(d) .> 0.0)
-    m7 = owner_share
-
-    # outmoms = [duration_mean, dwealth_mean, dwealth_var, adj_rate, owner_share]
-    outmoms = [m1, m3, m4, m6, m7]
+    #usd assets
+    m8 = mean(_fin(usd_sh))
+    m9 = var(_fin(usd_sh))
+    usd_share_mean = m8
 
     # ---- extra mechanisms: volatilities (NOT used in GMM) ----
     # consumption volatility: std(log(c + eps))
@@ -93,12 +93,19 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64};
     cons_vol    = std(log.(_fin(c_vec .+ eps)))
 
     # durable spending: price × ex × d_adjust
-    d_spend     = pd .* ex .* d_adj
+    d_spend     = d - d_lag*(1-delta)
     d_spend_vec = vec(d_spend)
-    d_spend_vol = std(log.(_fin(d_spend_vec .+ eps)))
+    d_spend_vol = std((_fin(d_spend_vec .+ eps)))
 
     # asset volatility: std(log(a_eff + eps))
     a_eff_vol   = std(log.(_fin(a_eff_vec .+ eps)))
+
+
+    # outmoms = [duration_mean, dwealth_mean, dwealth_var, adj_rate, dollar mean, dollar vol]
+    #outmoms = [m1, m3, m4, m6, m8, m9, cons_vol, d_spend_vol, a_eff_vol]
+    outmoms = [duration_mean, dwealth_mean, dwealth_var, adj_rate, usd_share_mean ,m9, cons_vol, d_spend_vol, a_eff_vol]
+
+
 
     if any(.!isfinite.(outmoms))
         badix = findfirst(!isfinite, outmoms)
@@ -111,7 +118,8 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64};
         println("m3 dwealth_mean               = ", m3)
         println("m4 dwealth_var                = ", m4)
         println("m6 adj_rate                   = ", m6)
-        println("m7 owner_share                = ", m7)
+        println("m8 dollar_share               = ", m8)
+        println("m9 dollar_share_vol           = ", m9)
         println("cons_vol (log c)              = ", cons_vol)
         println("d_spend_vol (log pd*ex*d_adj) = ", d_spend_vol)
         println("a_eff_vol (log a_eff)         = ", a_eff_vol)

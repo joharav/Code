@@ -16,11 +16,12 @@ momname = [
     "dwealth_mean",
     "dwealth_var",
     "adj_rate",
-    "owner_share"
+    "dollar_share",
+    "dollar_vol"
 ]
 
 # indices in momentgen(ppp) / makemoments (same order here)
-mom_indices = [1, 2, 3, 4, 5]
+mom_indices = [1, 2, 3, 4, 5, 6]
 
 # ---------- parameter names: MUST match ptrue ordering ----------
 pname = [
@@ -70,7 +71,8 @@ mom_labels = Dict(
     "dwealth_mean"  => "Durables-Wealth Ratio",
     "dwealth_var"   => "Durables-Wealth Dispersion",
     "adj_rate"      => "Adj. Ratio",
-    "owner_share"   => "Durable Ownership Share"
+    "dollar_share"   => "Dollar Assets Share",
+    "dollar_vol"    => "Dollar Assets Volatility"
 )
 
 # True parameter vector (17×1)
@@ -92,13 +94,13 @@ maxmin[1, :] = [0.80, 0.95]  # beta
 maxmin[2, :] = [0.05, 0.40]  # delta
 maxmin[3, :] = [0.30, 0.90]  # rho_e
 maxmin[4, :] = [0.20, 0.60]  # sigma_e
-maxmin[5, :] = [0.20, 0.90]  # nu
+maxmin[5, :] = [0.40, 0.90]  # nu
 maxmin[6, :] = [0.50, 3.00]  # gamma
-maxmin[7, :] = [0.05, 0.80]  # F^d
+maxmin[7, :] = [0.02, 0.80]  # F^d
 maxmin[8, :] = [0.50, 5.00]  # w
 maxmin[9, :] = [0.0,  0.05]  # r_f (you can refine)
 maxmin[10,:] = [2.00, 8.00]  # p_d
-maxmin[11,:] = [0.00, 0.80]  # kappa_a
+maxmin[11,:] = [0.00, 0.90]  # kappa_a
 maxmin[12,:] = [0.00, 0.60]  # tau
 maxmin[13,:] = [0.10, 0.50]  # h
 maxmin[14,:] = [0.10, 0.95]  # rho_y

@@ -48,15 +48,16 @@ datamom_full = vec(Matrix(mrow_full)[1, :])  # length 10 in original order
 # 10: dwealth_cond_usd
 
 # We now only want 5 moments: 1,3,4,6,7
-const pick5 = [1, 3, 4, 6, 7]
-datamom = datamom_full[pick5]
+const pick6 = [1, 3, 4, 6, 8, 5]
+datamom = datamom_full[pick6]
 
 mom_names = [
     "duration_mean",   # m1
     "dwealth_mean",    # m3
     "dwealth_var",     # m4
     "adj_rate",        # m6
-    "owner_share"      # m7
+    "dollar_share",      # m7
+    "dollar_vol"        # m8
 ]
 
 # ---------- influence functions ----------
@@ -102,7 +103,14 @@ IF_m4 = IF_wvar(d_wealth_ratio, p)
 IF_m6 = IF_wmean(adj_ratio, p)
 
 # 5) owner_share (d_value > 0)
-IF_m7 = IF_wshare_pos(d_value, p)
+#IF_m7 = IF_wshare_pos(d_value, p)
+
+#5) Dollar asset shares 
+IF_m7 = IF_wmean(usd_share, p)
+
+#6) Dollar Asset Vol 
+ IF_m8 = IF_wvar(usd_share, p)
+
 
 # Stack only these 5 columns
 IF_matrix = hcat(
@@ -110,7 +118,9 @@ IF_matrix = hcat(
     IF_m3,  # dwealth_mean
     IF_m4,  # dwealth_var
     IF_m6,  # adj_rate
-    IF_m7   # owner_share
+    IF_m7,   # dollar_share
+    IF_m8    # dollar_vol
+
 )
 
 # Covariance-style matrix Σ ∝ E[IF IF']
@@ -123,5 +133,5 @@ writedlm(kst.MOMS_FILE, datamom)
 writedlm(kst.W_FILE,   Σ)
 writedlm(kst.MNAME_FILE, mom_names)
 
-println("✅ Saved 5 moments and Σ ($(size(Σ))). Columns:")
+println("✅ Saved 6 moments and Σ ($(size(Σ))). Columns:")
 println(join(mom_names, ", "))
