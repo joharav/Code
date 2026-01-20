@@ -1,177 +1,152 @@
-# ==========================================================================
-# 4D MODEL: Simulation
-# State: (e, y, w, d)
-# Tracks: dollar share s, derived aa and a for moment computation
-# ==========================================================================
+@inline function draw_next_rowcdf(cdfrow::AbstractVector{<:Real}, u::Real)
+    return searchsortedfirst(cdfrow, u)
+end
 
-@inline clamp_to_grid(x, g::AbstractVector{<:Real}) = min(max(x, first(g)), last(g))
-
-@inline function draw_next(cdfrow::AbstractVector{<:Real}, u::Real)
-    @inbounds begin
-        n = length(cdfrow)
-        uu = min(max(u, 0.0), 1.0 - eps())
-        j = searchsortedfirst(cdfrow, uu)
-        return j < 1 ? 1 : (j > n ? n : j)
+@inline function nearest_index(grid::AbstractVector{<:Real}, x::Real)
+    j = searchsortedlast(grid, x)
+    if j < 1
+        return 1
+    elseif j >= length(grid)
+        return length(grid)
+    else
+        return (abs(x - grid[j]) ≤ abs(grid[j+1] - x)) ? j : (j+1)
     end
 end
 
-
 function simmodel(answ::NamedTuple)
-    # Unpack
-    grids = answ.g
-    tmat = grids.t
-    exg = grids.ex
-    yg = grids.y
-    w_grid = grids.w
-    d_grid = grids.d
-    s_grid = grids.s
-    
-    # Parameters for wealth evolution
-    beta = answ.pea[1]
-    rr = (1 / beta) - 1
-    rr_star = answ.pea[9]
-    kappa = answ.pea[11]
+    g     = answ.g
+    tmat  = g.t                 # (ne*ny)×(ne*ny), ROW-stochastic
+    exg   = g.ex
+    yg    = g.y
+    wgrid = g.w                 # STATE grid
+    wp    = g.wp                # POLICY grid
+    dgrid = g.d                 # STATE grid
+    dp    = g.dp                # POLICY grid
+    sgrid = g.s
 
-    # Precompute joint (e,y) CDF
+    pea     = answ.pea
+    beta    = pea[1]
+    delta   = pea[2]
+    f       = pea[7]
+    wage    = pea[8]
+    rr_star = pea[9]
+    pd      = pea[10]
+    kappa   = pea[11]
+    tau     = pea[12]
+    h       = pea[13]
+    ft      = pea[17]
+    rr      = (1/beta) - 1
+
+    # CDF rows for joint transition
     phatcdf = cumsum(tmat, dims=2)
     @inbounds phatcdf[:, end] .= 1.0
 
-    # Ergodic initialization
+    # crude initial distribution (keep your approach)
     cdf_wgt = Matrix(tmat')^100
     cdf_wgt = cumsum(cdf_wgt[:, Int(floor(sz.ne * 0.5)) + 1])
     @inbounds cdf_wgt[end] = 1.0
 
-    # Storage
-    allv = zeros(sz.nYears, sz.nFirms)
-    allw = zeros(sz.nYears, sz.nFirms)     # total wealth
-    alla = zeros(sz.nYears, sz.nFirms)     # dollar assets
-    allaa = zeros(sz.nYears, sz.nFirms)    # peso assets
-    alls = zeros(sz.nYears, sz.nFirms)     # dollar share
-    alle = zeros(sz.nYears, sz.nFirms)
-    ally = zeros(sz.nYears, sz.nFirms)
-    alld = zeros(sz.nYears, sz.nFirms)
-    allc = zeros(sz.nYears, sz.nFirms)
-    adjust_indicator = zeros(sz.nYears, sz.nFirms)
+    T, N = sz.nYears, sz.nFirms  # treat these as "periods"
+    allw = zeros(T, N)
+    alld = zeros(T, N)
+    alls = zeros(T, N)
+    alle = zeros(T, N)
+    ally = zeros(T, N)
+    allc = zeros(T, N)
+    adj  = zeros(T, N)
 
-    # Initial states
-    ls = zeros(Int, sz.nYears + 1, sz.nFirms)
-    @inbounds for ifi in 1:sz.nFirms
-        ls[1, ifi] = draw_next(cdf_wgt, globals.draws[1, ifi])
+    d_next_vec = answ.noadjust_result.d_next_vec  # next-period d level for each STATE id
+
+    # initial joint state index
+    ls = zeros(Int, T+1, N)
+    @inbounds for i in 1:N
+        ls[1, i] = searchsortedfirst(cdf_wgt, globals.draws[1, i])
     end
 
-    # Initial positions from random draws
     wstart = globals.draws[1, :]
     dstart = globals.draws[2, :]
-    sstart = globals.draws[3, :]  # initial dollar share
 
-    Threads.@threads for ifi in 1:sz.nFirms
-        @inbounds begin
-            # Initial state indices
-            pickw = min(Int(floor(sz.nw * wstart[ifi])) + 1, sz.nw)
-            pickd = min(Int(floor(sz.nd * dstart[ifi])) + 1, sz.nd)
-            
-            pickey = ls[1, ifi]
-            picke = div(pickey - 1, sz.ny) + 1
-            picky = mod(pickey - 1, sz.ny) + 1
-            
-            # Initial levels
-            w_old = w_grid[pickw]
-            d_old = d_grid[pickd]
-            s_old = sstart[ifi]  # initial dollar share
-            
-            # Derive initial aa and a
-            E_old = exg[picke]
-            aa_old = (1.0 - s_old) * w_old
-            a_old = (s_old * w_old) / E_old
+    Threads.@threads for i in 1:N
+        # initial continuous states (pick from grids using your random uniforms)
+        iw0 = clamp(Int(floor(sz.nw * wstart[i])) + 1, 1, sz.nw)
+        id0 = clamp(Int(floor(sz.nd * dstart[i])) + 1, 1, sz.nd)
 
-            for iti in 1:sz.nYears
-                # Current aggregate states
-                e = exg[picke]
-                y = yg[picky]
+        w_old = wgrid[iw0]
+        d_old = dgrid[id0]
 
-                # Clamp continuous states
-                w_in = clamp_to_grid(w_old, w_grid)
-                d_in = clamp_to_grid(d_old, d_grid)
+        pickey = ls[1, i]
+        ie = div(pickey - 1, sz.ny) + 1
+        iy = mod(pickey - 1, sz.ny) + 1
 
-                # Compare adjustment vs non-adjustment values
-                vA = interpol_ey(picke, picky, w_in, d_in, grids, answ.adjust_result.v)
-                vN = interpol_ey(picke, picky, w_in, d_in, grids, answ.noadjust_result.v)
-                do_adjust = (vA - vN) > sz.toler
+        for t in 1:T
+            e = exg[ie]
+            y = yg[iy]
 
-                # Get policies from winning regime
-                if do_adjust
-                    w_pr = interpol_ey(picke, picky, w_in, d_in, grids, answ.adjust_result.pol.w)
-                    d_pr = interpol_ey(picke, picky, w_in, d_in, grids, answ.adjust_result.pol.d)
-                    s_pr = interpol_ey(picke, picky, w_in, d_in, grids, answ.adjust_result.pol.s)
-                    c_pr = interpol_ey(picke, picky, w_in, d_in, grids, answ.adjust_result.pol.c)
-                    v_pr = vA
-                else
-                    w_pr = interpol_ey(picke, picky, w_in, d_in, grids, answ.noadjust_result.pol.w)
-                    d_pr = interpol_ey(picke, picky, w_in, d_in, grids, answ.noadjust_result.pol.d)
-                    s_pr = interpol_ey(picke, picky, w_in, d_in, grids, answ.noadjust_result.pol.s)
-                    c_pr = interpol_ey(picke, picky, w_in, d_in, grids, answ.noadjust_result.pol.c)
-                    v_pr = vN
-                end
+            # map continuous state -> indices ONLY for reading DP objects
+            iw = nearest_index(wgrid, w_old)
+            id = nearest_index(dgrid, d_old)
 
-                # Derive aa and a from w and s
-                aa_pr = (1.0 - s_pr) * w_pr
-                a_pr = (s_pr * w_pr) / max(e, 1e-10)
+            do_adj = answ.adjustment_indicator[ie, iy, iw, id]
+            adj[t, i] = do_adj ? 1.0 : 0.0
 
-                # Record adjustment
-                adjust_indicator[iti, ifi] = (do_adjust && abs(d_pr - d_in) > sz.toler) ? 1.0 : 0.0
+            if do_adj
+                iwp = answ.adjust_result.gidx.w[ie, iy, iw, id]
+                idp = answ.adjust_result.gidx.d[ie, iy, iw, id]
+                is  = answ.adjust_result.gidx.s[ie, iy, iw, id]
 
-                # Save paths
-                allv[iti, ifi] = v_pr
-                allw[iti, ifi] = w_pr
-                alla[iti, ifi] = a_pr
-                allaa[iti, ifi] = aa_pr
-                alls[iti, ifi] = s_pr
-                alle[iti, ifi] = e
-                ally[iti, ifi] = y
-                alld[iti, ifi] = d_pr
-                allc[iti, ifi] = c_pr
+                w_pr = wp[iwp]
+                d_pr = dp[idp]
+                s_pr = sgrid[is]
 
-                # Transition to next period
-                # Draw next (e,y) state
-                row = ls[iti, ifi]
-                u = globals.draws[iti + 1, ifi]
-                nxt = draw_next(view(phatcdf, row, :), u)
-                ls[iti + 1, ifi] = nxt
-                
-                picke_new = div(nxt - 1, sz.ny) + 1
-                picky_new = mod(nxt - 1, sz.ny) + 1
-                e_new = exg[picke_new]
+                labor_income     = y*wage*h*(1.0 - tau)
+                sale_value       = e*pd*(1.0 - f)*(1.0 - delta)*dgrid[id]
+                durable_purchase = e*pd*d_pr
+                time_cost        = wage*h*ft*y
+                c = labor_income + wgrid[iw] + sale_value - durable_purchase - w_pr - time_cost
+            else
+                iwp = answ.noadjust_result.gidx.w[ie, iy, iw, id]
+                is  = answ.noadjust_result.gidx.s[ie, iy, iw, id]
 
-                # Wealth evolution with portfolio returns
-                # w_{t+1} = (1-s)*w'*(1+r) + s*w'*(1+r*)*(E'/E) - κ*s*w'
-                trans_cost = kappa * s_pr * w_pr
-                w_new = (1.0 - s_pr) * w_pr * (1.0 + rr) + 
-                       s_pr * w_pr * (1.0 + rr_star) * (e_new / e) - trans_cost
-                w_new = max(w_new, w_grid[1])
-                w_new = min(w_new, w_grid[end])
+                w_pr = wp[iwp]
+                s_pr = sgrid[is]
+                d_pr = d_next_vec[id]  # already a LEVEL
 
-                # Update states
-                picke = picke_new
-                picky = picky_new
-                w_old = w_new
-                d_old = d_pr
-                s_old = s_pr
-                aa_old = aa_pr
-                a_old = a_pr
+                labor_income = y*wage*h*(1.0 - tau)
+                c = labor_income + wgrid[iw] - w_pr
             end
+
+            s_pr = clamp(s_pr, 0.0, 1.0)
+
+            allw[t, i] = w_pr
+            alld[t, i] = d_pr
+            alls[t, i] = s_pr
+            alle[t, i] = e
+            ally[t, i] = y
+            allc[t, i] = c
+
+            # draw next (e,y)
+            row = ls[t, i]
+            u   = globals.draws[t+1, i]
+            nxt = draw_next_rowcdf(view(phatcdf, row, :), u)
+            ls[t+1, i] = nxt
+
+            ie_new = div(nxt - 1, sz.ny) + 1
+            iy_new = mod(nxt - 1, sz.ny) + 1
+            e_new  = exg[ie_new]
+
+            # wealth transition
+            trans_cost = kappa * s_pr * w_pr
+            w_new = (1.0 - s_pr)*w_pr*(1.0 + rr) +
+                    s_pr*w_pr*(1.0 + rr_star)*(e_new / e) -
+                    trans_cost
+
+            # update continuous states (NO snapping here)
+            w_old = w_new
+            d_old = d_pr
+            ie = ie_new
+            iy = iy_new
         end
     end
 
-    return (
-        v = allv,
-        w = allw,
-        d = alld,
-        a = alla,
-        aa = allaa,
-        s = alls,
-        ex = alle,
-        y = ally,
-        c = allc,
-        adjust_indicator = adjust_indicator,
-    )
+    return (w=allw, d=alld, s=alls, ex=alle, y=ally, c=allc, adjust_indicator=adj)
 end

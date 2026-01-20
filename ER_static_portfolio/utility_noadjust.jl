@@ -1,73 +1,45 @@
-# ==========================================================================
-# 4D MODEL: Utility for NO-ADJUSTMENT regime
-# State: (e, y, w, d) where w = total liquid wealth
-# Policy: (w') only - durables depreciate deterministically
-# ==========================================================================
-
 function utility_noadjust(grids::NamedTuple, pea::Vector{Float64})
-    w_grid, d, wp, dp, e, y = grids.w, grids.d, grids.wp, grids.dp, grids.ex, grids.y
+    w_grid, d_grid, wp_grid, dp_grid = grids.w, grids.d, grids.wp, grids.dp
+    e_grid, y_grid = grids.ex, grids.y
 
-    beta, delta, nu, gamma = pea[1], pea[2], pea[5], pea[6]
-    wage, pd, kappa, tau, h = pea[8], pea[10], pea[11], pea[12], pea[13]
-    rr = (1 / beta) - 1
-    rr_star = pea[9]
-    chi = pea[16]   # maintenance effectiveness
+    beta  = pea[1]
+    delta = pea[2]
+    nu    = pea[5]
+    gamma = pea[6]
 
-    # In non-adjust regime, durables depreciate with maintenance
-    # d' = (1 - δ*(1-χ)) * d
-    d_next_vec = (1.0 .- delta .* (1.0 .- chi)) .* d
-    
-    # Map each durable state to nearest policy grid point
-    idp_map = [argmin(abs.(dp .- d_next_vec[id])) for id in 1:sz.nd]
+    wage = pea[8]
+    tau  = pea[12]
+    h    = pea[13]
+    chi  = pea[16]   # effectiveness in depreciation ONLY
 
-    # Flow utility array: util[ie, iy, iw, id, iwp]
-    # Note: idp is determined by id, so we don't loop over it
-    util = zeros(sz.ne, sz.ny, sz.nw, sz.nd, sz.npw)
+    d_next_vec = (1.0 .- delta .* (1.0 .- chi)) .* d_grid
+    idp_map = [argmin(abs.(dp_grid .- d_next_vec[id])) for id in 1:sz.nd]
+
+    util = fill(-1e10, sz.ne, sz.ny, sz.nw, sz.nd, sz.npw)
 
     Threads.@threads for iwp in 1:sz.npw
-        for id in 1:sz.nd
-            for iw in 1:sz.nw
-                for iy in 1:sz.ny
-                    for ie in 1:sz.ne
-                        # Current state
-                        E = e[ie]
-                        Y = y[iy]
-                        w_now = w_grid[iw]
-                        d_now = d[id]
-                        
-                        # Next period wealth choice
-                        w_next = wp[iwp]
-                        
-                        # Durables depreciate with maintenance
-                        d_keep = d_next_vec[id]
-                        
-                        # Maintenance cost
-                        maintenance = E * pd * delta * chi * d_now
-                        
-                        # Resources
-                        income = Y * wage * h * (1 - tau) + w_now
-                        
-                        # Consumption (no adjustment costs, no durable trade)
-                        c = income - w_next - maintenance
-                        
-                        if c > 0 && d_keep > 0
-                            util[ie, iy, iw, id, iwp] = 
-                                ((c^nu * d_keep^(1 - nu))^(1 - gamma)) / (1 - gamma)
-                        else
-                            util[ie, iy, iw, id, iwp] = -1e10
-                        end
-                    end
-                end
+        for id in 1:sz.nd, iw in 1:sz.nw, iy in 1:sz.ny, ie in 1:sz.ne
+            Y     = y_grid[iy]
+            w_now = w_grid[iw]
+            w_next = wp_grid[iwp]
+
+            labor_income = Y * wage * h * (1.0 - tau)
+            c = labor_income + w_now - w_next
+
+            if c > 0
+                d_eff = max(d_next_vec[id], 1e-8)
+                util[ie, iy, iw, id, iwp] =
+                    ((c^nu * d_eff^(1.0 - nu))^(1.0 - gamma)) / (1.0 - gamma)
             end
         end
     end
 
     if settings.verbose
-        bad = count(u -> u == -1e10, util)
+        bad = count(==( -1e10), util)
         total = length(util)
         println("Utility (no-adjust): penalized = ", bad, " / ", total,
                 " (", round(100*bad/total, digits=1), "%)")
     end
-    
+
     return util, idp_map, d_next_vec
 end

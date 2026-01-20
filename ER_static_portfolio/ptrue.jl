@@ -11,7 +11,7 @@ function ptrue(enn::Int64)
     pea[3] = 0.66          # rho_e (ER persistence)
     pea[4] = 0.15          # sigma_e (ER volatility)
     pea[6] = 2.0           # gamma (risk aversion)
-    pea[8] = 1.0           # wage
+    pea[8] = 100.0           # wage
     pea[9] = 0.0075          # r_foreign (dollar interest rate)
     pea[10] = 1.0          # pd (durable price)
     pea[12] = 0.0         # tau (tax rate)

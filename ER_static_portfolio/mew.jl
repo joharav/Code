@@ -1,101 +1,159 @@
-# Define the function makemew, which takes a tuple as Inputs and returns a matrix as Output
-function makemew(answ::NamedTuple)
+# ==========================================================================
+# Stationary distribution for 4D model
+# State: (e, y, w, d)
+# Uses:
+#   - grids.t : joint transition over combined (e,y) index of length ne*ny
+#   - answ.pol.w, answ.pol.d, answ.pol.s : policy levels on state grid
+# Wealth transition uses portfolio returns + FX, then interpolates onto w-grid
+# Durable transition interpolates onto d-grid (or collapses if exact)
+# ==========================================================================
 
-    a_wgt = inbetween(answ.g,true,:a) # True is for log spacing
-    d_wgt = inbetween(answ.g,true,:d) # True is for log spacing
-
-    interp_wgt, coarse_idx = makeweight(answ, a_wgt, d_wgt)
-
-
-    mew = ones(sz.ne,sz.na,sz.nd) ./ float(sz.ne*sz.na*sz.nd)
-    mew_new = mew
-
-    for id in 1:sz.maxditer
-        mew_new = makedist(coarse_idx, interp_wgt, answ.g, mew_new)
-        disterr = maximum(abs.(mew.-mew_new))
-        if disterr < sz.distol
-          break
-        else
-          mew = mew_new
-        end
-    end
-    mew = mew./sum(mew) #Rounding error
-    return mew::Matrix{Float64}
-
+@inline function ey_index(ie::Int, iy::Int, ny::Int)
+    return (ie - 1) * ny + iy
 end
 
-function makedist(coarse_idx, interp_wgt, grids, mew)
+@inline function ey_decompose(j::Int, ny::Int)
+    ie = div(j - 1, ny) + 1
+    iy = mod(j - 1, ny) + 1
+    return ie, iy
+end
 
-    tmat = grids.t
-    mew_old = mew
+@inline function bracket_grid(x::Float64, g::AbstractVector{<:Real})
+    n = length(g)
+    if x <= g[1]
+        return 1, 1, 0.0
+    elseif x >= g[n]
+        return n, n, 0.0
+    else
+        j = searchsortedlast(g, x)
+        xL = g[j]
+        xU = g[j+1]
+        wt = (xU == xL) ? 0.0 : (x - xL) / (xU - xL)
+        return j, j+1, wt
+    end
+end
 
+function stationary_dist_4d(answ::NamedTuple;
+                            maxiter::Int = 5_000,
+                            tol::Float64 = 1e-10)
 
-    for id in 1:sz.nd
-        for ia in 1:sz.na 
-            for ie in 1:sz.ne
-                if mew_old[ie,ia,id] > 0.0
-                    a_weight = interp_wgt[ie,ia,id].a_weight
-                    d_weight = interp_wgt[ie,ia,id].d_weight
+    grids = answ.g
+    tmat  = grids.t                 # (ne*ny) x (ne*ny)
+    exg   = grids.ex
+    yg    = grids.y
+    wg    = grids.w
+    dg    = grids.d
+    sg    = grids.s
 
-                    aidx = Int(coarse_idx[ie,ia,id]).a_lo; 
-                    didx = Int(coarse_idx[ie,ia,id]).d_lo; 
+    # parameters for wealth realization
+    beta    = answ.pea[1]
+    rr      = (1 / beta) - 1
+    rr_star = answ.pea[9]
+    kappa   = answ.pea[11]
 
-                    a_increm = min(sz.na-aidx,1)
-                    d_increm = min(sz.nd-didx,1)
+    ne, ny, nw, nd = sz.ne, sz.ny, sz.nw, sz.nd
 
+    # policies on state grid (levels)
+    pol_w = answ.pol.w
+    pol_d = answ.pol.d
+    pol_s = answ.pol.s
 
+    # initialize uniform distribution
+    μ  = fill(1.0 / (ne * ny * nw * nd), ne, ny, nw, nd)
+    μn = similar(μ)
 
-                    for iee in 1:sz.ne
-                        if tmat[iee,ie] > 0.0
-                            mew[iee,aidx,didx] = mew[iee,aidx,didx] + tmat[iee,ie]*mew_old[ie,ia,id] * (1-a_weight) * (1-d_weight)
+    # precompute endogenous mapping weights for each (ie,iy,iw,id) to w-grid and d-grid
+    wL = Array{Int}(undef, ne, ny, nw, nd)
+    wU = Array{Int}(undef, ne, ny, nw, nd)
+    ww = Array{Float64}(undef, ne, ny, nw, nd)
 
-                            if sz.npa > sz.na + sz.npd > sz.nd  
-                                mew[iee,aidx+a_increm,didx] = mew[iee,aidx+a_increm,didx] + tmat[iee,ie]*mew_old[ie,ia,id] * a_weight * (1.0-d_weight)
+    dL = Array{Int}(undef, ne, ny, nw, nd)
+    dU = Array{Int}(undef, ne, ny, nw, nd)
+    dw = Array{Float64}(undef, ne, ny, nw, nd)
 
-                                mew[iee,aidx,didx+d_increm] = mew[iee,aidx,didx+d_increm] + tmat[iee,ie]*mew_old[ie,ia,id] * (1.0-a_weight) * d_weight
+    @inbounds for id in 1:nd, iw in 1:nw, iy in 1:ny, ie in 1:ne
+        # chosen next-period (end of period) targets
+        w_next = pol_w[ie, iy, iw, id]
+        d_next = pol_d[ie, iy, iw, id]
 
-                                mew[iee,aidx+a_increm,didx+d_increm] = mew[iee,aidx+a_increm,didx+d_increm] + tmat[iee,ie]*mew_old[ie,ia,id] * a_weight * d_weight     
-                            end                       
-                        end
-                    end
-                end
+        iL, iU, wt = bracket_grid(w_next, wg)
+        wL[ie,iy,iw,id] = iL
+        wU[ie,iy,iw,id] = iU
+        ww[ie,iy,iw,id] = wt
+
+        jL, jU, wt2 = bracket_grid(d_next, dg)
+        dL[ie,iy,iw,id] = jL
+        dU[ie,iy,iw,id] = jU
+        dw[ie,iy,iw,id] = wt2
+    end
+
+    # iterate μ' = P' μ
+    for it in 1:maxiter
+        fill!(μn, 0.0)
+
+        @inbounds for id in 1:nd, iw in 1:nw, iy in 1:ny, ie in 1:ne
+            mass = μ[ie,iy,iw,id]
+            mass == 0.0 && continue
+
+            # exogenous transition over (e,y)
+            row = ey_index(ie, iy, ny)
+
+            # portfolio-induced wealth realization depends on next e'
+            # we will handle e' inside the ey-loop, then interpolate wealth back to w-grid.
+
+            # fixed chosen portfolio share s at this state
+            s = pol_s[ie,iy,iw,id]
+            s = clamp(s, 0.0, 1.0)
+
+            # chosen end-of-period saved wealth (before returns)
+            w_next = pol_w[ie,iy,iw,id]
+
+            # durable interpolation weights (do not depend on e')
+            jL = dL[ie,iy,iw,id]
+            jU = dU[ie,iy,iw,id]
+            wt_d = dw[ie,iy,iw,id]
+
+            E_now = exg[ie]
+            trans_cost = kappa * s * w_next
+
+            for col in 1:(ne*ny)
+                p = tmat[row, col]
+                p == 0.0 && continue
+
+                iep, iyp = ey_decompose(col, ny)
+                E_next = exg[iep]
+
+                # realized wealth in pesos next period
+                w_real = (1.0 - s) * w_next * (1.0 + rr) +
+                         s * w_next * (1.0 + rr_star) * (E_next / max(E_now, 1e-12)) -
+                         trans_cost
+
+                w_real = min(max(w_real, wg[1]), wg[end])
+                iL, iU, wt_w = bracket_grid(w_real, wg)
+
+                pmass = mass * p
+
+                # bilinear distribution across (w,d)
+                # weights:
+                #   w: (1-wt_w), wt_w
+                #   d: (1-wt_d), wt_d
+                μn[iep, iyp, iL, jL] += pmass * (1-wt_w) * (1-wt_d)
+                μn[iep, iyp, iU, jL] += pmass * (wt_w)   * (1-wt_d)
+                μn[iep, iyp, iL, jU] += pmass * (1-wt_w) * (wt_d)
+                μn[iep, iyp, iU, jU] += pmass * (wt_w)   * (wt_d)
             end
         end
-    end
-    
-    return mew
-end
 
-function makeweight(answ::NamedTuple, a_wgt::NamedTuple, d_wgt::NamedTuple) 
-    gidx  = answ.gidx
+        # normalize (numerical drift)
+        sμ = sum(μn)
+        μn ./= sμ
 
-
-    # Initialize interpolation weight storage
-    interp_wgt = [(a_weight=0.0, d_weight=0.0) for _ in 1:sz.ne, _ in 1:sz.na, _ in 1:sz.nd]
-    
-    # Initialize coarse index storage
-    coarse_idx = [(a_lo=0, d_lo=0) for _ in 1:sz.ne, _ in 1:sz.na, _ in 1:sz.nd]
-
-    for id in 1:sz.nd
-        for ia in 1:sz.na
-            for ie in 1:sz.ne
-                g_idx = gidx[ie, ia, id]
-
-                # Assign lower indices (grid positions just below policy choices)
-                a_lo = a_wgt.lo[g_idx]
-                d_lo = d_wgt.lo[g_idx]
-
-                # Assign interpolation weights
-                a_weight = a_wgt.w[g_idx]
-                d_weight = d_wgt.w[g_idx]
-
-                # Store in coarse_idx and interp_wgt
-                coarse_idx[ie, ia, id] = (a_lo=a_lo, d_lo=d_lo)
-                interp_wgt[ie, ia, id] = (a_weight=a_weight, d_weight=d_weight)
-            end
+        err = maximum(abs.(μn .- μ))
+        μ, μn = μn, μ
+        if err < tol
+            break
         end
     end
 
-    return interp_wgt, coarse_idx
+    return μ
 end
-

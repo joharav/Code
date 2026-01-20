@@ -25,7 +25,7 @@ function makegrids(ppp::Vector{Float64})
     else
         nume = sz.ne
         numstd_e = sz.nstd_e
-        mew = 3.0
+        mew = 0.0
         eg, trans_e = tauchen(mew, sigma_e, rho_e, nume, numstd_e)
         eg = exp.(eg)  # ensure E > 0
     end
@@ -94,15 +94,17 @@ function makegrids(ppp::Vector{Float64})
     end 
 
     outtuple = (
-        t   = trans::Array{Float64},      # joint (e,y) transition
-        w   = wg::Vector{Float64},        # total wealth state grid
-        wp  = wpg::Vector{Float64},       # total wealth policy grid
-        s   = sg::Vector{Float64},        # dollar share grid
-        d   = dg::Vector{Float64},        # durable state grid
-        dp  = dpg::Vector{Float64},       # durable policy grid
-        ex  = eg::Vector{Float64},        # exchange rate grid
-        y   = yg::Vector{Float64},        # income grid
-        te  = trans_e::Array{Float64},    # exchange rate transition (for portfolio choice)
+        t   = trans::Array{Float64},      # (you can keep it, but stop using it in VFI here)
+        ty  = trans_y::Array{Float64},    # <-- ADD THIS
+        w   = wg::Vector{Float64},
+        wp  = wpg::Vector{Float64},
+        s   = sg::Vector{Float64},
+        d   = dg::Vector{Float64},
+        dp  = dpg::Vector{Float64},
+        ex  = eg::Vector{Float64},
+        y   = yg::Vector{Float64},
+        te  = trans_e::Array{Float64},
     )
+    
     return outtuple
 end

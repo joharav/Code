@@ -1,45 +1,61 @@
+# Returns (lo, hi, w) such that:
+#   x ≈ (1-w)*grid[lo] + w*grid[hi]
+# with flat extrapolation at endpoints.
+@inline function brack1d_idx(grid::AbstractVector{<:Real}, x::Real)
+    @inbounds begin
+        n = length(grid)
+        n == 0 && error("brack1d_idx: empty grid")
+
+        if x <= grid[1]
+            return 1, 1, 0.0
+        elseif x >= grid[n]
+            return n, n, 0.0
+        else
+            j = searchsortedlast(grid, x)          # 1..n-1
+            gL = grid[j]
+            gU = grid[j+1]
+            w  = (gU == gL) ? 0.0 : (x - gL) / (gU - gL)
+            return j, j+1, w
+        end
+    end
+end
+
 function inbetween(grids::NamedTuple, islog::Bool, grid_type::Symbol)
-    # Choose the appropriate grid based on grid_type
-    if grid_type == :a
-        grid = grids.a
-        grid_policy = grids.ap
-        grid_size = sz.na
-        grid_policy_size = sz.npa
+    if grid_type == :w
+        grid        = grids.w
+        grid_policy = grids.wp
     elseif grid_type == :d
-        grid = grids.d
+        grid        = grids.d
         grid_policy = grids.dp
-        grid_size = sz.nd
-        grid_policy_size = sz.npd
+    elseif grid_type == :a
+        grid        = grids.a
+        grid_policy = grids.ap
+    elseif grid_type == :aa
+        grid        = grids.aa
+        grid_policy = grids.aap
     else
-        error("Invalid grid type. Use :a or :d.")
+        error("Invalid grid type. Use :w, :d, :a, or :aa.")
     end
 
-    # Optionally take the log of the grid if 'islog' is true
     if islog
-        grid = log.(grid)
+        # log requires strictly positive support
+        @assert minimum(grid) > 0 "inbetween: grid has nonpositive values, cannot log"
+        @assert minimum(grid_policy) > 0 "inbetween: policy grid has nonpositive values, cannot log"
+        grid        = log.(grid)
         grid_policy = log.(grid_policy)
     end
 
-    # Initialize interpolation weights and indices
-    kwgt_lo = Int.(zeros(grid_policy_size))
-    kwgt_hi = Int.(zeros(grid_policy_size))
-    kwgt_fr = zeros(grid_policy_size)
+    np = length(grid_policy)
+    lo = Vector{Int}(undef, np)
+    hi = Vector{Int}(undef, np)
+    w  = Vector{Float64}(undef, np)
 
-    # Interpolation loop
-    Threads.@threads for ik = 1:grid_policy_size
-        kdown = Int(floor((grid_size - 1.0) * (ik - 1.0) / (grid_policy_size - 1)) + 1)
-        if ik == grid_policy_size
-            kup = kdown
-            kfrac = 1.0
-        else
-            kup = kdown + 1
-            kfrac = (grid_policy[ik] - grid[kdown]) / (grid[kup] - grid[kdown])
-        end
-        kwgt_lo[ik] = kdown
-        kwgt_hi[ik] = kup
-        kwgt_fr[ik] = kfrac
+    @inbounds for i in 1:np
+        l, h, wi = brack1d_idx(grid, grid_policy[i])
+        lo[i] = l
+        hi[i] = h
+        w[i]  = wi
     end
 
-    k_wgt = (lo = kwgt_lo, hi = kwgt_hi, w = kwgt_fr)
-    return k_wgt
+    return (lo = lo, hi = hi, w = w)
 end

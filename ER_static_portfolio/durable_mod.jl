@@ -92,8 +92,8 @@ end;
 module settings; 
     const compstat      = false; 
     const verbose       = true; 
-    const irfsshock     = false;     
+    const irfsshock     = true;     
     const specif_two    = false;
-    const welfare       = false;
+    const welfare       = true;
     const complicated   = false;
 end

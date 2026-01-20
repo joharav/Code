@@ -1,149 +1,154 @@
-#-------------------------------------------------------------------------------
-# Refactored Julia Code
-#-------------------------------------------------------------------------------
+# ==========================================================================
+# Rare-disaster exchange-rate transition (COLUMN-stochastic, grid-preserving)
+# Use this with your existing makegrids(ppp) that returns:
+#   g.ex :: Vector{Float64}                  (exchange-rate grid, levels)
+#   g.te :: Matrix{Float64} size ne×ne       (e-transition, columns sum to 1)
+#   g.ty :: Matrix{Float64} size ny×ny       (y-transition, columns sum to 1)
+#   g.t  :: Matrix{Float64} size (ne*ny)×(ne*ny) (joint, columns sum to 1)
+# ==========================================================================
 
-using Random, Distributions, LinearAlgebra
+# ---------- probability mapping ----------
+@inline function annual_to_period_prob(pi_y::Float64, periods_per_year::Int)
+    @assert 0.0 ≤ pi_y ≤ 1.0
+    @assert periods_per_year ≥ 1
+    return 1.0 - (1.0 - pi_y)^(1.0 / periods_per_year)
+end
 
-# --- Core Functions ----------------------------------------------------------
+# ---------- nearest index on a sorted grid ----------
+@inline function nearest_index(grid::AbstractVector{<:Real}, x::Real)
+    j = searchsortedlast(grid, x)
+    if j < 1
+        return 1
+    elseif j >= length(grid)
+        return length(grid)
+    else
+        return (abs(x - grid[j]) ≤ abs(grid[j+1] - x)) ? j : (j + 1)
+    end
+end
 
-"""
-    annual_to_period_prob(pi_y::Float64, periods_per_year::Int)
-
-Maps an annual probability `pi_y` to its equivalent per-period probability,
-assuming independent trials within the year.
-
-The formula is `1 - (1 - pi_y)^(1 / periods_per_year)`.
-
-# Arguments
-- `pi_y::Float64`: The annual probability, must be in `[0, 1]`.
-- `periods_per_year::Int`: The number of periods in a year (e.g., 4 for quarterly).
-
-# Returns
-- `Float64`: The per-period probability.
-"""
-function annual_to_period_prob(pi_y::Float64, periods_per_year::Int)
-    # This function is already great. The main change is adopting the standard
-    # Julia docstring format for better integration with help systems (e.g., ? operator).
-    @assert 0.0 ≤ pi_y ≤ 1.0 "pi_y must be in [0,1]"
-    @assert periods_per_year ≥ 1 "periods_per_year must be ≥ 1"
-    return 1.0 - (1.0 - pi_y)^(1 / periods_per_year)
+# ---------- build map: ie_next -> ie_next_if_jump on LOG grid ----------
+function build_jump_map_ex(ex_grid::Vector{Float64}, kappa_e_log::Float64)
+    @assert all(ex_grid .> 0.0) "ex_grid must be strictly positive to take logs"
+    logex = log.(ex_grid)
+    ne = length(ex_grid)
+    jm = Vector{Int}(undef, ne)
+    @inbounds for iep in 1:ne
+        jm[iep] = nearest_index(logex, logex[iep] + kappa_e_log)
+    end
+    return jm
 end
 
 """
-    EV_mixture_over_jump(loge, params, eps_nodes, eps_weights, next_state_iter)
+    make_te_disaster_from_base(te_base, ex_grid; pi_annual, periods_per_year, kappa_e_log)
 
-Computes the conditional expectation `E[V(s') | s]` over a rare jump in the
-exchange rate process.
+Given baseline e-transition te_base (COLUMN-stochastic: columns sum to 1),
+construct disaster mixture:
 
-This calculates `(1-πe) * E[V | no jump] + πe * E[V | jump]`, where the
-expectation over the continuous shock `ε` is handled by quadrature.
+    te_dis = (1-π)*te_base + π*te_jump
 
-# Arguments
-- `loge::Float64`: Current log exchange rate.
-- `params::NamedTuple`: A tuple containing process parameters (`ρ`, `σ`, `κe`, `πe`).
-- `eps_nodes::AbstractVector`: Quadrature nodes for the `N(0,1)` innovation.
-- `eps_weights::AbstractVector`: Quadrature weights for the `N(0,1)` innovation.
-- `next_state_iter::Function`: A function `(loge_next) -> Float64` that computes
-  the value function integrated over all *other* state variables for a given
-  next-period log exchange rate `loge_next`.
+where te_jump remaps next-state mass via a log-jump of size kappa_e_log:
+mass in row ie_next is moved to row jump_map[ie_next] (within each column).
 
-# Returns
-- `Float64`: The expected value.
+Returns:
+- te_dis::Matrix{Float64} (column-stochastic)
+- meta::NamedTuple(π, jump_map, te_jump)
 """
-function EV_mixture_over_jump(
-    loge::Float64,
-    params::NamedTuple, # Suggestion: Group parameters for cleaner function signatures.
-    eps_nodes::AbstractVector,
-    eps_weights::AbstractVector,
-    next_state_iter::F # Using a type parameter F is slightly more robust for closures.
-) where {F<:Function}
-    # Unpack parameters
-    ρ, σ, κe, πe = params.ρ, params.σ, params.κe, params.πe
+function make_te_disaster_from_base(te_base::AbstractMatrix{<:Real},
+                                    ex_grid::Vector{Float64};
+                                    pi_annual::Float64,
+                                    periods_per_year::Int,
+                                    kappa_e_log::Float64)
 
-    EV_nojump = 0.0
-    EV_jump = 0.0
-    
-    # The core logic is efficient and correct. No changes needed here.
-    # Using @inbounds is fine as long as you guarantee nodes/weights match length.
-    @inbounds for (ε, w) in zip(eps_nodes, eps_weights)
-        loge_next_nojump = ρ * loge + σ * ε
-        
-        # Integrate over other states (e.g., income) via the provided closure
-        val_nojump = next_state_iter(loge_next_nojump)
-        val_jump = next_state_iter(loge_next_nojump + κe)
+    ne1, ne2 = size(te_base)
+    @assert ne1 == ne2 "te_base must be square"
+    @assert ne1 == length(ex_grid) "te/ex size mismatch"
 
-        EV_nojump += w * val_nojump
-        EV_jump += w * val_jump
+    te = Float64.(te_base)
+
+    # enforce column-stochastic (your code uses prob = te[ie_next, ie])
+    colerr = maximum(abs.(sum(te, dims=1) .- 1.0))
+    @assert colerr < 1e-10 "te_base must have columns summing to 1 (max col err = $colerr)"
+
+    π = annual_to_period_prob(pi_annual, periods_per_year)
+    jump_map = build_jump_map_ex(ex_grid, kappa_e_log)
+
+    te_jump = zeros(Float64, ne1, ne2)
+
+    # Column-stochastic remap: for each current state (column ie), move mass across rows
+    @inbounds for ie in 1:ne2
+        for iep in 1:ne1
+            p = te[iep, ie]
+            p == 0.0 && continue
+            iepJ = jump_map[iep]
+            te_jump[iepJ, ie] += p
+        end
     end
 
-    return (1.0 - πe) * EV_nojump + πe * EV_jump
+    te_dis = (1.0 - π) .* te .+ π .* te_jump
+
+    # numerical renormalization (columns)
+    te_dis ./= sum(te_dis, dims=1)
+
+    return te_dis, (π=π, jump_map=jump_map, te_jump=te_jump)
 end
 
+"""
+    make_joint_t(te, ty)
 
-# --- Example Usage ----------------------------------------------------------
-
-# Suggestion: Group model parameters into a struct or NamedTuple. This makes
-# passing them to functions much cleaner and less error-prone.
-params_e = (
-    ρ = 0.66,
-    σ = 0.25,
-    πe_annual = 0.02,
-    periods_per_year = 4,
-    κe = log(1.4)
-)
-
-# Derive the per-period probability from the annual one
-πe = annual_to_period_prob(params_e.πe_annual, params_e.periods_per_year)
-
-# Add it to the parameters tuple
-params_e = merge(params_e, (πe = πe,))
-
-
-# --- 1) Quadrature nodes/weights for ε ~ N(0,1) ---
-# Your method using Gauss-Hermite is standard and correct.
-function gauss_hermite_for_standard_normal(z, w)
-    nodes = sqrt(2.0) .* z
-    weights = (1.0 / sqrt(π)) .* w
-    return nodes, weights
+Both te and ty must be COLUMN-stochastic.
+Returns joint transition for z=(e,y) stacked as iz = (iy-1)*ne + ie (ie fastest).
+Then:
+    prob = t[iz_next, iz]
+"""
+function make_joint_t(te::AbstractMatrix{<:Real}, ty::AbstractMatrix{<:Real})
+    colerr_e = maximum(abs.(sum(te, dims=1) .- 1.0))
+    colerr_y = maximum(abs.(sum(ty, dims=1) .- 1.0))
+    @assert colerr_e < 1e-10 "te must be column-stochastic (max col err = $colerr_e)"
+    @assert colerr_y < 1e-10 "ty must be column-stochastic (max col err = $colerr_y)"
+    return kron(Float64.(ty), Float64.(te))
 end
 
-const GH_Z = [-2.020182870, -0.958572465, 0.0, 0.958572465, 2.020182870]
-const GH_W = [0.0199532421, 0.393619323, 0.945308720, 0.393619323, 0.0199532421]
-eps_nodes_e, eps_weights_e = gauss_hermite_for_standard_normal(GH_Z, GH_W)
+"""
+    makegrids_disaster(ppp; pi_annual, kappa_e_log, periods_per_year=4)
 
+Build baseline grids via makegrids(ppp), then replace ONLY:
+- g.te (exchange-rate transition)
+- g.t  (joint transition)
 
-# --- 2) Toy income Markov chain ---
-y_trans_probs = [0.5, 0.5]
-y_next_indices = [1, 2]
+Keeps the same exchange-rate grid g.ex (levels). This preserves comparability
+across counterfactuals while changing tail-risk beliefs.
 
+Assumes baseline makegrids(ppp) returns at least:
+- g.ex :: Vector{Float64}
+- g.te :: Matrix{Float64} (ne×ne, column-stochastic)
+- g.ty :: Matrix{Float64} (ny×ny, column-stochastic)
+- g.t  :: Matrix{Float64} ((ne*ny)×(ne*ny), column-stochastic)
+"""
+function makegrids_disaster(ppp::Vector{Float64};
+                            pi_annual::Float64,
+                            kappa_e_log::Float64,
+                            periods_per_year::Int=4)
 
-# --- 3) Fake V interpolator ---
-function V_interp(a_p::Float64, aD_p::Float64, d_p::Float64, loge_p::Float64, yidx_p::Int)
-    base = -(loge_p - 0.0)^2
-    ybonus = (yidx_p == 2 ? 0.25 : 0.0)
-    return base + ybonus
+    g0 = makegrids(ppp)
+
+    @assert hasproperty(g0, :ex) "baseline grids must contain g.ex"
+    @assert hasproperty(g0, :te) "baseline grids must contain g.te (ne×ne, column-stochastic)"
+    @assert hasproperty(g0, :ty) "baseline grids must contain g.ty (ny×ny, column-stochastic)"
+
+    ex0 = g0.ex
+    te0 = g0.te
+    ty0 = g0.ty
+
+    te_dis, meta = make_te_disaster_from_base(te0, ex0;
+        pi_annual=pi_annual,
+        periods_per_year=periods_per_year,
+        kappa_e_log=kappa_e_log
+    )
+
+    t_dis = make_joint_t(te_dis, ty0)
+
+    # return same structure as g0, but with te/t replaced
+    g_dis = (; g0..., te = te_dis, t = t_dis)
+
+    return g_dis, meta
 end
-
-# --- 4) Choices and current state for the test ---
-a_p, aD_p, d_p = 1.0, 0.5, 1.2
-loge = log(1.0)
-
-# Build the closure
-# This is a great way to structure the problem.
-next_state_iter = function (loge_next::Float64)
-    EV_y = 0.0
-    for (yidxp, Py) in zip(y_next_indices, y_trans_probs)
-        EV_y += Py * V_interp(a_p, aD_p, d_p, loge_next, yidxp)
-    end
-    return EV_y
-end
-
-# --- 5) Compute the mixture expectation ---
-EV = EV_mixture_over_jump(
-        loge,
-        params_e, # Pass the single parameters object
-        eps_nodes_e,
-        eps_weights_e,
-        next_state_iter
-)
-println("EV (quadrature) = ", EV)

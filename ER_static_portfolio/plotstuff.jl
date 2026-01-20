@@ -1,65 +1,117 @@
 using Plots
 default(fontfamily = "Computer Modern")
 
-# keep your old 4D method; add this 5D one:
-function plotstuff(vee::Array{Float64,5}, apol::Array{Int64,5}, dpol::Array{Int64,5}, cpol::Array{Float64,5}, g::NamedTuple)
-    a = g.a
+function plotstuff4D(
+    vee::Array{Float64,4},
+    pol_w::Array{Float64,4},
+    pol_d::Array{Float64,4},
+    pol_s::Array{Float64,4},
+    pol_c::Array{Float64,4},
+    g::NamedTuple;
+    outdir::String = "Output/Policy"
+)
+    w = g.w
     d = g.d
     e_vals = g.ex
 
-    iy  = Int(floor(sz.ny / 2))
-    iaa0 = Int(clamp(floor(sz.na / 2), 1, sz.na))   # fix local-asset slice
+    iy = cld(sz.ny, 2)  # middle income state
 
-    output_dir = "Output/Policy"
-    isdir(output_dir) || mkpath(output_dir)
+    isdir(outdir) || mkpath(outdir)
 
-    # 1) Surfaces over (a,d) for each e at fixed y, aa
+    # ------------------------------------------------------------
+    # 1) Surfaces over (w,d) for each e at fixed y
+    # ------------------------------------------------------------
     for ie in 1:sz.ne
-        vf = permutedims(vee[ie, iy, iaa0, :, :], (2,1))   # (nd, na)
-        aa = permutedims(apol[ie, iy, iaa0, :, :], (2,1))
-        dd = permutedims(dpol[ie, iy, iaa0, :, :], (2,1))
-        cc = permutedims(cpol[ie, iy, iaa0, :, :], (2,1))
+        vf = permutedims(vee[ie, iy, :, :], (2,1))     # (nd, nw) for surface(w,d, Z)
+        ww = permutedims(pol_w[ie, iy, :, :], (2,1))
+        dd = permutedims(pol_d[ie, iy, :, :], (2,1))
+        ss = permutedims(pol_s[ie, iy, :, :], (2,1))
+        cc = permutedims(pol_c[ie, iy, :, :], (2,1))
 
-        savefig(surface(a, d, vf, xlabel="Foreign assets a", ylabel="Durables d", zlabel="Value", legend=false),
-                joinpath(output_dir, "vf_slice_e$(ie).png"))
-        savefig(surface(a, d, aa, xlabel="Foreign assets a", ylabel="Durables d", zlabel="a'(a,d)", legend=false),
-                joinpath(output_dir, "Apolicy_slice_e$(ie).png"))
-        savefig(surface(a, d, dd, xlabel="Foreign assets a", ylabel="Durables d", zlabel="d'(a,d)", legend=false),
-                joinpath(output_dir, "Dpolicy_slice_e$(ie).png"))
-        savefig(surface(a, d, cc, xlabel="Foreign assets a", ylabel="Durables d", zlabel="c(a,d)", legend=false),
-                joinpath(output_dir, "Cpolicy_slice_e$(ie).png"))
+        savefig(surface(w, d, vf, xlabel="Total wealth w", ylabel="Durables d", zlabel="Value",
+                        title="V(w,d) | e index=$ie, y=mid", legend=false),
+                joinpath(outdir, "vf_slice_e$(ie).png"))
+
+        savefig(surface(w, d, ww, xlabel="Total wealth w", ylabel="Durables d", zlabel="w'(w,d)",
+                        title="Savings policy w' | e index=$ie, y=mid", legend=false),
+                joinpath(outdir, "Wpolicy_slice_e$(ie).png"))
+
+        savefig(surface(w, d, dd, xlabel="Total wealth w", ylabel="Durables d", zlabel="d'(w,d)",
+                        title="Durable policy d' | e index=$ie, y=mid", legend=false),
+                joinpath(outdir, "Dpolicy_slice_e$(ie).png"))
+
+        savefig(surface(w, d, ss, xlabel="Total wealth w", ylabel="Durables d", zlabel="s(w,d)",
+                        title="Dollar share s | e index=$ie, y=mid", legend=false),
+                joinpath(outdir, "Spolicy_slice_e$(ie).png"))
+
+        savefig(surface(w, d, cc, xlabel="Total wealth w", ylabel="Durables d", zlabel="c(w,d)",
+                        title="Consumption c | e index=$ie, y=mid", legend=false),
+                joinpath(outdir, "Cpolicy_slice_e$(ie).png"))
     end
 
-    # 2) Durable policy by a, for a couple of d levels (fixed y, aa, e varies across figures)
+    # ------------------------------------------------------------
+    # 2) Durable policy and dollar share vs w at a couple d levels
+    # ------------------------------------------------------------
+    d_levels = unique(clamp.([floor(Int, sz.nd/3), floor(Int, 2*sz.nd/3)], 1, sz.nd))
+
     for ie in 1:sz.ne
-        for d_level in [Int(floor(sz.nd / 3)), Int(floor(2 * sz.nd / 3))]
-            plt = plot(xlabel="Foreign assets a", ylabel="Durable policy d'", title="Durable Policy (d index = $d_level)", legend=:topright)
-            plot!(plt, a, dpol[ie, iy, iaa0, :, d_level], label="e=$ie")
-            savefig(plt, joinpath(output_dir, "Dpolicy_lines_d$(d_level)_e$(ie).png"))
+        for id in d_levels
+            d_val = round(d[id], digits=3)
+
+            pD = plot(xlabel="Total wealth w", ylabel="d'",
+                      title="Durable policy d'(w) | e index=$ie, y=mid, d=$(d_val)",
+                      legend=false)
+            plot!(pD, w, pol_d[ie, iy, :, id])
+            savefig(pD, joinpath(outdir, "Dpolicy_lines_d$(id)_e$(ie).png"))
+
+            pS = plot(xlabel="Total wealth w", ylabel="s",
+                      title="Dollar share s(w) | e index=$ie, y=mid, d=$(d_val)",
+                      ylims=(0,1), legend=false)
+            plot!(pS, w, pol_s[ie, iy, :, id])
+            savefig(pS, joinpath(outdir, "Spolicy_lines_d$(id)_e$(ie).png"))
+
+            pW = plot(xlabel="Total wealth w", ylabel="w'",
+                      title="Savings policy w'(w) | e index=$ie, y=mid, d=$(d_val)",
+                      legend=false)
+            plot!(pW, w, pol_w[ie, iy, :, id])
+            plot!(pW, w, w, ls=:dash)  # 45-degree
+            savefig(pW, joinpath(outdir, "Wpolicy_lines_d$(id)_e$(ie).png"))
         end
     end
 
-    # 3) Asset policy by a, for a couple of d levels
-    for ie in 1:sz.ne
-        for d_level in [Int(floor(sz.nd / 3)), Int(floor(2 * sz.nd / 3))]
-            plt = plot(xlabel="Foreign assets a", ylabel="Foreign asset policy a'", title="Asset Policy (d index = $d_level)", legend=:topright)
-            plot!(plt, a, apol[ie, iy, iaa0, :, d_level], label="e=$ie")
-            savefig(plt, joinpath(output_dir, "Apolicy_lines_d$(d_level)_e$(ie).png"))
-        end
-    end
+    # ------------------------------------------------------------
+    # 3) Fix (w,d), vary e: policies vs exchange rate
+    # ------------------------------------------------------------
+    w_idx = unique(clamp.([2, floor(Int, sz.nw/2)+1, sz.nw-1], 1, sz.nw))
+    d_idx = unique(clamp.([2, floor(Int, sz.nd/2)+1, sz.nd-1], 1, sz.nd))
 
-    # 4) Fix (a,d), vary e
-    a_idx = [2, Int(floor(sz.na / 2))+1, sz.na-1]
-    d_idx = [2, Int(floor(sz.nd / 2))+1, sz.nd-1]
-    for ia in a_idx, id in d_idx
-        a_val = round(a[ia], digits=2)
-        d_val = round(d[id], digits=2)
+    for iw in w_idx, id in d_idx
+        w_val = round(w[iw], digits=3)
+        d_val = round(d[id], digits=3)
 
-        plotA = plot(e_vals, apol[:, iy, iaa0, ia, id], xlabel="Exchange rate e", ylabel="a'", title="a' vs e (a=$a_val, d=$d_val)", marker=:circle, label=false)
-        plotD = plot(e_vals, dpol[:, iy, iaa0, ia, id], xlabel="Exchange rate e", ylabel="d'", title="d' vs e (a=$a_val, d=$d_val)", marker=:square, label=false)
+        pW = plot(e_vals, pol_w[:, iy, iw, id],
+                  xlabel="Exchange rate e", ylabel="w'",
+                  title="w' vs e | y=mid, w=$(w_val), d=$(d_val)",
+                  marker=:circle, legend=false)
+        savefig(pW, joinpath(outdir, "Wpolicy_byE_w$(iw)_d$(id).png"))
 
-        savefig(plotA, joinpath(output_dir, "Apolicy_byE_a$(ia)_d$(id).png"))
-        savefig(plotD, joinpath(output_dir, "Dpolicy_byE_a$(ia)_d$(id).png"))
+        pD = plot(e_vals, pol_d[:, iy, iw, id],
+                  xlabel="Exchange rate e", ylabel="d'",
+                  title="d' vs e | y=mid, w=$(w_val), d=$(d_val)",
+                  marker=:square, legend=false)
+        savefig(pD, joinpath(outdir, "Dpolicy_byE_w$(iw)_d$(id).png"))
+
+        pS = plot(e_vals, pol_s[:, iy, iw, id],
+                  xlabel="Exchange rate e", ylabel="s",
+                  title="s vs e | y=mid, w=$(w_val), d=$(d_val)",
+                  marker=:diamond, ylims=(0,1), legend=false)
+        savefig(pS, joinpath(outdir, "Spolicy_byE_w$(iw)_d$(id).png"))
+
+        pC = plot(e_vals, pol_c[:, iy, iw, id],
+                  xlabel="Exchange rate e", ylabel="c",
+                  title="c vs e | y=mid, w=$(w_val), d=$(d_val)",
+                  marker=:utriangle, legend=false)
+        savefig(pC, joinpath(outdir, "Cpolicy_byE_w$(iw)_d$(id).png"))
     end
 
     return nothing

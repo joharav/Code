@@ -1,43 +1,49 @@
 # ==========================================================================
 # 4D MODEL: Fill in value function from state grids to policy grids
-# obj: (ne, ny, nw, nd) -> objlong: (ne, ny, npw, npd)
+# obj:     (ne, ny, nw, nd)
+# objlong: (ne, ny, npw, npd)
 # ==========================================================================
 
 function fillin(obj::Array{Float64,4}, g::NamedTuple)
-    objlong = zeros(sz.ne, sz.ny, sz.npw, sz.npd)
-    
-    # Thread over (iwp, idp) combinations
+    objlong = Array{Float64}(undef, sz.ne, sz.ny, sz.npw, sz.npd)
+
+    # Precompute brackets for policy grids on state grids (fast + correct)
+    wL = Vector{Int}(undef, sz.npw)
+    wU = Vector{Int}(undef, sz.npw)
+    ww = Vector{Float64}(undef, sz.npw)
+    @inbounds for iwp in 1:sz.npw
+        l,u,w = brack1d(g.w, g.wp[iwp])
+        wL[iwp] = l; wU[iwp] = u; ww[iwp] = w
+    end
+
+    dL = Vector{Int}(undef, sz.npd)
+    dU = Vector{Int}(undef, sz.npd)
+    wd = Vector{Float64}(undef, sz.npd)
+    @inbounds for idp in 1:sz.npd
+        l,u,w = brack1d(g.d, g.dp[idp])
+        dL[idp] = l; dU[idp] = u; wd[idp] = w
+    end
+
+    # Parallelize over (iwp,idp). Each thread writes disjoint slices => safe.
     Threads.@threads for J in 1:(sz.npw * sz.npd)
         iwp = 1 + (J - 1) % sz.npw
         idp = 1 + (J - 1) ÷ sz.npw
-        
-        # w-weights (state w -> policy wp)
-        w_down = Int(floor((sz.nw - 1.0) * (iwp - 1.0) / (sz.npw - 1)) + 1)
-        w_up = (iwp == sz.npw) ? w_down : min(w_down + 1, sz.nw)
-        den_w = g.w[w_up] - g.w[w_down]
-        ww = (iwp == sz.npw || den_w == 0.0) ? 1.0 : (g.wp[iwp] - g.w[w_down]) / den_w
-        
-        # d-weights (state d -> policy dp)
-        d_down = Int(floor((sz.nd - 1.0) * (idp - 1.0) / (sz.npd - 1)) + 1)
-        d_up = (idp == sz.npd) ? d_down : min(d_down + 1, sz.nd)
-        den_d = g.d[d_up] - g.d[d_down]
-        wd = (idp == sz.npd || den_d == 0.0) ? 1.0 : (g.dp[idp] - g.d[d_down]) / den_d
-        
-        # 2D bilinear over (w, d) for each (ie, iy)
-        for iy in 1:sz.ny
-            for ie in 1:sz.ne
-                v00 = obj[ie, iy, w_down, d_down]
-                v01 = obj[ie, iy, w_down, d_up]
-                v10 = obj[ie, iy, w_up, d_down]
-                v11 = obj[ie, iy, w_up, d_up]
-                
-                v0 = (1 - ww) * v00 + ww * v10
-                v1 = (1 - ww) * v01 + ww * v11
-                
-                objlong[ie, iy, iwp, idp] = (1 - wd) * v0 + wd * v1
-            end
+
+        iwL = wL[iwp]; iwU = wU[iwp]; wwt = ww[iwp]
+        idL = dL[idp]; idU = dU[idp]; dwt = wd[idp]
+
+        @inbounds for iy in 1:sz.ny, ie in 1:sz.ne
+            v00 = obj[ie, iy, iwL, idL]
+            v10 = obj[ie, iy, iwU, idL]
+            v01 = obj[ie, iy, iwL, idU]
+            v11 = obj[ie, iy, iwU, idU]
+
+            v0 = (1.0 - wwt) * v00 + wwt * v10
+            v1 = (1.0 - wwt) * v01 + wwt * v11
+
+            objlong[ie, iy, iwp, idp] = (1.0 - dwt) * v0 + dwt * v1
         end
     end
-    
+
     return objlong
 end

@@ -39,7 +39,7 @@ function maxbellman(queue::Array{Float64,4}, util::Array{Float64,6},
         for iw in 1:sz.nw
             for iy in 1:sz.ny
                 for ie in 1:sz.ne
-                    vstar = -Inf
+                    vstar = -1e10
                     wstar = 1
                     dstar = 1
                     sstar = 1
