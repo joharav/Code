@@ -67,20 +67,14 @@ include("momentgen.jl")
 include("welfare.jl")
 include("diagnostics_plots.jl")
 include("plotgaps.jl")
+include("plotstuff.jl")
+include("printstuff.jl")
+include("plot_distribution_panels.jl")
+include("girf.jl")
+
 
 # ==========================================================================
 # Grid builder (4D always baseline)
 # ==========================================================================
 grid_builder(pea::Vector{Float64}) = makegrids(pea)
 
-# ==========================================================================
-# Smoke test
-# ==========================================================================
-function test_4D_model(; p::Vector{Float64}=ptrue(sz.nop))
-    println("="^60)
-    println("Testing 4D Model")
-    println("="^60)
-    moms = momentgen(p)
-    println("="^60)
-    return moms
-end

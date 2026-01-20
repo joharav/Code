@@ -25,8 +25,8 @@ function welfare_summary(peA::Vector{Float64}, peB::Vector{Float64};
 
     γ = peA[6]  # keep consistent with your parameter vector
 
-    ansA = valfun(peA; grid_builder=gridA)
-    ansB = valfun(peB; grid_builder=gridB)
+    ansA = valfun(peA)
+    ansB = valfun(peB)
 
     μA = compute_ergodic(ansA)   # same shape as ansA.v
     μB = compute_ergodic(ansB)
@@ -42,6 +42,8 @@ function welfare_summary(peA::Vector{Float64}, peB::Vector{Float64};
     cev_BA = cev_from_W(wAA, wBB, γ)        # switch A→B in steady state
     cev_AB = cev_from_W(wBB, wAA, γ)
 
+    acrossSS   = (wBB - wAA) / abs(wAA) * 100
+
     # “keep distribution” effects as CEV objects (not percent change in W)
     cev_keepDist_AB = cev_from_W(wAA, wBA, γ)  # evaluate B under μA
     cev_keepDist_BA = cev_from_W(wBB, wAB, γ)  # evaluate A under μB
@@ -49,5 +51,5 @@ function welfare_summary(peA::Vector{Float64}, peB::Vector{Float64};
     return (wAA=wAA, wBA=wBA, wBB=wBB, wAB=wAB,
             cev_BA=cev_BA, cev_AB=cev_AB,
             cev_keepDist_AB=cev_keepDist_AB,
-            cev_keepDist_BA=cev_keepDist_BA)
+            cev_keepDist_BA=cev_keepDist_BA, acrossSS=acrossSS)
 end

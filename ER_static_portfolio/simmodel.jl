@@ -46,18 +46,20 @@ function simmodel(answ::NamedTuple)
     cdf_wgt = cumsum(cdf_wgt[:, Int(floor(sz.ne * 0.5)) + 1])
     @inbounds cdf_wgt[end] = 1.0
 
-    T, N = sz.nYears, sz.nFirms  # treat these as "periods"
+    T, N = sz.nYears, sz.nFirms
     allw = zeros(T, N)
     alld = zeros(T, N)
     alls = zeros(T, N)
     alle = zeros(T, N)
     ally = zeros(T, N)
     allc = zeros(T, N)
-    adj  = zeros(T, N)
+
+    adj      = zeros(T, N)   # realized adjust indicator (from regime choice)
+    d_adjust = zeros(T, N)   # counterfactual adjust-regime target dA* every period
 
     d_next_vec = answ.noadjust_result.d_next_vec  # next-period d level for each STATE id
 
-    # initial joint state index
+    # initial joint (e,y) state index
     ls = zeros(Int, T+1, N)
     @inbounds for i in 1:N
         ls[1, i] = searchsortedfirst(cdf_wgt, globals.draws[1, i])
@@ -67,7 +69,7 @@ function simmodel(answ::NamedTuple)
     dstart = globals.draws[2, :]
 
     Threads.@threads for i in 1:N
-        # initial continuous states (pick from grids using your random uniforms)
+        # initial continuous states (pick from grids using uniforms)
         iw0 = clamp(Int(floor(sz.nw * wstart[i])) + 1, 1, sz.nw)
         id0 = clamp(Int(floor(sz.nd * dstart[i])) + 1, 1, sz.nd)
 
@@ -86,6 +88,11 @@ function simmodel(answ::NamedTuple)
             iw = nearest_index(wgrid, w_old)
             id = nearest_index(dgrid, d_old)
 
+            # --- NEW: always store adjust-regime target durable (counterfactual) ---
+            idpA = answ.adjust_result.gidx.d[ie, iy, iw, id]   # index on dp grid
+            d_adjust[t, i] = dp[idpA]                          # level on dp grid
+
+            # realized regime choice (from your merged indicator)
             do_adj = answ.adjustment_indicator[ie, iy, iw, id]
             adj[t, i] = do_adj ? 1.0 : 0.0
 
@@ -140,7 +147,7 @@ function simmodel(answ::NamedTuple)
                     s_pr*w_pr*(1.0 + rr_star)*(e_new / e) -
                     trans_cost
 
-            # update continuous states (NO snapping here)
+            # update continuous states
             w_old = w_new
             d_old = d_pr
             ie = ie_new
@@ -148,5 +155,9 @@ function simmodel(answ::NamedTuple)
         end
     end
 
-    return (w=allw, d=alld, s=alls, ex=alle, y=ally, c=allc, adjust_indicator=adj)
+    return (
+        w = allw, d = alld, d_adjust = d_adjust,
+        s = alls, ex = alle, y = ally, c = allc,
+        adjust_indicator = adj
+    )
 end

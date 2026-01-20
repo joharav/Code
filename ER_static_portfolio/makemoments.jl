@@ -45,6 +45,7 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64};
     d_lag  = simdata.d[r1, :]
     ex     = simdata.ex[r0, :]
     adj_r0 = simdata.adjust_indicator[r0, :]
+    d_adjust= simdata.d_adjust[r0, :]
 
     # Consumption (optional; only used for diagnostics)
     c = hasproperty(simdata, :c) ? simdata.c[r0, :] : zeros(size(w))
@@ -149,5 +150,10 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64};
         @printf("  min(a_eff)=%g  min(c)=%g\n", minimum(a_eff), minimum(c))
     end
 
-    return outmoms
+
+    gap_vec, f_x, x_values, h_x, I_d, mu_gap, var_gap, adjustment_ratio =adjustment_gaps_sim(d_lag,d_adjust,adj_r0)
+
+
+
+    return outmoms, x_values, f_x, h_x, gap_vec
 end

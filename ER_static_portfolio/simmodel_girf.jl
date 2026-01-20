@@ -1,163 +1,193 @@
 # ==========================================================================
-# 4D MODEL: Generalized Impulse Response simulation (ER shock at T_shock)
-# State: (e, y, w, d). Policies depend on (ie, iy, w, d).
-# Shock is implemented by overriding the ER index at t == T_shock.
+# 4D MODEL: GIRF simulation (single ER shock at T_shock)
+# Paired innovations come from globals.draws (same as baseline simmodel).
+# State evolves on (e,y,w,d). Policies read off grids via nearest_index.
+#
+# Adds:
+#   d_adjust[t,i] = dp[ idpA ] where idpA is the adjust-regime target index
+#                  evaluated at the (possibly shocked) decision index ie_dec.
+#
+# Options:
+#   shock_mult: multiply current e by this at impact (if shock_to_max=false)
+#   shock_to_max: override e at impact to maximum(exg)
+#   shock_before_decisions: if true, agents condition on shocked e when choosing policies at impact
 # ==========================================================================
 
-@inline clamp_to_grid(x, g::AbstractVector{<:Real}) = min(max(x, first(g)), last(g))
+@inline function draw_next_rowcdf(cdfrow::AbstractVector{<:Real}, u::Real)
+    return searchsortedfirst(cdfrow, u)
+end
 
-function simmodel_girf(answ::NamedTuple, T_shock::Int)
-    grids  = answ.g
-    tmat   = grids.t
-    exg    = grids.ex
-    yg     = grids.y
-    w_grid = grids.w
-    d_grid = grids.d
+@inline function nearest_index(grid::AbstractVector{<:Real}, x::Real)
+    j = searchsortedlast(grid, x)
+    if j < 1
+        return 1
+    elseif j >= length(grid)
+        return length(grid)
+    else
+        return (abs(x - grid[j]) ≤ abs(grid[j+1] - x)) ? j : (j+1)
+    end
+end
 
-    beta    = answ.pea[1]
-    rr      = (1 / beta) - 1
-    rr_star = answ.pea[9]
-    kappa   = answ.pea[11]
+function simmodel_girf(answ::NamedTuple, T_shock::Int;
+                       shock_mult::Float64=1.2,
+                       shock_to_max::Bool=false,
+                       shock_before_decisions::Bool=true)
 
-    nT, nI = sz.nYears, sz.nFirms
+    g     = answ.g
+    tmat  = g.t                 # (ne*ny)×(ne*ny), ROW-stochastic
+    exg   = g.ex
+    yg    = g.y
+    wgrid = g.w                 # STATE grid
+    wp    = g.wp                # POLICY grid
+    dgrid = g.d                 # STATE grid
+    dp    = g.dp                # POLICY grid
+    sgrid = g.s
 
-    # Storage
-    allv = zeros(nT, nI)
-    allw = zeros(nT, nI)
-    alla = zeros(nT, nI)
-    allaa = zeros(nT, nI)
-    alls = zeros(nT, nI)
-    alle = zeros(nT, nI)
-    ally = zeros(nT, nI)
-    alld = zeros(nT, nI)
-    allc = zeros(nT, nI)
-    adjust_indicator = zeros(nT, nI)
+    pea     = answ.pea
+    beta    = pea[1]
+    delta   = pea[2]
+    f       = pea[7]
+    wage    = pea[8]
+    rr_star = pea[9]
+    pd      = pea[10]
+    kappa   = pea[11]
+    tau     = pea[12]
+    h       = pea[13]
+    ft      = pea[17]
+    rr      = (1/beta) - 1
 
-    # Joint (e,y) transitions (rows = current combined state)
+    # CDF rows for joint transition
     phatcdf = cumsum(tmat, dims=2)
     @inbounds phatcdf[:, end] .= 1.0
 
-    # Ergodic init over combined (e,y)
+    # crude initial distribution (same as baseline)
     cdf_wgt = Matrix(tmat')^100
     cdf_wgt = cumsum(cdf_wgt[:, Int(floor(sz.ne * 0.5)) + 1])
     @inbounds cdf_wgt[end] = 1.0
 
-    # Precompute shock ER index
-    shock_val = maximum(exg)
-    shock_ie = argmax(exg)  # index of shock_val
+    T, N = sz.nYears, sz.nFirms
 
-    # Initial combined (e,y) indices
-    ls = zeros(Int, nT + 1, nI)
-    @inbounds for i in 1:nI
-        ls[1, i] = draw_next(cdf_wgt, globals.draws[1, i])
+    # outputs (match baseline simmodel fields + d_adjust)
+    allw = zeros(T, N)
+    alld = zeros(T, N)
+    alls = zeros(T, N)
+    alle = zeros(T, N)
+    ally = zeros(T, N)
+    allc = zeros(T, N)
+    adj  = zeros(T, N)
+    d_adjust = zeros(T, N)
+
+    d_next_vec = answ.noadjust_result.d_next_vec
+
+    # initial joint state index
+    ls = zeros(Int, T+1, N)
+    @inbounds for i in 1:N
+        ls[1, i] = searchsortedfirst(cdf_wgt, globals.draws[1, i])
     end
 
-    # Initial continuous states from draws
+    # initial continuous picks
     wstart = globals.draws[1, :]
     dstart = globals.draws[2, :]
-    sstart = globals.draws[3, :]
 
-    Threads.@threads for i in 1:nI
-        @inbounds begin
-            pickw = min(Int(floor(sz.nw * wstart[i])) + 1, sz.nw)
-            pickd = min(Int(floor(sz.nd * dstart[i])) + 1, sz.nd)
+    emax = maximum(exg)
 
-            pickey = ls[1, i]
-            picke = div(pickey - 1, sz.ny) + 1
-            picky = mod(pickey - 1, sz.ny) + 1
+    Threads.@threads for i in 1:N
+        # initial states from uniform draws
+        iw0 = clamp(Int(floor(sz.nw * wstart[i])) + 1, 1, sz.nw)
+        id0 = clamp(Int(floor(sz.nd * dstart[i])) + 1, 1, sz.nd)
 
-            w_old = w_grid[pickw]
-            d_old = d_grid[pickd]
-            s_old = sstart[i]
+        w_old = wgrid[iw0]
+        d_old = dgrid[id0]
 
-            for t in 1:nT
-                # --------- current (e,y) indices for decision rules ----------
-                ie_t = picke
-                iy_t = picky
+        pickey = ls[1, i]
+        ie = div(pickey - 1, sz.ny) + 1
+        iy = mod(pickey - 1, sz.ny) + 1
 
-                # apply the shock by overriding the ER index AT THIS PERIOD
-                if t == T_shock
-                    ie_t = shock_ie
-                end
+        for t in 1:T
+            e_base = exg[ie]
+            y      = yg[iy]
 
-                e = exg[ie_t]
-                y = yg[iy_t]
+            # shock only changes the level used in this period
+            e = (t == T_shock) ? (shock_to_max ? emax : (e_base * shock_mult)) : e_base
 
-                # Clamp continuous states
-                w_in = clamp_to_grid(w_old, w_grid)
-                d_in = clamp_to_grid(d_old, d_grid)
+            # map continuous state -> indices for DP objects
+            iw = nearest_index(wgrid, w_old)
+            id = nearest_index(dgrid, d_old)
 
-                # Compare regimes using SHOCKED INDEX if t == T_shock
-                vA = interpol_ey(ie_t, iy_t, w_in, d_in, grids, answ.adjust_result.v)
-                vN = interpol_ey(ie_t, iy_t, w_in, d_in, grids, answ.noadjust_result.v)
-                do_adjust = (vA - vN) > sz.toler
+            # decision ER index at impact
+            ie_dec = (t == T_shock && shock_before_decisions) ? nearest_index(exg, e) : ie
 
-                # Policies from winning regime (also using ie_t)
-                if do_adjust
-                    w_pr = interpol_ey(ie_t, iy_t, w_in, d_in, grids, answ.adjust_result.pol.w)
-                    d_pr = interpol_ey(ie_t, iy_t, w_in, d_in, grids, answ.adjust_result.pol.d)
-                    s_pr = interpol_ey(ie_t, iy_t, w_in, d_in, grids, answ.adjust_result.pol.s)
-                    c_pr = interpol_ey(ie_t, iy_t, w_in, d_in, grids, answ.adjust_result.pol.c)
-                    v_pr = vA
-                else
-                    w_pr = interpol_ey(ie_t, iy_t, w_in, d_in, grids, answ.noadjust_result.pol.w)
-                    d_pr = interpol_ey(ie_t, iy_t, w_in, d_in, grids, answ.noadjust_result.pol.d)
-                    s_pr = interpol_ey(ie_t, iy_t, w_in, d_in, grids, answ.noadjust_result.pol.s)
-                    c_pr = interpol_ey(ie_t, iy_t, w_in, d_in, grids, answ.noadjust_result.pol.c)
-                    v_pr = vN
-                end
+            # --- NEW: always store adjust-regime target durable under (possibly shocked) ie_dec ---
+            idpA = answ.adjust_result.gidx.d[ie_dec, iy, iw, id]
+            d_adjust[t, i] = dp[idpA]
 
-                # Derive aa and a at current e
-                aa_pr = (1.0 - s_pr) * w_pr
-                a_pr  = (s_pr * w_pr) / max(e, 1e-10)
+            # realized regime (value-based indicator from your solver wrapper)
+            do_adj = answ.adjustment_indicator[ie_dec, iy, iw, id]
+            adj[t, i] = do_adj ? 1.0 : 0.0
 
-                # Record
-                adjust_indicator[t, i] = (do_adjust && abs(d_pr - d_in) > sz.toler) ? 1.0 : 0.0
-                allv[t, i]  = v_pr
-                allw[t, i]  = w_pr
-                alla[t, i]  = a_pr
-                allaa[t, i] = aa_pr
-                alls[t, i]  = s_pr
-                alle[t, i]  = e
-                ally[t, i]  = y
-                alld[t, i]  = d_pr
-                allc[t, i]  = c_pr
+            if do_adj
+                iwp = answ.adjust_result.gidx.w[ie_dec, iy, iw, id]
+                idp = answ.adjust_result.gidx.d[ie_dec, iy, iw, id]
+                is  = answ.adjust_result.gidx.s[ie_dec, iy, iw, id]
 
-                # --------- draw next (e,y) combined state ----------
-                row = ls[t, i]
-                u = globals.draws[t + 1, i]
-                nxt = draw_next(view(phatcdf, row, :), u)
-                ls[t + 1, i] = nxt
+                w_pr = wp[iwp]
+                d_pr = dp[idp]
+                s_pr = sgrid[is]
 
-                picke_new = div(nxt - 1, sz.ny) + 1
-                picky_new = mod(nxt - 1, sz.ny) + 1
+                labor_income     = y*wage*h*(1.0 - tau)
+                sale_value       = e*pd*(1.0 - f)*(1.0 - delta)*dgrid[id]
+                durable_purchase = e*pd*d_pr
+                time_cost        = wage*h*ft*y
+                c = labor_income + wgrid[iw] + sale_value - durable_purchase - w_pr - time_cost
+            else
+                iwp = answ.noadjust_result.gidx.w[ie_dec, iy, iw, id]
+                is  = answ.noadjust_result.gidx.s[ie_dec, iy, iw, id]
 
-                # next e index is the drawn one (no forced shock at t+1 unless you want it)
-                ie_tp1 = picke_new
-                e_new = exg[ie_tp1]
+                w_pr = wp[iwp]
+                s_pr = sgrid[is]
+                d_pr = d_next_vec[id]
 
-                # Wealth evolution uses e_new / e_current, where e_current is shocked if t==T_shock
-                trans_cost = kappa * s_pr * w_pr
-                w_new = (1.0 - s_pr) * w_pr * (1.0 + rr) +
-                        s_pr * w_pr * (1.0 + rr_star) * (e_new / max(e, 1e-12)) -
-                        trans_cost
-                w_new = clamp_to_grid(w_new, w_grid)
-
-                # Update states (note: picke itself follows the Markov draw; shock only overrides ie_t inside period)
-                picke = picke_new
-                picky = picky_new
-                w_old = w_new
-                d_old = d_pr
-                s_old = s_pr
+                labor_income = y*wage*h*(1.0 - tau)
+                c = labor_income + wgrid[iw] - w_pr
             end
+
+            s_pr = clamp(s_pr, 0.0, 1.0)
+
+            # record
+            allw[t, i] = w_pr
+            alld[t, i] = d_pr
+            alls[t, i] = s_pr
+            alle[t, i] = e
+            ally[t, i] = y
+            allc[t, i] = c
+
+            # next (e,y)
+            row = ls[t, i]
+            u   = globals.draws[t+1, i]
+            nxt = draw_next_rowcdf(view(phatcdf, row, :), u)
+            ls[t+1, i] = nxt
+
+            ie_new = div(nxt - 1, sz.ny) + 1
+            iy_new = mod(nxt - 1, sz.ny) + 1
+            e_new  = exg[ie_new]
+
+            # wealth transition uses shocked e in denominator at impact
+            trans_cost = kappa * s_pr * w_pr
+            w_new = (1.0 - s_pr)*w_pr*(1.0 + rr) +
+                    s_pr*w_pr*(1.0 + rr_star)*(e_new / max(e, 1e-12)) -
+                    trans_cost
+
+            # update continuous + Markov indices
+            w_old = w_new
+            d_old = d_pr
+            ie    = ie_new
+            iy    = iy_new
         end
     end
 
     return (
-        v = allv, w = allw, d = alld,
-        a = alla, aa = allaa, s = alls,
-        ex = alle, y = ally, c = allc,
-        adjust_indicator = adjust_indicator,
+        w = allw, d = alld, d_adjust = d_adjust,
+        s = alls, ex = alle, y = ally, c = allc,
+        adjust_indicator = adj
     )
 end
-

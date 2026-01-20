@@ -85,9 +85,9 @@ Random.seed!(seed)
 # Parameter bounds - UPDATED for 4D model
 # Order: [nu, F_d, kappa, chi, F_t]
 x_start = zeros(sz.noestp)
-x_start[1] = 0.55       # nu (non-durable share)
-x_start[2] = 1.0        # F_d (durable fixed cost) - INCREASED
-x_start[3] = 0.15       # kappa (dollar transaction cost) - DECREASED
+x_start[1] = 0.58       # nu (non-durable share)
+x_start[2] = 0.4        # F_d (durable fixed cost) - INCREASED
+x_start[3] = 0.20       # kappa (dollar transaction cost) - DECREASED
 x_start[4] = 0.50       # chi (maintenance effectiveness)
 x_start[5] = 0.30       # F_t (time cost)
 
@@ -98,10 +98,10 @@ ub = zeros(sz.noestp)
 # - F_d needs to be MUCH higher to reduce adjustment rate
 # - kappa needs to be LOWER to increase dollar share
 lb[1] = 0.40;  ub[1] = 0.70   # nu
-lb[2] = 0.50;  ub[2] = 5.00   # F_d - WIDER, HIGHER range
+lb[2] = 0.3;  ub[2] = 1.00   # F_d - WIDER, HIGHER range
 lb[3] = 0.01;  ub[3] = 0.50   # kappa - LOWER range
-lb[4] = 0.30;  ub[4] = 0.70   # chi
-lb[5] = 0.10;  ub[5] = 0.60   # F_t
+lb[4] = 0.30;  ub[4] = 0.80   # chi
+lb[5] = 0.10;  ub[5] = 0.80   # F_t
 
 println("\nParameter bounds:")
 pnames = ["nu", "F_d", "kappa", "chi", "F_t"]

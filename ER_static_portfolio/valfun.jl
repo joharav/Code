@@ -19,14 +19,14 @@ Improvements vs your version:
 - Optional transition-matrix sanity checks (row-stochastic for simulation draw code).
 - Cleaner diagnostics and safer “share where adjust lower” computation.
 """
-function valfun(pea::Vector{Float64})
+function valfun(pea::Vector{Float64}; grid_builder = makegrids)
     verbose = settings.verbose
 
     verbose && println("\n=== Solving ADJUSTMENT regime ===")
-    adj = valfun_adjust(pea)
+    adj = valfun_adjust(pea; grid_builder = makegrids)
 
     verbose && println("\n=== Solving NO-ADJUSTMENT regime ===")
-    nadj = valfun_noadjust(pea)
+    nadj = valfun_noadjust(pea; grid_builder = makegrids)
 
     # --- basic consistency checks (cheap, fail-fast) ---
     @assert size(adj.v) == size(nadj.v) "valfun: adj.v and nadj.v sizes differ"
@@ -123,6 +123,10 @@ function valfun(pea::Vector{Float64})
 
         println("Mean diff: ", vdiff_mean, " | Min: ", vdiff_min, " | Max: ", vdiff_max)
         println("Share where adjust gives lower value: ", nneg / n)
+        plotstuff4D(v,pol.w,pol.d,pol.s,pol.c,adj.g) 
+
+   
+
     end
 
     # --- return bundle ---
@@ -138,4 +142,8 @@ function valfun(pea::Vector{Float64})
         adjustment_indicator = choose_adj,
         pea = pea
     )
+
+
+
+
 end

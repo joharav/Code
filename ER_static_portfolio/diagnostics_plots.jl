@@ -157,46 +157,66 @@ end
 # -----------------------------------------------------------------------------
 # PLOT AGGREGATES (consistent with simdata: a, aa, d, ex)
 # -----------------------------------------------------------------------------
+# ---------- helpers ----------
+@inline function _derive_a_aa(w::AbstractArray, s::AbstractArray, e::AbstractArray; eps=1e-12)
+    # aa in pesos, a in dollars
+    aa = (1 .- s) .* w
+    a  = (s .* w) ./ max.(e, eps)
+    return a, aa
+end
+
+# -----------------------------------------------------------------------------
+# PLOT AGGREGATES (compatible with simdata: w,d,s,ex,y,c,adjust_indicator)
+# -----------------------------------------------------------------------------
 function plot_aggregates(simdata; tailT::Int=500)
-    T0 = max(sz.nYears - tailT + 1, 1)
+    T = size(simdata.w, 1)
+    N = size(simdata.w, 2)
+    T0 = max(T - tailT + 1, 1)
 
-    a  = simdata.a[T0:sz.nYears, :]
-    aa = simdata.aa[T0:sz.nYears, :]
-    d  = simdata.d[T0:sz.nYears, :]
-    ex = simdata.ex[T0:sz.nYears, :]
+    w  = simdata.w[T0:T, :]
+    d  = simdata.d[T0:T, :]
+    s  = simdata.s[T0:T, :]
+    ex = simdata.ex[T0:T, :]
 
-    a_eff = aa .+ ex .* a
+    a, aa = _derive_a_aa(w, s, ex)
+    a_eff = aa .+ ex .* a   # equals w up to numerical error; still useful as a check
 
+    agg_w    = vec(mean(w,     dims=2))
     agg_a    = vec(mean(a,     dims=2))
     agg_aa   = vec(mean(aa,    dims=2))
     agg_aeff = vec(mean(a_eff, dims=2))
     agg_d    = vec(mean(d,     dims=2))
     ex_bar   = vec(mean(ex,    dims=2))
-    time     = 1:length(agg_a)
+    time     = 1:length(agg_w)
 
     outdir = "Output/Aggregates"
     isdir(outdir) || mkpath(outdir)
 
-    savefig(plot(time, agg_a,    xlabel="Time", ylabel="Mean a",     title="Mean foreign assets", legend=false),
+    savefig(plot(time, agg_w,    xlabel="Time", ylabel="Mean w",     title="Mean total liquid wealth (w)", legend=false),
+            joinpath(outdir, "Aggregate_w.png"))
+    savefig(plot(time, agg_a,    xlabel="Time", ylabel="Mean a",     title="Mean foreign assets (a)", legend=false),
             joinpath(outdir, "Aggregate_a.png"))
-    savefig(plot(time, agg_aa,   xlabel="Time", ylabel="Mean aa",    title="Mean local assets", legend=false),
+    savefig(plot(time, agg_aa,   xlabel="Time", ylabel="Mean aa",    title="Mean local assets (aa)", legend=false),
             joinpath(outdir, "Aggregate_aa.png"))
-    savefig(plot(time, agg_aeff, xlabel="Time", ylabel="Mean a_eff", title="Mean effective assets", legend=false),
+    savefig(plot(time, agg_aeff, xlabel="Time", ylabel="Mean a_eff", title="Mean effective assets (aa + e*a)", legend=false),
             joinpath(outdir, "Aggregate_a_eff.png"))
     savefig(plot(time, agg_d,    xlabel="Time", ylabel="Mean d",     title="Mean durables", legend=false),
             joinpath(outdir, "Aggregate_Durable_Stock.png"))
     savefig(plot(time, ex_bar,   xlabel="Time", ylabel="Exchange rate", title="Exchange rate over time", legend=false),
             joinpath(outdir, "Exchange_Rate.png"))
 
-    savefig(histogram(vec(a),  bins=50, normalize=true, xlabel="a",  ylabel="Density", title="Foreign assets", legend=false),
+    savefig(histogram(vec(w),  bins=50, normalize=true, xlabel="w",  ylabel="Density", title="Total liquid wealth (w)", legend=false),
+            joinpath(outdir, "Wealth_w_distr.png"))
+    savefig(histogram(vec(a),  bins=50, normalize=true, xlabel="a",  ylabel="Density", title="Foreign assets (a)", legend=false),
             joinpath(outdir, "Assets_a_distr.png"))
-    savefig(histogram(vec(aa), bins=50, normalize=true, xlabel="aa", ylabel="Density", title="Local assets", legend=false),
+    savefig(histogram(vec(aa), bins=50, normalize=true, xlabel="aa", ylabel="Density", title="Local assets (aa)", legend=false),
             joinpath(outdir, "Assets_aa_distr.png"))
     savefig(histogram(vec(d),  bins=50, normalize=true, xlabel="d",  ylabel="Density", title="Durables", legend=false),
             joinpath(outdir, "Durables_distr.png"))
 
     return nothing
 end
+
 
 
 # -----------------------------------------------------------------------------
@@ -239,13 +259,15 @@ end
 # Avoid huge findall on full matrix; use masks and vec directly.
 # -----------------------------------------------------------------------------
 function plot_simulated_d_and_a_by_state(simdata)
-    r0 = (sz.burnin - 2):sz.nYears
+    r0 = (sz.burnin - 2):size(simdata.w,1)
 
+    w  = simdata.w[r0, :]
     d  = simdata.d[r0, :]
-    a  = simdata.a[r0, :]
-    aa = simdata.aa[r0, :]
+    s  = simdata.s[r0, :]
     e  = simdata.ex[r0, :]
     y  = simdata.y[r0, :]
+
+    a, aa = _derive_a_aa(w, s, e)
 
     outdir = "Output/Distr_State"
     isdir(outdir) || mkpath(outdir)
@@ -262,13 +284,13 @@ function plot_simulated_d_and_a_by_state(simdata)
 
         isempty(d_vals) && continue
 
-        savefig(histogram(d_vals,  bins=50, normalize=true,
+        savefig(histogram(d_vals, bins=50, normalize=true,
                           xlabel="Durables", ylabel="Density",
                           title="Durables | e=$(round(ei,digits=3)), y=$(round(yi,digits=3))",
                           legend=false),
                 joinpath(outdir, "d_dist_e$(round(ei,digits=3))_y$(round(yi,digits=3)).png"))
 
-        savefig(histogram(a_vals,  bins=50, normalize=true,
+        savefig(histogram(a_vals, bins=50, normalize=true,
                           xlabel="Foreign assets a", ylabel="Density",
                           title="a | e=$(round(ei,digits=3)), y=$(round(yi,digits=3))",
                           legend=false),
@@ -280,9 +302,9 @@ function plot_simulated_d_and_a_by_state(simdata)
                           legend=false),
                 joinpath(outdir, "aa_dist_e$(round(ei,digits=3))_y$(round(yi,digits=3)).png"))
     end
-
     return nothing
 end
+
 
 
 # -----------------------------------------------------------------------------
@@ -394,38 +416,3 @@ function decision_rules(answ)
 end
 
 
-# -----------------------------------------------------------------------------
-# OPTIONAL: build d_star panel from sim states using adjust policy
-# Use this before calling adjustment_gaps_sim.
-#
-# You must have interpol_ey(picke,picky,w,d,grids, obj) available.
-# -----------------------------------------------------------------------------
-function compute_d_star_panel(simdata, answ)
-    r0 = (sz.burnin - 2):sz.nYears
-
-    e = simdata.ex[r0, :]
-    y = simdata.y[r0, :]
-    w = simdata.w[r0, :]
-    d = simdata.d[r0, :]
-
-    d_star = similar(d)
-
-    exg = answ.g.ex
-    yg  = answ.g.y
-
-    Threads.@threads for j in 1:size(d,2)
-        for t in 1:size(d,1)
-            # map realized (e,y) levels to nearest indices
-            ie = argmin(abs.(exg .- e[t,j]))
-            iy = argmin(abs.(yg  .- y[t,j]))
-
-            w_in = clamp_to_grid(w[t,j], answ.g.w)
-            d_in = clamp_to_grid(d[t,j], answ.g.d)
-
-            # target is adjust-regime durable policy at current state
-            d_star[t,j] = interpol_ey(ie, iy, w_in, d_in, answ.g, answ.adjust_result.pol.d)
-        end
-    end
-
-    return d_star
-end
