@@ -8,6 +8,40 @@ using Printf
 _fin(v) = v[isfinite.(v)]
 _pos(v) = v[isfinite.(v) .& (v .> 0.0)]   # finite AND strictly positive
 
+function completed_spells(adj::AbstractMatrix, per_year::Int)
+    T, N = size(adj)
+    all_spells = Float64[] # To store the length of every finished spell
+    
+    for j in 1:N
+        current_spell_length = 0
+        # We start counting from the first adjustment to avoid 
+        # the "left-censoring" problem (we don't know when the first spell started)
+        first_adj_found = false 
+        
+        for t in 1:T
+            if adj[t, j] > 0
+                if first_adj_found
+                    # Record the finished spell
+                    push!(all_spells, current_spell_length)
+                end
+                current_spell_length = 0
+                first_adj_found = true
+            else
+                if first_adj_found
+                    current_spell_length += 1
+                end
+            end
+        end
+    end
+    
+    # Convert from quarters (or periods) to years
+    if isempty(all_spells)
+        return 0.0
+    else
+        return mean(all_spells) / per_year
+    end
+end
+
 # Running time-since-last-adjustment (in periods) for each (t,i)
 function running_spells(adj::AbstractMatrix)
     T, N = size(adj)
@@ -59,9 +93,11 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64};
     # Moment 1: Duration (years since last adjustment)
     # =========================================================================
     spells_full = running_spells(simdata.adjust_indicator)
-    t_survey = last(r0)
+    t_survey = last(r0) # last(r0)
     duration_years_cs = spells_full[t_survey, :] ./ per_year
     m1_duration_mean = mean(_fin(vec(duration_years_cs)))
+
+    #m1_completed_duration = completed_spells(simdata.adjust_indicator[r0, :], per_year)
 
     # =========================================================================
     # Moment 4: Adjustment rate (annualized)
@@ -125,7 +161,7 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64};
         m3_dwealth_var,     # 3: dwealth_var
         m4_adj_rate,        # 4: adj_rate (annualized)
         m5_dollar_share,    # 5: dollar_share
-        m6_dollar_vol,      # 6: dollar_vol
+        m6_dollar_vol      # 6: dollar_vol
     ]
 
     if any(.!isfinite.(outmoms))

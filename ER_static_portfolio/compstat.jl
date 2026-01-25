@@ -1,19 +1,23 @@
-# ==========================================================================
-# 4D MODEL: Comparative statics
-# ==========================================================================
+# =======================
+# Comparative statics with CLEAN curves (no PARAM_* redefinition + no @L_str)
+# =======================
 
-using Random, Distributions, LinearAlgebra, Plots, Statistics, Printf
+using Random, Distributions, LinearAlgebra, Statistics, Printf
 using StatsBase, Polynomials
+using Plots
+gr()
 
 include("durable_mod.jl")
 include("collectfunctions.jl")
 include("ptrue.jl")
 
-using Main.sz, Main.settings, Main.globals, Main.dtp
+using Main.sz, Main.settings
 
 commence = time()
 
-# Moment names (must match makemoments output order)
+# -----------------------
+# Moments
+# -----------------------
 momname = [
     "duration_mean",
     "dwealth_mean",
@@ -22,17 +26,11 @@ momname = [
     "dollar_share",
     "dollar_vol"
 ]
-
-mom_indices = [1, 2, 3, 4, 5, 6]
-
-# Parameter names
-pname = PARAM_NAMES
-
-# LaTeX labels
-param_labels = PARAM_LABELS
+mom_indices = 1:length(momname)
+nnmom = length(momname)
 
 mom_labels = Dict(
-    "duration_mean" => "Duration (years)",
+    "duration_mean" => "Duration",
     "dwealth_mean"  => "Durable/Wealth Ratio",
     "dwealth_var"   => "Durable/Wealth Var",
     "adj_rate"      => "Adjustment Rate",
@@ -40,140 +38,214 @@ mom_labels = Dict(
     "dollar_vol"    => "Dollar Share Var"
 )
 
-# Baseline parameters
-pea = ptrue(sz.nop)
+# -----------------------
+# Parameters: plain strings (avoid LaTeXStrings' @L_str macro)
+# -----------------------
+param_labels = Dict(
+    "beta"    => raw"$\beta$",
+    "delta"   => raw"$\delta$",
+    "rho_e"   => raw"$\rho_e$",
+    "sigma_e" => raw"$\sigma_e$",
+    "nu"      => raw"$\nu$",
+    "gamma"   => raw"$\gamma$",
+    "Fd"      => raw"$F^d$",
+    "wage"    => raw"$w$",
+    "r_for"   => raw"$r^{\$}$",
+    "pd"      => raw"$p_d$",
+    "kappa"   => raw"$\kappa$",
+    "tau"     => raw"$\tau$",
+    "h"       => raw"$h$",
+    "rho_y"   => raw"$\rho_y$",
+    "sigma_y" => raw"$\sigma_y$",
+    "chi"     => raw"$\chi$",
+    "Ft"      => raw"$f_t$"
+)
 
-nvary = 8
-nparam = sz.nop
-nnmom = length(momname)
+# -----------------------
+# Map NAME -> index in pea
+# (edit once if your ptrue ordering differs)
+# -----------------------
+param_index = Dict(
+    "beta"    => 1,
+    "delta"   => 2,
+    "rho_e"   => 3,
+    "sigma_e" => 4,
+    "nu"      => 5,
+    "gamma"   => 6,
+    "Fd"      => 7,
+    "wage"    => 8,
+    "r_for"   => 9,
+    "pd"      => 10,
+    "kappa"   => 11,
+    "tau"     => 12,
+    "h"       => 13,
+    "rho_y"   => 14,
+    "sigma_y" => 15,
+    "chi"     => 16,
+    "Ft"      => 17
+)
 
-# Which parameters to vary
-varying_params = [2, 4, 5, 7, 9, 11, 16, 17]  # delta, sigma_e, nu, F_d, r_f, kappa, chi, F_t
+# which to vary (by NAME)
+varying_param_names = ["delta", "sigma_e", "nu", "Fd", "r_for", "kappa", "chi", "Ft"]
 
-# Parameter ranges
-maxmin = fill(NaN, nparam, 2)
-maxmin[1, :] = [0.95, 0.99]   # beta
-maxmin[2, :] = [0.01, 0.10]   # delta
-maxmin[3, :] = [0.70, 0.95]   # rho_e
-maxmin[4, :] = [0.05, 0.30]   # sigma_e
-maxmin[5, :] = [0.40, 0.70]   # nu
-maxmin[6, :] = [1.0, 4.0]     # gamma
-maxmin[7, :] = [0.5, 5.0]     # F_d - WIDER range
-maxmin[8, :] = [0.5, 2.0]     # wage
-maxmin[9, :] = [0.0, 0.05]    # r_foreign
-maxmin[10,:] = [0.5, 2.0]     # p_d
-maxmin[11,:] = [0.01, 0.5]    # kappa - NARROWER, LOWER range
-maxmin[12,:] = [0.0, 0.4]     # tau
-maxmin[13,:] = [0.5, 1.5]     # h
-maxmin[14,:] = [0.7, 0.95]    # rho_y
-maxmin[15,:] = [0.05, 0.30]   # sigma_y
-maxmin[16,:] = [0.2, 0.8]     # chi
-maxmin[17,:] = [0.1, 0.6]     # F_t
+# -----------------------
+# Ranges (by NAME)
+# -----------------------
+param_range = Dict(
+    "beta"    => (0.95, 0.99),
+    "delta"   => (0.01, 0.10),
+    "rho_e"   => (0.70, 0.95),
+    "sigma_e" => (0.05, 0.30),
+    "nu"      => (0.40, 0.70),
+    "gamma"   => (1.0, 4.0),
+    "Fd"      => (0.5, 5.0),
+    "wage"    => (0.5, 2.0),
+    "r_for"   => (0.0, 0.05),
+    "pd"      => (0.5, 2.0),
+    "kappa"   => (0.01, 0.5),
+    "tau"     => (0.0, 0.4),
+    "h"       => (0.5, 1.5),
+    "rho_y"   => (0.7, 0.95),
+    "sigma_y" => (0.05, 0.30),
+    "chi"     => (0.2, 0.8),
+    "Ft"      => (0.1, 0.6)
+)
 
+# sanity checks
+for nm in varying_param_names
+    @assert haskey(param_labels, nm) "Missing label for '$nm' in param_labels"
+    @assert haskey(param_index, nm)  "Missing index for '$nm' in param_index"
+    @assert haskey(param_range, nm)  "Missing range for '$nm' in param_range"
+end
+
+# -----------------------
 # Storage
-allparams = zeros(nvary, nparam)
-allmoms = zeros(nvary, nparam, nnmom)
+# -----------------------
+nvary  = 8
+nparam = sz.nop
 
-isdir("Output/Comparative") || mkpath("Output/Comparative")
+allparams = fill(NaN, nvary, nparam)
+allmoms   = fill(NaN, nvary, nparam, nnmom)
 
+outdir = "Output/Comparative"
+isdir(outdir) || mkpath(outdir)
+
+# -----------------------
 # Main loop
-for iparam in varying_params
+# -----------------------
+for nm in varying_param_names
+    iparam = param_index[nm]
+    lo, hi = param_range[nm]
+
     for ivary in 1:nvary
-        println("Parameter $(pname[iparam]), iteration $ivary/$nvary")
-        
-        # Reset to baseline
+        println("Parameter $nm (idx=$iparam), iteration $ivary/$nvary")
+
         ppp = ptrue(sz.nop)
-        
-        # New value along range
-        lo, hi = maxmin[iparam, 1], maxmin[iparam, 2]
         glop = lo + (hi - lo) * (ivary - 1) / (nvary - 1)
         ppp[iparam] = glop
-        
-        # Compute moments
+
         try
             moms_full = momentgen(ppp)
-            moms_sel = moms_full[mom_indices]
-            
+            moms_sel  = moms_full[mom_indices]
+
             allparams[ivary, iparam] = glop
             allmoms[ivary, iparam, :] .= moms_sel
         catch e
-            @warn "Failed at param=$(pname[iparam]), val=$glop" exception=e
+            @warn "Failed at param=$nm (idx=$iparam), val=$glop" exception=e
             allparams[ivary, iparam] = glop
             allmoms[ivary, iparam, :] .= NaN
         end
     end
 end
 
+# -----------------------
+# Smooth helper
+# -----------------------
 degree = 2
+function poly_smooth(x::AbstractVector, y::AbstractVector; degree::Int=2, ngrid::Int=200)
+    valid = isfinite.(x) .& isfinite.(y)
+    x = x[valid]; y = y[valid]
+    length(x) < 3 && return nothing
+    deg = min(degree, length(x)-1)
+    fit = Polynomials.fit(x, y, deg)
+    xs  = range(minimum(x), stop=maximum(x), length=ngrid)
+    ys  = fit.(xs)
+    return xs, ys
+end
 
+# -----------------------
 # Plotting
-for iparam in varying_params
+# -----------------------
+for nm in varying_param_names
+    iparam = param_index[nm]
+    x_data = allparams[:, iparam]
+
     for imom in 1:nnmom
-        pname_i = pname[iparam]
-        mom_i = momname[imom]
-        
-        x_data = allparams[:, iparam]
+        mom_i  = momname[imom]
         y_data = allmoms[:, iparam, imom]
-        
-        # Skip if all NaN
-        if all(isnan.(y_data))
-            continue
-        end
-        
-        # Filter valid data
-        valid = .!isnan.(y_data)
+
+        valid = isfinite.(x_data) .& isfinite.(y_data)
+        count(valid) < 3 && continue
         x_valid = x_data[valid]
         y_valid = y_data[valid]
-        
-        if length(x_valid) < 3
-            continue
-        end
-        
-        # Raw scatter
-        p_raw = scatter(x_valid, y_valid,
+
+        # RAW
+        p_raw = scatter(
+            x_valid, y_valid,
             legend=false,
-            xlabel=pname_i,
-            ylabel=mom_i,
-            title="$pname_i vs $mom_i"
+            xlabel=param_labels[nm],
+            ylabel=mom_labels[mom_i],
+            title="$(param_labels[nm]) vs $(mom_labels[mom_i])"
         )
-        savefig(p_raw, "Output/Comparative/$(pname_i)_$(mom_i)_raw.png")
-        
-        # Polynomial fit
-        try
-            poly_fit = Polynomials.fit(x_valid, y_valid, min(degree, length(x_valid)-1))
-            x_smooth = range(minimum(x_valid), stop=maximum(x_valid), length=100)
-            y_smooth = poly_fit.(x_smooth)
-            
-            p_smooth = scatter(x_valid, y_valid, label="Data")
-            plot!(p_smooth, x_smooth, y_smooth, 
-                linewidth=2, label="Fit",
-                xlabel=param_labels[pname_i],
-                ylabel=mom_labels[mom_i],
-                title="Effect of $(param_labels[pname_i])"
-            )
-            savefig(p_smooth, "Output/Comparative/$(pname_i)_$(mom_i)_smooth.png")
-        catch
-        end
+        savefig(p_raw, joinpath(outdir, "$(nm)_$(mom_i)_raw.pdf"))
+
+        # Smooth fit
+        sm = poly_smooth(x_valid, y_valid; degree=degree, ngrid=200)
+        sm === nothing && continue
+        xs, ys = sm
+
+        p_smooth = scatter(
+            x_valid, y_valid,
+            label="Data",
+            xlabel=param_labels[nm],
+            ylabel=mom_labels[mom_i],
+            title="Effect of $(param_labels[nm])"
+        )
+        plot!(p_smooth, xs, ys, linewidth=2, label="Fit")
+        savefig(p_smooth, joinpath(outdir, "$(nm)_$(mom_i)_smooth.pdf"))
+
+        # CLEAN curve only
+        p_clean = plot(
+            xs, ys,
+            linewidth=2,
+            legend=false,
+            xlabel=param_labels[nm],
+            ylabel=mom_labels[mom_i],
+            title="Effect of $(param_labels[nm])"
+        )
+        savefig(p_clean, joinpath(outdir, "clean_$(nm)_$(mom_i).pdf"))
     end
 end
 
-# Summary table
+# -----------------------
+# Summary
+# -----------------------
 println("\n" * "="^60)
 println("Comparative Statics Summary")
 println("="^60)
 
-for iparam in varying_params
-    println("\n$(pname[iparam]):")
+for nm in varying_param_names
+    iparam = param_index[nm]
+    println("\n$nm (idx=$iparam):")
     for imom in 1:nnmom
         y = allmoms[:, iparam, imom]
-        valid = .!isnan.(y)
+        valid = isfinite.(y)
         if any(valid)
             y_range = maximum(y[valid]) - minimum(y[valid])
-            y_mean = mean(y[valid])
+            y_mean  = mean(y[valid])
             println("  $(momname[imom]): range=$(round(y_range, digits=4)), mean=$(round(y_mean, digits=4))")
         end
     end
 end
 
-arret = time()
-println("\nTotal time: $(round(arret - commence, digits=1)) seconds")
+println("\nTotal time: $(round(time() - commence, digits=1)) seconds")

@@ -4,11 +4,11 @@ using StatsBase: Weights, mean, var
 # Align x and weights, drop missing/nonfinite
 function aligned_xw(xu::AbstractVector, w::Vector{Float64})
     mask = [!ismissing(xu[i]) && isfinite(Float64(xu[i])) for i in eachindex(xu)]
-    x = Float64.(xu[mask])
-    ww = w[mask]
-    ww ./= sum(ww)                 # normalize within the valid sample
+    x  = Float64.(xu[mask])
+    ww = w[mask]          # DO NOT renormalize here
     return x, ww, mask
 end
+
 
 "Weighted mean IF: φ_i = x_i - μ_w  (NOT multiplied by weights)"
 function IF_wmean(xu::AbstractVector, w::Vector{Float64})
@@ -23,21 +23,21 @@ end
 function IF_wvar(xu::AbstractVector, w::Vector{Float64})
     x, ww, mask = aligned_xw(xu, w)
     μ  = mean(x, Weights(ww))
-    σ2 = sum(ww .* (x .- μ).^2)
+    σ2 = sum(ww .* (x .- μ).^2) / sum(ww)   # FIX
     out = zeros(Float64, length(xu))
     out[mask] = (x .- μ).^2 .- σ2
     return out
 end
 
-"Share IF: θ = E_w[1{x>0}]"
 function IF_wshare_pos(xu::AbstractVector, w::Vector{Float64})
     x, ww, mask = aligned_xw(xu, w)
     ind = x .> 0.0
-    θ = sum(ww .* ind)
+    θ = sum(ww .* ind) / sum(ww)            # FIX
     out = zeros(Float64, length(xu))
     out[mask] = Float64.(ind) .- θ
     return out
 end
+
 using LinearAlgebra
 using DataFrames, CSV
 using DelimitedFiles: writedlm
@@ -46,6 +46,38 @@ include("durable_mod.jl")
 using Main.kst
 
 df = CSV.read(joinpath(kst.DATA_DIR, "EFHU_moments_data_weighted.csv"), DataFrame)
+
+
+
+# ---------- read data moment vector ----------
+mrow_full = CSV.read(joinpath(kst.DATA_DIR, "moments_vector_data_weighted.csv"), DataFrame)
+datamom_full = vec(Matrix(mrow_full)[1, :])  # length 10 in original order
+
+# Original 10-moment order (for reference):
+# 1: duration_mean
+# 2: usd_particip_mean
+# 3: dwealth_mean
+# 4: dwealth_var
+# 5: usd_particip_var
+# 6: adj_rate
+# 7: owner_share
+# 8: usd_share_mean
+# 9: usd_heavy_share
+# 10: dwealth_cond_usd
+
+# We now only want 5 moments: 1,3,4,6,7
+const pick6 = [1, 3, 4, 6, 8, 5]
+datamom = datamom_full[pick6]
+
+mom_names = [
+    "duration_mean",   # m1
+    "dwealth_mean",    # m3
+    "dwealth_var",     # m4
+    "adj_rate",        # m6
+    "dollar_share",      # m7
+    "dollar_vol"        # m8
+]
+
 
 N = nrow(df)
 w_raw = Float64.(df.pesoEFHU)
@@ -73,22 +105,9 @@ IF = hcat(IF_m1, IF_m2, IF_m3, IF_m4, IF_m5, IF_m6)
 W = Diagonal(w)
 Σ = Symmetric((IF' * W * IF + (IF' * W * IF)') / 2)
 
-mom_names = [
-    "duration_mean",
-    "dwealth_mean",
-    "dwealth_var",
-    "adj_rate",
-    "dollar_share",
-    "dollar_vol"
-]
 
-# Read data moment vector in same order you use in estimation (length 6)
-mrow = CSV.read(joinpath(kst.DATA_DIR, "moments_vector_data_weighted.csv"), DataFrame)
-datamom_full = vec(Matrix(mrow)[1, :])
 
-# IMPORTANT: your pick must match the file order.
-# If that file already IS the 6-moment vector, just:
-datamom = datamom_full[1:6]
+
 
 # Save
 isdir(kst.DATA_DIR) || mkpath(kst.DATA_DIR)

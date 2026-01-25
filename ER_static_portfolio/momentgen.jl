@@ -36,7 +36,6 @@ function momentgen(p::Vector{Float64}; grid_builder = makegrids)
         plot_aggregates(simdata)
         plot_simulated_d_and_a_by_state(simdata)
         d_adjust_time_size(simdata, p)
-        compute_d_star_panel(simdata, answ)
         plot_distribution_panels(simdata, p)
         printstuff(answ)
         plotgaps(x_values::Vector{Float64}, f_x::Vector{Float64}, h_x::Vector{Float64}, gap_vec::Vector{Float64})
@@ -119,10 +118,10 @@ function run_welfare_analysis(p::Vector{Float64}, answ::NamedTuple)
     resultsF = welfare_summary(p, pe_F)
 
     # Collect all results
-    cases = ["Durable FCost 1", "Durable FCost 2", "Durable FCost 3", "Fixed ER", "High Volatility"]
-    cev_BA_vals = [results.cev_BA, resultsB2.cev_BA, resultsB3.cev_BA, resultsC.cev_BA, resultsD.cev_BA,resultsE.cev_BA,resultsF.cev_BA]
-    keepDistAB_vals = [results.keepDistAB, resultsB2.keepDistAB, resultsB3.keepDistAB, resultsC.keepDistAB, resultsD.keepDistAB, resultsE.keepDistAB, resultsF.keepDistAB]
-    acrossSS_vals = [results.acrossSS, resultsB2.acrossSS, resultsB3.acrossSS, resultsC.acrossSS, resultsD.acrossSS, resultsE.acrossSS, resultsF.acrossSS]
+    cases = ["Durable FCost 1", "Durable FCost 2", "Durable FCost 3", "Fixed ER", "High Volatility", "High Depreciation", "High Kappa"]
+    cev_BA_vals = [results_B.cev_BA, resultsB2.cev_BA, resultsB3.cev_BA, resultsC.cev_BA, resultsD.cev_BA,resultsE.cev_BA,resultsF.cev_BA]
+    keepDistAB_vals = [results_B.cev_keepDist_AB, resultsB2.cev_keepDist_AB, resultsB3.cev_keepDist_AB, resultsC.cev_keepDist_AB, resultsD.cev_keepDist_AB, resultsE.cev_keepDist_AB, resultsF.cev_keepDist_AB]
+    acrossSS_vals = [results_B.acrossSS, resultsB2.acrossSS, resultsB3.acrossSS, resultsC.acrossSS, resultsD.acrossSS, resultsE.acrossSS, resultsF.acrossSS]
     
     # Create a DataFrame
     df = DataFrame(

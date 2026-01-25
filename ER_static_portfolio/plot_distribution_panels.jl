@@ -1,4 +1,12 @@
+# =======================
+# 1) EPS saving (Dist plots)
+# =======================
 using StatsBase, KernelDensity, Plots
+
+# IMPORTANT for EPS:
+# - Use a backend that supports vector output (GR usually works; PGFPlotsX is also great for LaTeX).
+# - If EPS fails on your system, switch backend: `using PGFPlotsX; pgfplotsx()`
+gr()
 
 _fin(v) = v[isfinite.(v)]
 
@@ -14,17 +22,12 @@ function plot_distribution_panels(simdata::NamedTuple, pea::Vector{Float64}; out
     ex = simdata.ex[r0, :]
 
     # liquid wealth in pesos (preferred): aa + e*a
-    # use stored aa/a if present, else derive from w & s
     if hasproperty(simdata, :aa) && hasproperty(simdata, :a)
         aa = simdata.aa[r0, :]
         a  = simdata.a[r0, :]
-        a_eff = aa .+ ex .* a
-        w_liq = a_eff
+        w_liq = aa .+ ex .* a
     else
-        w = simdata.w[r0, :]
-        s = simdata.s[r0, :]
-        a_eff = w
-        w_liq = w
+        w_liq = simdata.w[r0, :]  # fallback
     end
 
     # durable value in pesos
@@ -46,7 +49,9 @@ function plot_distribution_panels(simdata::NamedTuple, pea::Vector{Float64}; out
               xlabel="Durable value / (durable value + liquid wealth)",
               ylabel="Density",
               title="Durable share of wealth (simulation)")
-    savefig(p1, joinpath(outdir, "durable_wealth_distribution.png"))
+
+    # Save EPS explicitly
+    savefig(p1, joinpath(outdir, "durable_wealth_distribution.pdf"))
 
     # ---- binned relationship: durable share by wealth decile ----
     Wv = vec(Wtot)
@@ -62,7 +67,7 @@ function plot_distribution_panels(simdata::NamedTuple, pea::Vector{Float64}; out
     p90    = fill(NaN, 10)
 
     for i in 1:10
-        sel = (Wv .>= qedges[i]) .& (Wv .<= qedges[i+1])
+        sel = (Wv .>= qedges[i]) .& (Wv .< qedges[i+1])  # strict upper bound avoids double-count
         if any(sel)
             s = rv[sel]
             means[i] = mean(s)
@@ -77,7 +82,8 @@ function plot_distribution_panels(simdata::NamedTuple, pea::Vector{Float64}; out
               title="Durable share by wealth decile")
     plot!(qcent, p10, lw=1, ls=:dash, label="P10")
     plot!(qcent, p90, lw=1, ls=:dash, label="P90")
-    savefig(p2, joinpath(outdir, "durable_share_by_wealth_decile.png"))
+
+    savefig(p2, joinpath(outdir, "durable_share_by_wealth_decile.pdf"))
 
     return nothing
 end

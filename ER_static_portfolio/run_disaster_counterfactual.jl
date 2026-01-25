@@ -13,8 +13,8 @@ p = ptrue(sz.nop)
 gridA = makegrids
 
 # scenarios
-pi_annual = 0.10
-kappas    = [log(1.2), log(1.5), log(2.0)]
+pi_annual = 0.2
+kappas    = [log(1.18), log(1.89), log(2.5)]
 labels    = ["mild", "moderate", "severe"]
 
 println("=== Baseline (no disaster) ===")

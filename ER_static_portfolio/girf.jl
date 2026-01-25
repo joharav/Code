@@ -40,15 +40,15 @@
         rng = T_shock:min(T_shock + 8, length(girf_c))
     
         savefig(plot(girf_c[rng], xlabel="Quarters", ylabel="% log dev", title="Consumption response", legend=false),
-                joinpath(outdir, "IRF_c.png"))
+                joinpath(outdir, "IRF_c.pdf"))
         savefig(plot(girf_d[rng], xlabel="Quarters", ylabel="% log dev", title="Durables response", legend=false),
-                joinpath(outdir, "IRF_d.png"))
+                joinpath(outdir, "IRF_d.pdf"))
         savefig(plot(girf_a[rng], xlabel="Quarters", ylabel="% log dev", title="Foreign assets (a)", legend=false),
-                joinpath(outdir, "IRF_a.png"))
+                joinpath(outdir, "IRF_a.pdf"))
         savefig(plot(girf_aa[rng], xlabel="Quarters", ylabel="% log dev", title="Local assets (aa)", legend=false),
-                joinpath(outdir, "IRF_aa.png"))
+                joinpath(outdir, "IRF_aa.pdf"))
         savefig(plot(girf_aeff[rng], xlabel="Quarters", ylabel="% log dev", title="Effective assets (aa + e·a)", legend=false),
-                joinpath(outdir, "IRF_a_eff.png"))
+                joinpath(outdir, "IRF_a_eff.pdf"))
     
         return (girf_c, girf_d, girf_a, girf_aa, girf_aeff)
     end
@@ -65,7 +65,7 @@
     
         rng = T_shock:min(T_shock + 8, T)
         savefig(plot(cirf[rng], title="Cumulative IRF (window=$window_size)", xlabel="Quarters", ylabel="% log dev", legend=false),
-                joinpath(outdir, "$(name)_w$(window_size).png"))
+                joinpath(outdir, "$(name)_w$(window_size).pdf"))
     
         return cirf
     end

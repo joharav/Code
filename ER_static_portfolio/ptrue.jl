@@ -4,16 +4,16 @@
 
 function ptrue(enn::Int64)
     pea = zeros(enn)
-    
+    rr=0.0142
     # Calibrated parameters
-    pea[1] = 0.98          # beta (discount factor)
+    pea[1] = 1/(1+rr)          # beta (discount factor) 1.42 pesos
     pea[2] = 0.05         # delta (depreciation rate)
     pea[3] = 0.66          # rho_e (ER persistence)
-    pea[4] = 0.15          # sigma_e (ER volatility)
+    pea[4] = 0.22          # sigma_e (ER volatility)
     pea[6] = 2.0           # gamma (risk aversion)
-    pea[8] = 100.0           # wage
-    pea[9] = 0.0075          # r_foreign (dollar interest rate)
-    pea[10] = 1.0          # pd (durable price)
+    pea[8] = 1.0           # wage
+    pea[9] = 0.0112          # r_foreign (dollar interest rate)1.12
+    pea[10] = 5.0          # pd (durable price)
     pea[12] = 0.0         # tau (tax rate)
     pea[13] = 1.0          # h (labor supply)
     pea[14] = 0.9          # rho_y (income persistence)
@@ -21,11 +21,11 @@ function ptrue(enn::Int64)
     
     # Estimated parameters - UPDATED for 4D model
     # These are starting points that should match data moments better
-    pea[5] = 0.58          # nu (non-durable share) - targets dwealth_mean
-    pea[7] = 0.4           # F_d (durable fixed cost) - targets adj_rate, duration
-    pea[11] = 0.20         # kappa (dollar transaction cost) - targets dollar_share
-    pea[16] = 0.50         # chi (maintenance effectiveness) - targets dwealth_var
-    pea[17] = 0.30         # F_t (time cost)
+    pea[5] = 0.48          # nu (non-durable share) - targets dwealth_mean
+    pea[7] = 0.3           # F_d (durable fixed cost) - targets adj_rate, duration
+    pea[11] = 0.0003         # kappa (dollar transaction cost) - targets dollar_share
+    pea[16] = 0.5         # chi (maintenance effectiveness) - targets dwealth_var
+    pea[17] = 0.3         # F_t (time cost)
     
     return pea
 end
@@ -39,11 +39,11 @@ function param_bounds()
     ub = zeros(sz.noestp)
     
     # Order: [nu, F_d, kappa, chi, F_t]
-    lb[1] = 0.40;  ub[1] = 0.70   # nu
-    lb[2] = 0.50;  ub[2] = 5.00   # F_d - MUCH higher to reduce adj rate
-    lb[3] = 0.01;  ub[3] = 0.50   # kappa - LOWER to increase dollar share
-    lb[4] = 0.30;  ub[4] = 0.70   # chi
-    lb[5] = 0.10;  ub[5] = 0.60   # F_t
+    lb[1] = 0.40;  ub[1] = 0.60   # nu
+    lb[2] = 0.001;  ub[2] = 0.3   # F_d - WIDER, HIGHER range
+    lb[3] = 0.0000;  ub[3] = 0.005   # kappa - LOWER range
+    lb[4] = 0.40;  ub[4] = 0.70   # chi
+    lb[5] = 0.001;  ub[5] = 0.3   # F_t
     
     return lb, ub
 end
