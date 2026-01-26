@@ -10,8 +10,6 @@ function buildparam(p::Vector{Float64})
     pea[5]  = p[1]   # ν_ndurables
     pea[7]  = p[2]   # f_d, fixed cost
     pea[11] = p[3]   # kappa, fixed cost asset
-    pea[16] = p[4]   # chi, maintenance effectiveness 
-    pea[17] = p[5]   # ft, time fixed cost
     return pea
 end
 

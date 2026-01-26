@@ -85,11 +85,9 @@ Random.seed!(seed)
 # Parameter bounds - UPDATED for 4D model
 # Order: [nu, F_d, kappa, chi, F_t]
 x_start = zeros(sz.noestp)
-x_start[1] = 0.58       # nu (non-durable share)
+x_start[1] = 0.5       # nu (non-durable share)
 x_start[2] = 0.2        # F_d (durable fixed cost) - INCREASED
 x_start[3] = 0.0001       # kappa (dollar transaction cost) - DECREASED
-x_start[4] = 0.50       # chi (maintenance effectiveness)
-x_start[5] = 0.10       # F_t (time cost)
 
 lb = zeros(sz.noestp)
 ub = zeros(sz.noestp)
@@ -97,14 +95,12 @@ ub = zeros(sz.noestp)
 # Updated bounds based on moment mismatch diagnosis:
 # - F_d needs to be MUCH higher to reduce adjustment rate
 # - kappa needs to be LOWER to increase dollar share
-lb[1] = 0.40;  ub[1] = 0.60   # nu
-lb[2] = 0.001;  ub[2] = 0.3   # F_d - WIDER, HIGHER range
-lb[3] = 0.0000;  ub[3] = 0.005   # kappa - LOWER range
-lb[4] = 0.40;  ub[4] = 0.70   # chi
-lb[5] = 0.001;  ub[5] = 0.3   # F_t
+lb[1] = 0.20;  ub[1] = 0.60   # nu
+lb[2] = 0.001;  ub[2] = 0.7   # F_d - WIDER, HIGHER range
+lb[3] = 0.0000;  ub[3] = 0.009   # kappa - LOWER range
 
 println("\nParameter bounds:")
-pnames = ["nu", "F_d", "kappa", "chi", "F_t"]
+pnames = ["nu", "F_d", "kappa"]
 for (i, name) in enumerate(pnames)
     @printf("  %s: [%.2f, %.2f], start = %.2f\n", name, lb[i], ub[i], x_start[i])
 end

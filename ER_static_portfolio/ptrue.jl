@@ -21,11 +21,11 @@ function ptrue(enn::Int64)
     
     # Estimated parameters - UPDATED for 4D model
     # These are starting points that should match data moments better
-    pea[5] = 0.48          # nu (non-durable share) - targets dwealth_mean
-    pea[7] = 0.3           # F_d (durable fixed cost) - targets adj_rate, duration
-    pea[11] = 0.0003         # kappa (dollar transaction cost) - targets dollar_share
-    pea[16] = 0.5         # chi (maintenance effectiveness) - targets dwealth_var
-    pea[17] = 0.3         # F_t (time cost)
+    pea[5] = 0.518373          # nu (non-durable share) - targets dwealth_mean
+    pea[7] = 0.013382           # F_d (durable fixed cost) - targets adj_rate, duration
+    pea[11] =  0.002725         # kappa (dollar transaction cost) - targets dollar_share
+    pea[16] = 0.695093         # chi (maintenance effectiveness) - targets dwealth_var
+    pea[17] = 0         # F_t (time cost)
     
     return pea
 end
@@ -39,11 +39,11 @@ function param_bounds()
     ub = zeros(sz.noestp)
     
     # Order: [nu, F_d, kappa, chi, F_t]
-    lb[1] = 0.40;  ub[1] = 0.60   # nu
-    lb[2] = 0.001;  ub[2] = 0.3   # F_d - WIDER, HIGHER range
-    lb[3] = 0.0000;  ub[3] = 0.005   # kappa - LOWER range
-    lb[4] = 0.40;  ub[4] = 0.70   # chi
-    lb[5] = 0.001;  ub[5] = 0.3   # F_t
+    lb[1] = 0.20;  ub[1] = 0.60   # nu
+    lb[2] = 0.001;  ub[2] = 0.7   # F_d - WIDER, HIGHER range
+    lb[3] = 0.0000;  ub[3] = 0.009   # kappa - LOWER range
+    #lb[4] = 0.40;  ub[4] = 0.70   # chi
+    #lb[5] = 0.001;  ub[5] = 0.3   # F_t
     
     return lb, ub
 end

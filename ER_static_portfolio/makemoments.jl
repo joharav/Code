@@ -7,6 +7,48 @@ using Printf
 
 _fin(v) = v[isfinite.(v)]
 _pos(v) = v[isfinite.(v) .& (v .> 0.0)]   # finite AND strictly positive
+# years since last adjustment at time t (cross-section)
+function tenure_years_cross_section(adj::AbstractMatrix, t::Int; per_year::Int=4)
+    T, N = size(adj)
+    @assert 1 ≤ t ≤ T
+    out = zeros(Float64, N)
+    @inbounds for j in 1:N
+        s = 0.0
+        for τ in t:-1:1
+            if adj[τ, j] > 0
+                break
+            else
+                s += 1.0
+            end
+        end
+        out[j] = s / per_year
+    end
+    return out
+end
+
+function tenure_mean(adj::AbstractMatrix, t::Int; per_year::Int=4)
+    v = tenure_years_cross_section(adj, t; per_year=per_year)
+    return mean(v[isfinite.(v)])
+end
+
+
+function tenure_mean_from_window(adj_win::AbstractMatrix; per_year::Int=4)
+    T, N = size(adj_win)
+    t = T
+    years = zeros(Float64, N)
+    @inbounds for j in 1:N
+        s = 0.0
+        for τ in t:-1:1
+            if adj_win[τ,j] > 0
+                break
+            else
+                s += 1.0
+            end
+        end
+        years[j] = s / per_year
+    end
+    return mean(years)
+end
 
 function completed_spells(adj::AbstractMatrix, per_year::Int)
     T, N = size(adj)
@@ -92,17 +134,25 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64};
     # =========================================================================
     # Moment 1: Duration (years since last adjustment)
     # =========================================================================
-    spells_full = running_spells(simdata.adjust_indicator)
-    t_survey = last(r0) # last(r0)
-    duration_years_cs = spells_full[t_survey, :] ./ per_year
-    m1_duration_mean = mean(_fin(vec(duration_years_cs)))
+    # spells_full = running_spells(simdata.adjust_indicator)
+    # t_survey = last(r0) # last(r0)
+    # duration_years_cs = spells_full[t_survey, :] ./ per_year
+    # m1_duration_mean = mean(_fin(vec(duration_years_cs)))
+
+    #adj_win  = simdata.adjust_indicator[r0, :]
+    #t_survey = size(adj_win, 1)  # interview at end of window
+    
+    #m1_duration_mean = tenure_mean(adj_win, t_survey; per_year=per_year)
+
+    adj_win = simdata.adjust_indicator[r0,:]
+    m1_duration_mean = tenure_mean_from_window(adj_win; per_year=per_year)
 
     #m1_completed_duration = completed_spells(simdata.adjust_indicator[r0, :], per_year)
 
     # =========================================================================
     # Moment 4: Adjustment rate (annualized)
     # =========================================================================
-    q_q = mean(vec(adj_r0 .> 0.0))                # quarterly probability
+    q_q = mean(vec(adj_win .> 0.0))                # quarterly probability
     m4_adj_rate = 1.0 - (1.0 - q_q)^per_year      # annual probability
 
     # =========================================================================
@@ -133,8 +183,8 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64};
     usd_share  = a_fx_vec ./ max.(a_eff_vec, 1e-12)
 
     usd_sh_fin = _fin(usd_share)
-    m5_dollar_share = mean(usd_sh_fin)
-    m6_dollar_vol   = var(usd_sh_fin)   # variance (not std)
+    m4_dollar_share = mean(usd_sh_fin)
+    m5_dollar_vol   = var(usd_sh_fin)   # variance (not std)
 
     # =========================================================================
     # Additional diagnostics (never crash on log of non-positive)
@@ -159,9 +209,8 @@ function makemoments(simdata::NamedTuple, pea::Vector{Float64};
         m1_duration_mean,   # 1: duration_mean (years)
         m2_dwealth_mean,    # 2: dwealth_mean
         m3_dwealth_var,     # 3: dwealth_var
-        m4_adj_rate,        # 4: adj_rate (annualized)
-        m5_dollar_share,    # 5: dollar_share
-        m6_dollar_vol      # 6: dollar_vol
+        m4_dollar_share,    # 5: dollar_share
+        m5_dollar_vol      # 6: dollar_vol
     ]
 
     if any(.!isfinite.(outmoms))

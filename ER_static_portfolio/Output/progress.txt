@@ -1,17 +1,15 @@
 Data vs. Simulated Moments (improved Q)
 
-duration_mean         data =    25.495630   sim =    89.946500
-dwealth_mean          data =     0.912323   sim =     0.353784
-dwealth_var           data =     0.013873   sim =     0.128093
-adj_rate              data =     0.086067   sim =     0.996682
-dollar_share          data =     0.562977   sim =     0.181409
-dollar_vol            data =     0.095973   sim =     0.060170
+duration_mean         data =    23.204306   sim =    78.326500
+dwealth_mean          data =     0.830005   sim =     0.318302
+dwealth_var           data =     0.090209   sim =     0.150313
+dollar_share          data =     0.243793   sim =     0.195370
+dollar_vol            data =     0.237145   sim =     0.055380
 
 Parameters:
-nu                        0.464755
-f                         0.029406
-kappa                     0.000475
-chi                       0.446056
-f^t                       0.208164
+nu                        0.580000
+f                         0.200000
+kappa                     0.000100
+chi                       0.500000
 
-GMM objective Q =  1191.709583
+GMM objective Q =    88.383997

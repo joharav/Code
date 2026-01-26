@@ -24,7 +24,7 @@ module sz;
     const nFirms    = 500;          # households to simulate (increased from 400)
     
     # Moments
-    const nmom      = 6;            # number of moments
+    const nmom      = 5;            # number of moments
     
     # VFI parameters
     const maxiter   = 10000;        # max VFI iterations
@@ -36,14 +36,14 @@ module sz;
     
     # Parameter counts
     const nop       = 17;           # total parameters
-    const noestp    = 5;            # estimated parameters
+    const noestp    = 3;            # estimated parameters
     
     # Tauchen discretization
     const nstd_e    = 3.0;          # std devs for exchange rate
     const nstd_y    = 1.0;          # std devs for income
     
     # Moments to use
-    const pick = [1,2,3,4,5,6];
+    const pick = [1,2,3,4,5];
 end;
 
 

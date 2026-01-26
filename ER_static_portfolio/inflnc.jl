@@ -65,15 +65,14 @@ datamom_full = vec(Matrix(mrow_full)[1, :])  # length 10 in original order
 # 9: usd_heavy_share
 # 10: dwealth_cond_usd
 
-# We now only want 5 moments: 1,3,4,6,7
-const pick6 = [1, 3, 4, 6, 8, 5]
-datamom = datamom_full[pick6]
+# We now only want 5 moments: 1,3,4,8,5
+const pick5 = [1, 3, 4, 8, 5]
+datamom = datamom_full[pick5]
 
 mom_names = [
     "duration_mean",   # m1
     "dwealth_mean",    # m3
     "dwealth_var",     # m4
-    "adj_rate",        # m6
     "dollar_share",      # m7
     "dollar_vol"        # m8
 ]
@@ -86,18 +85,16 @@ w = w_raw ./ sum(w_raw)   # probability weights
 # Pull variables (allow Missing)
 duration       = hasproperty(df, :duration) ? Vector{Union{Missing,Float64}}(df.duration) : fill(missing, N)
 d_wealth_ratio = Vector{Union{Missing,Float64}}(df.d_wealth_ratio)
-adj_ratio      = Vector{Union{Missing,Float64}}(df.adj_ratio)
 usd_share      = Vector{Union{Missing,Float64}}(df.usd_share)
 
 # IF columns (6 moments)
 IF_m1 = IF_wmean(duration, w)           # duration_mean
 IF_m2 = IF_wmean(d_wealth_ratio, w)     # dwealth_mean
 IF_m3 = IF_wvar(d_wealth_ratio, w)      # dwealth_var
-IF_m4 = IF_wmean(adj_ratio, w)          # adj_rate (must match how you define it in data moments)
-IF_m5 = IF_wmean(usd_share, w)          # dollar_share
-IF_m6 = IF_wvar(usd_share, w)           # dollar_vol
+IF_m4 = IF_wmean(usd_share, w)          # dollar_share
+IF_m5 = IF_wvar(usd_share, w)           # dollar_vol
 
-IF = hcat(IF_m1, IF_m2, IF_m3, IF_m4, IF_m5, IF_m6)
+IF = hcat(IF_m1, IF_m2, IF_m3, IF_m4, IF_m5)
 
 # Weighted covariance of moments: Σ = E_w[φ φ']
 # Implement as φ' diag(w) φ with w normalized to sum to 1 over ALL obs,
@@ -115,4 +112,4 @@ writedlm(kst.MOMS_FILE, datamom)
 writedlm(kst.W_FILE, Matrix(Σ))
 writedlm(kst.MNAME_FILE, mom_names)
 
-println("Saved 6 moments and Σ = $(size(Σ)) with names: ", join(mom_names, ", "))
+println("Saved 5 moments and Σ = $(size(Σ)) with names: ", join(mom_names, ", "))

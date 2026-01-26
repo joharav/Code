@@ -15,13 +15,10 @@ end
 
 function simmodel(answ::NamedTuple)
     g     = answ.g
-    tmat  = g.t                 # (ne*ny)×(ne*ny), ROW-stochastic
-    exg   = g.ex
-    yg    = g.y
-    wgrid = g.w                 # STATE grid
-    wp    = g.wp                # POLICY grid
-    dgrid = g.d                 # STATE grid
-    dp    = g.dp                # POLICY grid
+    tmat  = g.t
+    exg, yg = g.ex, g.y
+    wgrid, wp = g.w, g.wp
+    dgrid, dp = g.d, g.dp
     sgrid = g.s
 
     pea     = answ.pea
@@ -37,29 +34,22 @@ function simmodel(answ::NamedTuple)
     ft      = pea[17]
     rr      = (1/beta) - 1
 
-    # CDF rows for joint transition
     phatcdf = cumsum(tmat, dims=2)
     @inbounds phatcdf[:, end] .= 1.0
 
-    # crude initial distribution (keep your approach)
     cdf_wgt = Matrix(tmat')^100
     cdf_wgt = cumsum(cdf_wgt[:, Int(floor(sz.ne * 0.5)) + 1])
     @inbounds cdf_wgt[end] = 1.0
 
     T, N = sz.nYears, sz.nFirms
-    allw = zeros(T, N)
-    alld = zeros(T, N)
-    alls = zeros(T, N)
-    alle = zeros(T, N)
-    ally = zeros(T, N)
-    allc = zeros(T, N)
+    allw = zeros(T, N); alld = zeros(T, N); alls = zeros(T, N)
+    alle = zeros(T, N); ally = zeros(T, N); allc = zeros(T, N)
 
-    adj      = zeros(T, N)   # realized adjust indicator (from regime choice)
-    d_adjust = zeros(T, N)   # counterfactual adjust-regime target dA* every period
+    move_ind = zeros(T, N)     # tenure-reset event
+    d_adjust = zeros(T, N)
 
-    d_next_vec = answ.noadjust_result.d_next_vec  # next-period d level for each STATE id
+    d_next_vec = answ.noadjust_result.d_next_vec
 
-    # initial joint (e,y) state index
     ls = zeros(Int, T+1, N)
     @inbounds for i in 1:N
         ls[1, i] = searchsortedfirst(cdf_wgt, globals.draws[1, i])
@@ -68,8 +58,9 @@ function simmodel(answ::NamedTuple)
     wstart = globals.draws[1, :]
     dstart = globals.draws[2, :]
 
+    tol = 1e-6
+
     Threads.@threads for i in 1:N
-        # initial continuous states (pick from grids using uniforms)
         iw0 = clamp(Int(floor(sz.nw * wstart[i])) + 1, 1, sz.nw)
         id0 = clamp(Int(floor(sz.nd * dstart[i])) + 1, 1, sz.nd)
 
@@ -84,17 +75,17 @@ function simmodel(answ::NamedTuple)
             e = exg[ie]
             y = yg[iy]
 
-            # map continuous state -> indices ONLY for reading DP objects
             iw = nearest_index(wgrid, w_old)
             id = nearest_index(dgrid, d_old)
 
-            # --- NEW: always store adjust-regime target durable (counterfactual) ---
-            idpA = answ.adjust_result.gidx.d[ie, iy, iw, id]   # index on dp grid
-            d_adjust[t, i] = dp[idpA]                          # level on dp grid
+            # counterfactual adjust target every period
+            idpA = answ.adjust_result.gidx.d[ie, iy, iw, id]
+            d_adjust[t, i] = dp[idpA]
 
-            # realized regime choice (from your merged indicator)
+            # no-adjust implied next durable (passive depreciation)
+            d_keep = d_next_vec[id]
+
             do_adj = answ.adjustment_indicator[ie, iy, iw, id]
-            adj[t, i] = do_adj ? 1.0 : 0.0
 
             if do_adj
                 iwp = answ.adjust_result.gidx.w[ie, iy, iw, id]
@@ -116,11 +107,15 @@ function simmodel(answ::NamedTuple)
 
                 w_pr = wp[iwp]
                 s_pr = sgrid[is]
-                d_pr = d_next_vec[id]  # already a LEVEL
+                d_pr = d_keep
 
                 labor_income = y*wage*h*(1.0 - tau)
                 c = labor_income + wgrid[iw] - w_pr
             end
+
+            # tenure reset = “changed house” event
+            move = do_adj && (abs(d_pr - d_keep) > tol * max(1.0, abs(d_keep)))
+            move_ind[t, i] = move ? 1.0 : 0.0
 
             s_pr = clamp(s_pr, 0.0, 1.0)
 
@@ -131,7 +126,6 @@ function simmodel(answ::NamedTuple)
             ally[t, i] = y
             allc[t, i] = c
 
-            # draw next (e,y)
             row = ls[t, i]
             u   = globals.draws[t+1, i]
             nxt = draw_next_rowcdf(view(phatcdf, row, :), u)
@@ -141,13 +135,11 @@ function simmodel(answ::NamedTuple)
             iy_new = mod(nxt - 1, sz.ny) + 1
             e_new  = exg[ie_new]
 
-            # wealth transition
             trans_cost = kappa * s_pr * w_pr
             w_new = (1.0 - s_pr)*w_pr*(1.0 + rr) +
                     s_pr*w_pr*(1.0 + rr_star)*(e_new / e) -
                     trans_cost
 
-            # update continuous states
             w_old = w_new
             d_old = d_pr
             ie = ie_new
@@ -158,6 +150,7 @@ function simmodel(answ::NamedTuple)
     return (
         w = allw, d = alld, d_adjust = d_adjust,
         s = alls, ex = alle, y = ally, c = allc,
-        adjust_indicator = adj
+        adjust_indicator = move_ind
     )
 end
+

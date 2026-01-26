@@ -1,5 +1,3 @@
 nu
 f
 kappa
-chi
-f^t
